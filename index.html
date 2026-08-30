@@ -134,21 +134,26 @@
   .node.expanded p{display:block}
   .node .dot{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,166,201,0.25),rgba(203,176,232,0.15));border:1.5px solid rgba(255,166,201,0.35);display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 0 18px rgba(255,166,201,0.15);transition:all 0.3s;}
   .node:hover .dot,.node.expanded .dot{transform:scale(1.15);box-shadow:0 0 30px rgba(255,166,201,0.35);border-color:rgba(255,166,201,0.6);}
-  .node:not(.expanded){opacity:0.35;filter:grayscale(0.6);transition:opacity 0.4s,filter 0.4s;}
-  .node.expanded{z-index:20;position:absolute;transform:scale(1.4);opacity:1;filter:none;box-shadow:0 0 60px rgba(255,166,201,0.25);}
-  .node:hover:not(.expanded){opacity:0.7;filter:grayscale(0.3);}
-  .node.expanded .dot{width:80px;height:80px;font-size:2rem;box-shadow:0 0 50px rgba(255,166,201,0.45);border-color:rgba(255,166,201,0.8);}
+  .node:not(.expanded){opacity:0.25;filter:brightness(0.5) grayscale(1);transition:opacity 0.5s,filter 0.5s,transform 0.3s;}
+  .node:hover:not(.expanded){opacity:0.55;filter:brightness(0.7) grayscale(0.4);transform:scale(1.08);}
+  .node.expanded{z-index:20;position:absolute;transform:scale(1.55);opacity:1;filter:brightness(1.1) grayscale(0);box-shadow:0 0 70px rgba(255,166,201,0.4);transition:all 0.35s ease;}
+  .node.expanded .dot{width:90px;height:90px;font-size:2.4rem;box-shadow:0 0 60px rgba(255,166,201,0.55),inset 0 0 30px rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.9);background:radial-gradient(circle at 35% 35%,rgba(255,166,201,0.35),rgba(203,176,232,0.2));}
   .node.expanded h3{font-size:1.15rem;margin-top:0.8rem;max-width:220px;color:#fff;}
   .node.expanded p{display:block;font-size:0.88rem;color:var(--txt-dim);max-width:240px;margin-top:0.5rem;}
   /* ---------- node connections ---------- */
   .node-connector{position:absolute;pointer-events:none;z-index:1;}
-  .node-connector line{stroke:rgba(255,166,201,0.2);stroke-width:1.5;stroke-dasharray:4 3;}
-  .node-connector circle{fill:rgba(203,176,232,0.5);r:2.5;}
+  .node-connector line{stroke:rgba(255,166,201,0.55);stroke-width:2;stroke-linecap:round;}
+  .node-connector circle{fill:#ffa6c9;r:4;filter:drop-shadow(0 0 4px rgba(255,166,201,0.6));}
   /* knowledge-graph layout container */
   #graph-landing{
-    position:relative;width:100%;min-height:140vh;padding-top:12vh;
-    background:radial-gradient(ellipse at center,rgba(255,166,201,0.06),transparent 60%);
+    position:relative;width:100%;min-height:150vh;padding-top:10vh;
+    background:
+      radial-gradient(ellipse at 20% 20%,rgba(255,166,201,0.08) 0%,transparent 50%),
+      radial-gradient(ellipse at 80% 80%,rgba(203,176,232,0.06) 0%,transparent 50%),
+      radial-gradient(ellipse at 50% 50%,rgba(169,232,212,0.04) 0%,transparent 60%),
+      linear-gradient(180deg,rgba(20,11,18,1) 0%,rgba(28,16,24,1) 60%,rgba(20,11,18,1) 100%);
   }
+  #graph-bg{display:none;}
   .card::after{
     content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);
     width:70%;height:2px;background:linear-gradient(90deg,transparent,var(--pink-dim),transparent);
@@ -1230,61 +1235,8 @@
     mpx=(e.clientX/window.innerWidth-0.5)*2;
     mpy=(e.clientY/window.innerHeight-0.5)*2;
   },{passive:true});
-  // ---------- obsidian-style graph background ----------
-  // connected node network behind all info: nodes = info sections
-  const graphBg=document.createElement('canvas');
-  graphBg.id='graph-bg';
-  graphBg.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;';
-  document.body.insertBefore(graphBg,document.body.firstChild);
-  const bgCtx=graphBg.getContext('2d');
-  let bgW=0,bgH=0,bgNodes=[],bgEdges=[];
-  function resizeBg(){
-    bgW=graphBg.width=window.innerWidth*window.devicePixelRatio;
-    bgH=graphBg.height=window.innerHeight*window.devicePixelRatio;
-    bgCtx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
-  }
-  function initBgGraph(){
-    bgNodes=[];bgEdges=[];
-    const sections=document.querySelectorAll('section');
-    const count=Math.max(12,sections.length+4);
-    for(let i=0;i<count;i++){
-      bgNodes.push({
-        x:(0.2+i*0.7/count)*window.innerWidth+Math.random()*120-60,
-        y:Math.random()*window.innerHeight,
-        vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.2,
-        r:2+Math.random()*4,
-        c:['#ffa6c9','#cbb0e8','#a9e8d4','#ffd3b3','#a8d8f0'][Math.floor(Math.random()*5)]
-      });
-    }
-    for(let i=0;i<bgNodes.length;i++){
-      for(let j=i+1;j<Math.min(i+4,bgNodes.length);j++){
-        bgEdges.push({a:i,b:j});
-      }
-    }
-  }
-  function drawBg(){
-    bgCtx.clearRect(0,0,window.innerWidth,window.innerHeight);
-    for(let e of bgEdges){
-      const a=bgNodes[e.a],b=bgNodes[e.b];
-      bgCtx.beginPath();
-      bgCtx.moveTo(a.x,a.y);bgCtx.lineTo(b.x,b.y);
-      bgCtx.strokeStyle='rgba(255,166,201,0.08)';
-      bgCtx.lineWidth=0.8;
-      bgCtx.stroke();
-    }
-    for(let n of bgNodes){
-      n.x+=n.vx;n.y+=n.vy;
-      if(n.x<0||n.x>window.innerWidth)n.vx*=-1;
-      if(n.y<0||n.y>window.innerHeight)n.vy*=-1;
-      bgCtx.beginPath();
-      bgCtx.arc(n.x,n.y,n.r,0,Math.PI*2);
-      bgCtx.fillStyle=n.c;
-      bgCtx.fill();
-    }
-    requestAnimationFrame(drawBg);
-  }
-  window.addEventListener('resize',()=>{resizeBg();initBgGraph();});
-  resizeBg();initBgGraph();drawBg();
+  // background graph hidden — landing graph is the visual focus
+  // (old bg canvas kept but invisible; #graph-bg hidden in css)
   // ---------- extraction ----------
   // canonicalKeyword resolves a raw word to a FACTS key, trying the word itself
   // first and then its stem — so "networks"/"transformers" still match
