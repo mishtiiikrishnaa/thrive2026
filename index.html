@@ -47,14 +47,12 @@
   ::-webkit-scrollbar-track{background:var(--bg)}
   ::-webkit-scrollbar-thumb{background:var(--pink-dark);border-radius:8px}
   a{color:var(--pink-soft);text-decoration:none;border-bottom:1px dashed var(--pink-dim)}
-
   .glow{
     position:fixed;top:-20vh;left:50%;transform:translateX(-50%);
     width:90vw;height:80vh;z-index:0;pointer-events:none;
     background:radial-gradient(ellipse at center,rgba(255,166,201,0.14),transparent 60%);
     filter:blur(10px);
   }
-
   /* sticky nav */
   nav{
     position:fixed;top:0;left:0;right:0;z-index:50;
@@ -67,7 +65,6 @@
   nav .links{display:flex;gap:1.4rem;font-size:0.82rem}
   nav a{color:var(--txt-dim);border:none}
   nav a:hover{color:var(--pink-soft)}
-
   /* ---------- landing ---------- */
   #hero{
     position:relative;z-index:2;
@@ -98,11 +95,9 @@
     border:none;animation:float 2.4s ease-in-out infinite;
   }
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
-
   #hero-canvas{
     position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.65;
   }
-
   /* ---------- sections ---------- */
   section{position:relative;z-index:2;padding:8vw 6vw}
   .sec-title{
@@ -111,7 +106,6 @@
   }
   .sec-title span{color:var(--pink)}
   .sec-sub{text-align:center;max-width:46rem;margin:0 auto 3rem;color:var(--txt-dim);font-size:1rem}
-
   .how{
     max-width:82rem;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.2rem;
   }
@@ -124,7 +118,6 @@
   .card .ic{font-size:1.7rem;margin-bottom:0.9rem}
   .card h3{color:var(--pink-soft);font-size:1.15rem;margin-bottom:0.5rem}
   .card p{color:var(--txt-dim);font-size:0.94rem;line-height:1.6}
-
   /* deep dive */
   .deepgrid{
     max-width:82rem;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;
@@ -143,11 +136,9 @@
   .deepcard .dc-ic{font-size:1.6rem;margin-bottom:0.8rem}
   .deepcard h3{color:var(--pink-soft);font-size:1.15rem;margin-bottom:0.5rem}
   .deepcard p{color:var(--txt-dim);font-size:0.93rem;line-height:1.65}
-
   /* scroll reveal */
   .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.7s ease,transform 0.7s ease}
   .reveal.in{opacity:1;transform:none}
-
   /* ---------- anatomy ---------- */
   .anatomy{
     max-width:82rem;margin:0 auto;display:grid;gap:1.2rem;
@@ -177,7 +168,6 @@
   .flow .step .b{font-size:0.9rem}
   .flow .step .b strong{color:var(--txt)}
   .flow .step .b span{display:block;font-size:0.8rem;color:var(--txt-dim);margin-top:0.2rem}
-
   /* ---------- glossary accordion ---------- */
   .glossary{max-width:60rem;margin:0 auto}
   .term{
@@ -193,11 +183,9 @@
   .term.open h3 .pl{transform:rotate(45deg)}
   .term .bd{display:none;padding:0 1.3rem 1.2rem;color:var(--txt-dim);font-size:0.92rem;line-height:1.65}
   .term.open .bd{display:block;animation:fade 0.4s ease}
-
   /* ---------- play ---------- */
   .play{position:relative;z-index:2;padding:4vw 4vw 8vw}
   .stage{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:1.2rem;align-items:stretch}
-
   /* the graph is the star: full width and tall on top */
   .graph-hero{display:flex;flex-direction:column;gap:0.8rem}
   .graph-wrap.hero{height:68vh;min-height:460px}
@@ -206,7 +194,6 @@
   .controls{max-width:820px;margin:0 auto;width:100%}
   .workings{display:grid;grid-template-columns:1fr;gap:1rem}
   @media(min-width:900px){.workings{grid-template-columns:1.3fr 1fr}}
-
   .promptbox{
     background:var(--bg-2);border:1px solid var(--border);border-radius:16px;
     padding:1.1rem 1.2rem;
@@ -233,13 +220,11 @@
     font-size:0.78rem;padding:0.2rem 0.6rem;border-radius:999px;
     background:rgba(255,166,201,0.12);border:1px solid rgba(255,166,201,0.3);color:var(--pink-soft);
   }
-
   .panel{
     background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:0.9rem 1.1rem;
     display:flex;flex-direction:column;min-height:0;
   }
   .panel-t{font-size:0.78rem;color:var(--txt-faint);letter-spacing:0.1em;margin-bottom:0.6rem}
-
   .graph-wrap{
     background:var(--bg-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative;
     display:flex;flex-direction:column;height:100%;
@@ -251,7 +236,6 @@
   .graph-head .t{font-size:0.85rem;color:var(--txt-faint);letter-spacing:0.08em}
   .stats{font-size:0.78rem;color:var(--txt-dim);display:flex;gap:1rem}
   .stats b{color:var(--pink-soft);font-weight:400}
-
   /* graph camera controls */
   .graph-canvas-wrap{position:relative;flex:1}
   #graph{display:block}
@@ -281,7 +265,19 @@
     font-size:0.74rem;color:var(--pink-soft);background:rgba(20,11,18,0.7);
     padding:0.2rem 0.5rem;border-radius:8px;border:1px solid var(--border);
   }
-
+  .fact-tooltip{
+    position:absolute;z-index:6;max-width:min(320px,72vw);
+    background:rgba(15,8,13,0.97);border:1px solid var(--pink-dim);
+    border-radius:12px;padding:0.7rem 0.9rem;font-size:0.83rem;line-height:1.55;
+    color:var(--txt);pointer-events:none;opacity:0;transform:translateY(4px);
+    transition:opacity 0.12s ease,transform 0.12s ease;
+    box-shadow:0 10px 30px rgba(0,0,0,0.45);
+  }
+  .fact-tooltip.show{opacity:1;transform:translateY(0)}
+  .fact-tooltip .tt-src{
+    display:block;color:var(--mint);font-size:0.7rem;letter-spacing:0.1em;
+    margin-bottom:0.35rem;text-transform:lowercase;
+  }
   /* chat window */
   .chatwin{display:flex;flex-direction:column;gap:0.7rem;max-height:16rem;overflow:auto;padding-right:0.2rem}
   .msg{max-width:92%;padding:0.6rem 0.9rem;border-radius:14px;font-size:0.88rem;line-height:1.5;animation:fade 0.4s ease}
@@ -290,7 +286,6 @@
   .msg .roles{font-size:0.7rem;letter-spacing:0.08em;color:var(--pink-soft);margin-bottom:0.3rem}
   .msg .facts{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem}
   .msg .facts span{font-size:0.76rem;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(255,166,201,0.1);border:1px solid var(--border);color:var(--txt-dim)}
-
   /* fact generation feed */
   .logs{display:flex;flex-direction:column;gap:0.4rem;max-height:14rem;overflow:auto;padding-right:0.2rem}
   .flog{
@@ -302,12 +297,10 @@
   .flog .k{color:var(--pink-soft);white-space:nowrap}
   .flog .d{color:var(--txt-dim)}
   @keyframes slide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
-
   /* legend */
   .legend{display:flex;flex-wrap:wrap;gap:1.2rem;justify-content:center;font-size:0.78rem;color:var(--txt-faint)}
   .legend .it{display:flex;align-items:center;gap:0.5rem}
   .legend .dot{width:12px;height:12px;border-radius:50%}
-
   /* the proper AI answer window */
   .answer{
     margin-top:0.4rem;min-height:0;
@@ -332,17 +325,18 @@
     font-size:0.76rem;padding:0.2rem 0.6rem;border-radius:999px;
     background:rgba(169,232,212,0.12);border:1px solid rgba(169,232,212,0.35);color:var(--mint);
   }
+  .answer .connects .label{
+    font-size:0.76rem;color:var(--txt-faint);align-self:center;margin-right:0.1rem;
+  }
   .answer .sources{margin-top:0.8rem;padding-top:0.7rem;border-top:1px dashed var(--border);font-size:0.74rem;color:var(--txt-faint)}
   .answer .sources b{color:var(--pink-soft);font-weight:400}
   @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
   footer{
     position:relative;z-index:2;text-align:center;padding:3rem 6vw 4rem;
     color:var(--txt-faint);font-size:0.85rem;
   }
   footer .cap{color:var(--pink);font-size:0.95rem;margin-bottom:0.5rem;font-family:var(--dsp)}
   footer .cap b{color:#fff;font-weight:700}
-
   @media(max-width:640px){
     nav .links{display:none}
   }
@@ -351,7 +345,6 @@
 <body>
 <div class="glow"></div>
 <canvas id="hero-canvas"></canvas>
-
 <nav>
   <div class="logo">graphic<b>.</b>ai</div>
   <div class="links">
@@ -361,7 +354,6 @@
     <a href="#play">grow the graph</a>
   </div>
 </nav>
-
 <!-- ============ LANDING ============ -->
 <header id="hero">
   <div class="eyebrow">an interactive explainer</div>
@@ -374,7 +366,6 @@
   </p>
   <a class="nudge" href="#play">grow it ↓</a>
 </header>
-
 <!-- ============ HOW AI WORKS ============ -->
 <section id="how">
   <h2 class="sec-title">how do machines <span>learn to think?</span></h2>
@@ -427,7 +418,6 @@
     </div>
   </div>
 </section>
-
 <!-- ============ ANATOMY ============ -->
 <section id="anatomy">
   <h2 class="sec-title">the anatomy of <span>a transformer</span></h2>
@@ -456,7 +446,6 @@
     </div>
   </div>
 </section>
-
 <!-- ============ GLOSSARY ============ -->
 <section id="glossary">
   <h2 class="sec-title">the pieces that <span>make it work</span></h2>
@@ -467,7 +456,7 @@
     <div class="term"><h3>attention <span class="pl">+</span></h3><div class="bd">a mechanism where each token asks how relevant every other token is, and mixes their information accordingly. it is why a model can connect the word at position one to the word at position two hundred.</div></div>
     <div class="term"><h3>self-attention <span class="pl">+</span></h3><div class="bd">attention where a token attends to the whole sequence, including itself. repeated across many layers, it lets the model build a rich representation of context before guessing the next token.</div></div>
     <div class="term"><h3>weights <span class="pl">+</span></h3><div class="bd">the learnable numbers that, multiplied and added through layers, transform inputs into predictions. training is the slow process of finding weights that make the model consistently right.</div></div>
-    <div class="term"><h3>backpropagation <span class="pl">+</span></h3><div class="bd">from the Greek, "backwards propagation of error". the model measures how wrong it was, then pushes that blame backwards through every weight, nudging each one toward a better answer. the heart of learning.</div></div>
+    <div class="term"><h3>backpropagation <span class="pl">+</span></h3><div class="bd">from the greek, "backwards propagation of error". the model measures how wrong it was, then pushes that blame backwards through every weight, nudging each one toward a better answer. the heart of learning.</div></div>
     <div class="term"><h3>gradient descent <span class="pl">+</span></h3><div class="bd">the optimisation that follows the downhill slope of the error. like rolling a ball down a hill of mistakes, the model keeps moving in the direction that reduces error most steeply, step by careful step.</div></div>
     <div class="term"><h3>overfitting <span class="pl">+</span></h3><div class="bd">when the model memorises the training data instead of generalising, it becomes great at old examples and terrible at new ones. the ai equivalent of a student who learns the answers, not the subject.</div></div>
     <div class="term"><h3>parameter <span class="pl">+</span></h3><div class="bd">one individual weight in the model. a "large language model" is large precisely because it has billions of these. think of parameters as the model's neurons, and edges as the connections between them.</div></div>
@@ -476,12 +465,10 @@
     <div class="term"><h3>context window <span class="pl">+</span></h3><div class="bd">the amount of text the model can keep in mind at once. bigger context means it can weave together more threads — like a longer conversation, or a graph that keeps every fact you add alive.</div></div>
   </div>
 </section>
-
 <!-- ============ DEEPER DIVE ============ -->
 <section id="deep">
   <h2 class="sec-title">go <span>deeper</span></h2>
   <p class="sec-sub">the glossy summary is over. this is the stuff under the hood — what the big words actually mean, and what people get wrong.</p>
-
   <div class="deepgrid">
     <div class="deepcard">
       <div class="dc-ic">📏</div>
@@ -515,12 +502,10 @@
     </div>
   </div>
 </section>
-
 <!-- ============ THE PLAY AREA ============ -->
 <section class="play" id="play">
   <h2 class="sec-title">the graph is the <span>answer</span></h2>
   <p class="sec-sub">front and centre: your prompts grow the graph. every keyword becomes a cluster, every fact a node, every shared idea a connector. below it, the answer — assembled from every node — lives in the chat.</p>
-
   <div class="stage graph-first">
     <!-- the graph, front and centre -->
     <div class="graph-hero">
@@ -537,8 +522,9 @@
             <button id="zoom-home" title="reset view">⌂</button>
           </div>
           <canvas id="graph" aria-label="interactive fact graph"></canvas>
-          <div class="camhint">scroll to zoom · drag empty space to pan · drag a node to move it</div>
+          <div class="camhint">scroll to zoom · drag empty space to pan · hover (or tap) a node for its fact</div>
           <div class="emptyhint" id="emptyhint">the graph is empty — ask a question and it will grow</div>
+          <div class="fact-tooltip" id="fact-tooltip"></div>
         </div>
       </div>
       <div class="legend">
@@ -547,7 +533,6 @@
         <div class="it"><span class="dot" style="background:var(--mint)"></span> shared word (connector)</div>
       </div>
     </div>
-
     <!-- prompt controls below the graph -->
     <div class="controls">
       <div class="promptbox">
@@ -559,7 +544,6 @@
         <div class="keywords" id="keywords"></div>
       </div>
     </div>
-
     <!-- workings: chat (the answer) + fact feed -->
     <div class="workings">
       <div class="panel chat-panel">
@@ -573,17 +557,14 @@
     </div>
   </div>
 </section>
-
 <footer>
   <div class="cap">graphic<b>.</b>ai</div>
   built in pastel · typewriter type · dark. every fact a node, every node a thought. nothing deleted, only added.
   <br>graphic.ai is a tiny, harmless demo of how graphy an answer can get — not a real model.
 </footer>
-
 <script>
 (function(){
   "use strict";
-
   // polyfill roundRect (older browsers)
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -596,9 +577,7 @@
       return this;
     };
   }
-
   const PALETTE=["#ffa6c9","#cbb0e8","#a9e8d4","#ffd3b3","#a8d8f0","#fff0b3"];
-
   // ---------- fact bank ----------
   const FACTS={
     "ai":["ai is software that learns patterns from data instead of following hand-written rules.",
@@ -685,7 +664,6 @@
     "algorithmic":["algorithmic thinking is breaking a big task into tiny, repeatable steps.",
       "at its core, ai is a vast, learned chain of tiny algorithmic steps."]
   };
-
   const GENERIC=[
     "this keyword is a bridge word — it keeps showing up across your prompts, tying the clusters together.",
     "ask about it and the graph grows a fresh cluster around it, pulling in nearby facts.",
@@ -694,9 +672,7 @@
     "a seed word — from it, a handful of related facts will branch off.",
     "the more you revisit this idea, the denser the graph gets around it."
   ];
-  function factsFor(word){
-    if(FACTS[word])return FACTS[word].slice();
-    const base={
+  const BASE_FACTS={
       sky:[
         "the sky looks blue because air scatters shorter (blue) wavelengths of sunlight far more than longer ones — a process called rayleigh scattering.",
         "on a clear day the other colours reach your eye almost undisguised, but blue is the one that bounces around the most.",
@@ -811,17 +787,35 @@
         "data is the fuel — the more varied it is, the more robust the learning.",
         "an ai is only as good as the data it was taught on."
       ]
-    };
-    const pool=base[word]||GENERIC;
+  };
+  function factsFor(word){
+    if(FACTS[word])return FACTS[word].slice();
+    const pool=BASE_FACTS[word]||GENERIC;
     return pool.slice().sort(()=>Math.random()-0.5).slice(0,3);
   }
-
+  // real facts only (no GENERIC filler) in their original, logically-ordered
+  // sequence — used to compose the straightforward chat answer, as opposed
+  // to factsFor()'s shuffled pool used for spawning graph nodes.
+  function factsForAnswer(word){
+    return FACTS[word]||BASE_FACTS[word]||null;
+  }
+  function composeDirectAnswer(keywords){
+    const parts=[];
+    const seen=new Set();
+    for(const word of (keywords||[])){
+      const facts=factsForAnswer(word);
+      if(!facts)continue;
+      for(const f of facts.slice(0,2)){
+        if(seen.has(f))continue;
+        seen.add(f);parts.push(f);
+      }
+    }
+    return parts.slice(0,6);
+  }
   const STOP=["a","an","the","is","are","was","were","be","been","being","do","does","did","to","of","in","on","for","and","or","but","why","how","what","when","where","who","it","its","so","my","me","even","can","with","you","i","that","this","there","than","as","at","by","from","your","have","has","not","just","which","will","would","should","could","about"];
-
   // ---------- state ----------
   const NODES=[];
   const EDGES=[];
-  const pinned=[];
   const chat=[];
   let W=0,H=0;
   const cam={zoom:1,tx:0,ty:0};
@@ -833,11 +827,10 @@
   let scrollY=0, mpx=0, mpy=0;
   let pinching=null;
   let chatBusy=false;
-
+  let tooltipPinned=null; // node whose fact tooltip is tap-pinned open (touch)
   // world <-> screen
   function toScreen(wx,wy){return {x:wx*cam.zoom+cam.tx,y:wy*cam.zoom+cam.ty};}
   function toWorld(sx,sy){return {x:(sx-cam.tx)/cam.zoom,y:(sy-cam.ty)/cam.zoom};}
-
   // ---------- sizing ----------
   function sizeGraph(){
     const wrap=graphCanvas.parentElement;
@@ -858,12 +851,10 @@
     hctx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
   }
   window.addEventListener('resize',()=>{sizeGraph();sizeHero();rebuildHero();});
-
   function rnd(a,b){return a+Math.random()*(b-a)}
   function colorOf(n){return PALETTE[n.color%PALETTE.length]}
   function nodeRadius(n){return (4+Math.min(9,Math.sqrt(n.conn)/2))*cam.zoom}
   function nodeWorldR(n){return 4+Math.min(9,Math.sqrt(n.conn)/2)}
-
   // ---------- camera helpers ----------
   function setZoom(nz,aboutScreenX,aboutScreenY){
     if(aboutScreenX===undefined){aboutScreenX=W/2;aboutScreenY=H/2;}
@@ -879,7 +870,6 @@
     const zb=document.getElementById('zoom-badge');
     if(zb)zb.textContent=Math.round(cam.zoom*100)+'%';
   }
-
   // ---------- physics ----------
   function step(){
     for(let i=0;i<NODES.length;i++){
@@ -893,7 +883,8 @@
           a.x+=dx*push;a.y+=dy*push;b.x-=dx*push;b.y-=dy*push;
           continue;
         }
-        let f=(1400*d2)/(d2+1400);f=Math.min(f,60);
+        if(d>340)continue; // outside interaction range — let gravity handle far-flung nodes
+        let f=Math.min(2200/d,50);
         dx/=d;dy/=d;
         a.x+=dx*f*0.12;a.y+=dy*f*0.12;
         b.x-=dx*f*0.12;b.y-=dy*f*0.12;
@@ -910,12 +901,11 @@
     }
     for(let n of NODES){
       if(n.pinned)continue;
-      n.vx=(n.vx||0)*0.92+(-n.x)*0.0016;
-      n.vy=(n.vy||0)*0.92+(-n.y)*0.0016;
+      n.vx=(n.vx||0)*0.88+(-n.x)*0.006;
+      n.vy=(n.vy||0)*0.88+(-n.y)*0.006;
       n.x+=n.vx;n.y+=n.vy;
     }
   }
-
   function draw(){
     gctx.clearRect(0,0,W,H);
     const z=cam.zoom;
@@ -965,7 +955,7 @@
     for(let n of NODES){
       const p=toScreen(n.x,n.y);
       const r=nodeRadius(n);
-      let show=n.group?showGroupLabels:(n.connector?showGroupLabels:mouseOver(n));
+      let show=n.group?showGroupLabels:(n.connector?showGroupLabels:false);
       if(!show)continue;
       const label=truncateLabel(n.group||n.label,z);
       const tw=gctx.measureText(label).width+12*z;
@@ -990,18 +980,40 @@
     }
     updateStats();
   }
-
   function truncateLabel(str,z){
     const max=26;
     if(str.length<=max)return str;
     return str.slice(0,max-1)+'…';
   }
-
   function mouseOver(n){
     const w=toWorld(mouseX,mouseY);
     return Math.hypot(w.x-n.x,w.y-n.y)<nodeWorldR(n)+8/cam.zoom;
   }
-
+  // ---------- fact tooltip (full text on hover / tap) ----------
+  const tooltipEl=document.getElementById('fact-tooltip');
+  function updateTooltip(node,clientX,clientY){
+    if(!tooltipEl)return;
+    if(!node){tooltipEl.classList.remove('show');return;}
+    let src,text;
+    if(node.group){src='keyword cluster';text=node.group;}
+    else if(node.connector){src='shared idea — links two clusters';text=node.label;}
+    else {src=node.src?('fact, from “'+node.src+'”'):'fact';text=node.label;}
+    tooltipEl.innerHTML='<span class="tt-src">'+escapeHtml(src)+'</span>'+escapeHtml(text);
+    const wrapRect=graphCanvas.parentElement.getBoundingClientRect();
+    let left=clientX-wrapRect.left+14;
+    let top=clientY-wrapRect.top+14;
+    tooltipEl.style.left=left+'px';
+    tooltipEl.style.top=top+'px';
+    tooltipEl.classList.add('show');
+    requestAnimationFrame(()=>{
+      const tw=tooltipEl.offsetWidth,th=tooltipEl.offsetHeight;
+      let cl=left,ct=top;
+      if(cl+tw>wrapRect.width-8)cl=Math.max(8,clientX-wrapRect.left-tw-14);
+      if(ct+th>wrapRect.height-8)ct=Math.max(8,wrapRect.height-th-8);
+      tooltipEl.style.left=cl+'px';
+      tooltipEl.style.top=ct+'px';
+    });
+  }
   function updateStats(){
     const ne=document.getElementById('stat-n'),ee=document.getElementById('stat-e');
     const eh=document.getElementById('emptyhint');
@@ -1009,7 +1021,6 @@
     if(ee)ee.textContent=EDGES.length;
     if(eh)eh.style.display=(NODES.length===0)?'block':'none';
   }
-
   function loop(t){
     try{
       if(NODES.length)step();
@@ -1018,7 +1029,6 @@
     }catch(err){ /* never let one bad frame kill the loop */ }
     requestAnimationFrame(loop);
   }
-
   // ---------- hero ambient ----------
   let heroNodes=[];
   const heroLinks=[];
@@ -1037,7 +1047,6 @@
       }
   }
   function rebuildHero(){ /* keep positions, recompute none needed */ }
-
   function drawHero(){
     hctx.clearRect(0,0,window.innerWidth,window.innerHeight);
     const sx=scrollY*0.15+mpx*-10;
@@ -1063,7 +1072,6 @@
     mpx=(e.clientX/window.innerWidth-0.5)*2;
     mpy=(e.clientY/window.innerHeight-0.5)*2;
   },{passive:true});
-
   // ---------- DOM parallax on cards ----------
   function applyParallax(){
     const cards=document.querySelectorAll('.card');
@@ -1076,27 +1084,34 @@
       c.style.transform='translateY('+shift.toFixed(1)+'px)';
     });
   }
-
   // ---------- extraction ----------
+  // canonicalKeyword resolves a raw word to a FACTS key, trying the word itself
+  // first and then its stem — so "networks"/"transformers" still match
+  // "network"/"transformer", and short-but-real keywords like "ai" aren't
+  // thrown out by a length filter.
+  function canonicalKeyword(w){
+    if(FACTS[w])return w;
+    const s=stemWord(w);
+    if(FACTS[s])return s;
+    return null;
+  }
   function extract(raw){
-    const words=raw.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>2);
-    const stems={};
-    for(let k in FACTS){ if(k.length>2) stems[k]=k; }
+    const words=raw.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>1);
     const known=[];
     const seen=new Set();
     for(let w of words){
-      if(FACTS[w]&&!seen.has(w)){known.push(w);seen.add(w);}
+      const c=canonicalKeyword(w);
+      if(c&&!seen.has(c)){known.push(c);seen.add(c);}
     }
     const unknowns=[];
     for(let w of words){
       if(STOP.includes(w))continue;
-      if(FACTS[w])continue;
+      if(canonicalKeyword(w))continue;
       if(!seen.has(w)){unknowns.push(w);seen.add(w);}
       if(unknowns.length>=3)break;
     }
     return {known,unknowns};
   }
-
   // ---------- mutations ----------
   function ensureGroup(word){
     let g=NODES.find(n=>n.group===word);
@@ -1107,6 +1122,9 @@
     }
     return g;
   }
+  function edgeExists(a,b){
+    return EDGES.some(e=>(e.a===a&&e.b===b)||(e.a===b&&e.b===a));
+  }
   function addFactFor(word,fact){
     const g=ensureGroup(word);
     const n={label:fact,src:word,color:Math.floor(Math.random()*PALETTE.length),
@@ -1115,14 +1133,13 @@
     EDGES.push({a:g,b:n,len:rnd(55,90)});
     g.conn++;
     for(let other of NODES){
-      if(other.group&&other!==g){
+      if(other.group&&other!==g&&!edgeExists(g,other)){
         EDGES.push({a:g,b:other,len:rnd(90,150)});
         g.conn++;other.conn++;
       }
     }
     pushLog(word,fact);
   }
-
   // ---------- visible feed ----------
   function pushLog(word,fact){
     const logs=document.getElementById('logs');
@@ -1134,7 +1151,6 @@
     logs.appendChild(row);
     logs.scrollTop=logs.scrollHeight;
   }
-
   // ---------- rapid fire ----------
   function fireFacts(word){
     const facts=factsFor(word);
@@ -1144,7 +1160,6 @@
       addFactFor(word,facts[i]);i++;
     },260);
   }
-
   // ---------- persistence (graph survives reload; chat does not) ----------
   function saveGraph(){
     try{
@@ -1174,7 +1189,6 @@
       return true;
     }catch(e){return false;}
   }
-
   // ---------- shared-word connectors ----------
   // find words that appear inside the facts of two (or more) keyword clusters,
   // add a small connector node in the middle and link the clusters to it.
@@ -1191,28 +1205,41 @@
     return w;
   }
   function freqWord(w){
-    // a whitelist of genuinely connective words
-    return ['light','color','colour','water','air','sun','time','energy','shape','motion','rule','word','idea','fact','link','part','kind','way','need','make','see','use','wavelength','wave','particle','molecule','memory','nerve','signal','brain','network','connection','pattern','data','prediction','scatter','visible','warm','cool','blue','red','green','white','short','long','tiny','hot','cold'].includes(w);
+    // a whitelist of genuinely connective, on-topic words — deliberately excludes
+    // meta/self-referential filler like "fact" and "word" that shows up in almost
+    // every entry regardless of subject, which used to dominate the connectors.
+    return ['light','color','colour','water','air','sun','time','energy','shape','motion','rule','wavelength','wave','particle','molecule','memory','nerve','signal','brain','network','connection','pattern','data','prediction','scatter','visible','warm','cool','blue','red','green','white','short','long','tiny','hot','cold'].includes(w);
   }
   function finishConnectors(){
     const groups=groupLabels();
     if(groups.length<2)return;
+    // never let a connector steal the exact name of a keyword cluster already
+    // on the graph — the old check only excluded the two groups being linked
+    // in *this* pair, so a third, unrelated cluster (e.g. "light" typed as
+    // its own prompt) could still collide with a "light" connector spawned
+    // between two other clusters.
+    const groupNames=new Set(groups.map(g=>g.group));
     const used=new Set(connectorNodes().map(c=>c.label));
     let added=0;
     for(let i=0;i<groups.length;i++){
       for(let j=i+1;j<groups.length;j++){
         const a=groups[i],b=groups[j];
         const fa=factLabelsInGroup(a),fb=factLabelsInGroup(b);
-        const shared=[]
         const wa=new Set(),wb=new Set();
         fa.forEach(f=>tokenizeFact(f.label).forEach(w=>{if(CONNECTOR_WORDS.includes(w)||freqWord(w))wa.add(w);}));
         fb.forEach(f=>tokenizeFact(f.label).forEach(w=>{if(CONNECTOR_WORDS.includes(w)||freqWord(w))wb.add(w);}));
-        // shared words in insertion-friendly order, skipping already-used connectors
-        for(let w of wa){if(wb.has(w)&&!used.has(w)&&!shared.includes(w))shared.push(w);}
-        // if all distinct connectors are taken for this pair, allow reuse only as a fallback
-        if(shared.length===0){for(let w of wa){if(wb.has(w)&&!shared.includes(w))shared.push(w);}}
+        // best: a shared word that's neither an active connector label nor
+        // the name of any keyword cluster already on the graph
+        let shared=[];
+        for(let w of wa){if(wb.has(w)&&!used.has(w)&&!groupNames.has(w)&&!shared.includes(w))shared.push(w);}
+        // fallback: reuse a connector label already in play, but still never
+        // collide with a cluster's own name. if even that comes up empty —
+        // meaning the only word the two clusters share is itself the name of
+        // a cluster already on the graph — skip this pair rather than ever
+        // drawing a connector with a duplicate label.
+        if(shared.length===0){for(let w of wa){if(wb.has(w)&&!groupNames.has(w)&&!shared.includes(w))shared.push(w);}}
         if(shared.length===0)continue;
-        const chosen=shared.find(s=>s!==a.group&&s!==b.group)||shared[0];
+        const chosen=shared[0];
         used.add(chosen);
         const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
         const c={group:null,label:chosen,color:2 /*mint*/,conn:2,x:cx+rnd(-10,10),y:cy+rnd(-10,10),pinned:false,connector:true,age:0};
@@ -1229,7 +1256,6 @@
   function factLabelsInGroup(g){
     return NODES.filter(n=>!n.group&&EDGES.some(e=>e.a===g&&e.b===n));
   }
-
   // ---------- cumulative answer (the graph is the memory) ----------
   function factLabels(){
     const seen=new Set(),out=[];
@@ -1264,31 +1290,31 @@
     chatwin.scrollTop=chatwin.scrollHeight;
     pendingAnswer=m;
   }
-  function buildAnswerHTML(){
+  function buildAnswerHTML(keywords){
     const facts=factLabels();
     const groups=groupLabels();
     const connectors=connectorNodes();
     const topicChips=groups.map(g=>'<span class="cnx">'+escapeHtml(g.group)+'</span>').join('')||'<span class="cnx">?</span>';
-    const kws=groups.map(g=>g.group).join(', ')||'the topic';
     const shared=connectors.map(c=>c.label);
-    let conclusion;
-    if(shared.length){
-      const shareList=shared.slice(0,3).join(', ');
-      conclusion='putting it together: the graph connects <b>'+escapeHtml(kws)+'</b> through the shared idea'+
-        (shared.length>1?'s':'')+' <b>'+escapeHtml(shareList)+(shared.length>3?' and more':'')+'</b>. '+
-        'click the facts in the graph to see how each one feeds the answer.';
+
+    // the actual answer — plain sentences, no graph-clicking required
+    const directParts=composeDirectAnswer(keywords);
+    let answer;
+    if(directParts.length){
+      answer=directParts.map(escapeHtml).join(' ');
     }else{
-      conclusion='about <b>'+escapeHtml(kws)+'</b>: the facts are laid out in the graph. keep asking and the shared ideas between topics will appear as mint connector nodes.';
+      const kws=(keywords&&keywords.length)?keywords.join(', '):'that';
+      answer='no stored facts for <b>'+escapeHtml(kws)+'</b> yet — try something closer to sky/colour/light, ai/learning/neural networks, or the brain, and i can give you a straight answer.';
     }
-    let html='<div class="concl">'+conclusion+'</div>';
+
+    let html='<div class="concl">'+answer+'</div>';
     html+='<div class="connects">'+topicChips+'</div>';
-    if(shared.length) html+='<div class="connects">shared words: '+shared.map(s=>'<span class="cnx">“'+escapeHtml(s)+'”</span>').join('')+'</div>';
-    const src=facts.slice(0,8).map(f=>'<span>'+escapeHtml(truncate(f.label,110))+'</span>').join('');
-    if(facts.length) html+='<div class="sources"><b>'+facts.length+' facts in the graph · </b>'+src+'</div>';
+    if(shared.length) html+='<div class="connects"><span class="label">also connects to:</span>'+shared.map(s=>'<span class="cnx">“'+escapeHtml(s)+'”</span>').join('')+'</div>';
+    if(facts.length) html+='<div class="sources">the graph below now holds <b>'+facts.length+' facts</b> — optional to explore, not required to read the answer above.</div>';
     return html;
   }
-  function postAnswer(){
-    const html=buildAnswerHTML();
+  function postAnswer(keywords){
+    const html='<div class="answer show"><div class="body">'+buildAnswerHTML(keywords)+'</div></div>';
     if(pendingAnswer){
       const body=pendingAnswer.querySelector('.body');
       body.innerHTML=html;
@@ -1309,7 +1335,6 @@
   function escapeHtml(s){
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-
   // ---------- chat ----------
   const chatwin=document.getElementById('chatwin');
   function addMessage(role,text,facts){
@@ -1331,7 +1356,6 @@
     chatwin.appendChild(m);
     chatwin.scrollTop=chatwin.scrollHeight;
   }
-
   // ---------- events ----------
   const rect=()=>graphCanvas.getBoundingClientRect();
   let moved=false;
@@ -1347,7 +1371,13 @@
       cam.ty+=(e.clientY-panning.py);
       panning.px=e.clientX;panning.py=e.clientY;
     }
+    const hoverHit=NODES.find(n=>mouseOver(n));
+    graphCanvas.style.cursor=hoverHit?'pointer':(panning?'grabbing':'default');
+    if(!tooltipPinned&&!dragging&&!panning)updateTooltip(hoverHit,e.clientX,e.clientY);
   },{passive:true});
+  graphCanvas.addEventListener('mouseleave',()=>{
+    if(!tooltipPinned)updateTooltip(null);
+  });
   graphCanvas.addEventListener('mousedown',e=>{
     const r=rect();mouseX=e.clientX-r.left;mouseY=e.clientY-r.top;
     moved=false;
@@ -1364,23 +1394,24 @@
   },{passive:false});
   graphCanvas.addEventListener('click',e=>{
     if(moved){return;}
-    const r=rect();const x=e.clientX-r.left,y=e.clientY-r.top;
     const hit=NODES.find(n=>mouseOver(n));
-    if(hit&&!pinned.includes(hit)){pinned.push(hit);}
-    if(hit)postAnswer();
+    tooltipPinned=(hit&&tooltipPinned!==hit)?hit:null;
+    updateTooltip(tooltipPinned,e.clientX,e.clientY);
   });
-
-  // touch: one-finger pan, two-finger pinch
+  // touch: one-finger pan, two-finger pinch, tap-to-pin the fact tooltip
   let touches=new Map();
+  let touchTapStart=null,touchMovedFar=false,singleTouchTap=false;
   graphCanvas.addEventListener('touchstart',e=>{
     e.preventDefault();
     const r=rect();
     [...e.touches].forEach(t=>touches.set(t.identifier,{x:t.clientX-r.left,y:t.clientY-r.top}));
     if(touches.size===2){
+      singleTouchTap=false;
       const ts=[...touches.values()];
       pinching={d:Math.hypot(ts[0].x-ts[1].x,ts[0].y-ts[1].y),cx:(ts[0].x+ts[1].x)/2,cy:(ts[0].y+ts[1].y)/2};
     } else if(touches.size===1){
       const t=[...touches.values()][0];
+      touchTapStart={x:t.x,y:t.y};touchMovedFar=false;singleTouchTap=true;
       const w=toWorld(t.x,t.y);
       const hit=NODES.find(n=>mouseOverAt(t.x,t.y));
       if(hit){dragging=hit;offsetX=w.x-hit.x;offsetY=w.y-hit.y;hit.pinned=true;}
@@ -1391,12 +1422,14 @@
     const r=rect();
     const ts=[...e.touches].map(t=>({x:t.clientX-r.left,y:t.clientY-r.top}));
     if(ts.length===2&&pinching){
+      singleTouchTap=false;
       const d=Math.hypot(ts[0].x-ts[1].x,ts[0].y-ts[1].y);
       const cx=(ts[0].x+ts[1].x)/2,cy=(ts[0].y+ts[1].y)/2;
       setZoom(cam.zoom*(d/pinching.d),cx,cy);
       pinching.d=d;pinching.cx=cx;pinching.cy=cy;
     } else if(ts.length===1&&dragging){
       mouseX=ts[0].x;mouseY=ts[0].y;
+      if(touchTapStart&&Math.hypot(mouseX-touchTapStart.x,mouseY-touchTapStart.y)>8)touchMovedFar=true;
       const w=toWorld(mouseX,mouseY);
       dragging.x=w.x-offsetX;dragging.y=w.y-offsetY;
     } else if(ts.length===1&&panning===null&&!dragging&&pinching){
@@ -1405,20 +1438,24 @@
     touches=new Map();e.touches.forEach(t=>touches.set(t.identifier,{x:t.clientX-r.left,y:t.clientY-r.top}));
   },{passive:false});
   graphCanvas.addEventListener('touchend',e=>{
-    touches.clear();pinching=null;dragging=null;
+    if(singleTouchTap&&!touchMovedFar&&touchTapStart){
+      const r=rect();
+      const hit=mouseOverAt(touchTapStart.x,touchTapStart.y);
+      tooltipPinned=(hit&&tooltipPinned!==hit)?hit:null;
+      updateTooltip(tooltipPinned,r.left+touchTapStart.x,r.top+touchTapStart.y);
+    }
+    touches.clear();pinching=null;dragging=null;touchTapStart=null;singleTouchTap=false;
   });
   function mouseOverAt(sx,sy){
     const w=toWorld(sx,sy);
     return NODES.find(n=>Math.hypot(w.x-n.x,w.y-n.y)<nodeWorldR(n)+8/cam.zoom);
   }
-
   // camera controls
   document.getElementById('zoom-in').addEventListener('click',()=>setZoom(cam.zoom*1.3));
   document.getElementById('zoom-out').addEventListener('click',()=>setZoom(cam.zoom/1.3));
   document.getElementById('zoom-home').addEventListener('click',()=>{
     cam.zoom=1;cam.tx=W/2;cam.ty=H/2;updateZoomBadge();
   });
-
   document.getElementById('go').addEventListener('click',()=>{
     const raw=document.getElementById('prompt').value.trim();
     if(!raw||chatBusy)return;
@@ -1442,22 +1479,19 @@
     keywords.forEach((word,i)=>setTimeout(()=>fireFacts(word),i*120+rnd(40,200)));
     const doneAt=((total-1)*120+400+3*260);
     setTimeout(()=>{
-      postAnswer();
+      postAnswer(keywords);
       saveGraph();
       chatBusy=false;
     },doneAt);
     document.getElementById('prompt').value='';
   });
-
   document.getElementById('prompt').addEventListener('keydown',e=>{
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('go').click();}
   });
-
   // glossary accordion
   document.querySelectorAll('.term h3').forEach(h=>{
     h.addEventListener('click',()=>{h.parentElement.classList.toggle('open');});
   });
-
   // scroll reveal
   try{
     const seen=new Set();
@@ -1467,7 +1501,6 @@
     },{threshold:0.12});
     document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
   }catch(e){}
-
   // ---------- init ----------
   sizeGraph();sizeHero();buildHero();
   loadGraph();
