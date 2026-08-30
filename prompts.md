@@ -763,3 +763,49 @@ session, and every answer is read out of that accumulated web.
   (6,10,13,19,25), `< 6` fact rows per run (panels reset correctly),
   every run reaching `answered` with streamed text. `index.html` still
   byte-for-byte untouched.
+## 18 — live browser bug: facts appeared but the graph froze and nothing followed
+
+"i'm looking at it live — keywords show, facts show, but then it just freezes.
+no answer ever comes."
+
+the root cause was a silent NaN that had been hiding in the geometry the whole
+time. `smooth()` and `catmull()` read `.x`/`.y` off their control points, but
+every caller (`growCablePath`, `growArbor`) passes flat `[x, y]` arrays — so
+every cable and arbor was secretly filled with NaN control points. the cable
+drawing functions tolerated it (they just drew nothing), but the *fire impulse*
+calls `createRadialGradient(pos.x, pos.y, ...)` on that NaN position, and that
+throws — killing the whole `requestAnimationFrame` loop mid-reveal. fact rows
+were revealed, then the engine died before connections/forming/answer.
+
+fix: `catmull` now reads `p0[0]/p0[1]` and returns an array point; `smooth`
+slices the end arrays. verified in a real headless Chrome session (not just the
+stub-DOM harness): facts reveal, cables launch, impulses fire, the answer
+streams, and the input re-enables. the same session proved it across three
+consecutive accumulating prompts with no exception.
+
+## 19 — everything CMU Typewriter, per-keyword fact series, question pinned to top, no scroll
+
+"everything should use cmu typewriter even prompt box and each keyword should
+fire a series of facts, different series of facts for each keyword, which show
+in the graph and make it grow" + "the question after enter should go up and
+below that only all this must happen — why scroll" + "fact series must also be
+randomised across everything, nothing is fixed".
+
+- every `font-family` is now `"CMU Typewriter Text", "Courier New", monospace`,
+  including the prompt box (`#input`) and the canvas font; the now-unused
+  cmu-serif and cmu-sans-serif stylesheet links were dropped (only
+  cmu-typewriter-text loads).
+- per-keyword fact series: new `generatePerKeyword(chips, chain)` births a
+  small randomised series (2–3 fresh nodes) *per keyword*, each tagged with its
+  keyword so it lands in that keyword's own panel (`fkeys` showed `sky`/`blue`,
+  then `moon`/`round`/`bright`). the drawing pool is the keyword's closest
+  facts **plus a shuffle of the whole memory**, so no run is fixed — every
+  pair is drawn at random. all of them persist in `memory` (the graph grows);
+  a capped subset joins the current round's firing and answer.
+- question pinned to the top: the landing `.about` now collapses
+  (`max-height:0; overflow:hidden`) when hidden instead of leaving ~600px of
+  dead space, and `appendTurn` inserts the question *above* the working zone
+  and appends the answer *below* it, so the column reads top-to-bottom —
+  question → keywords/facts → graph → answer. `scrollBottom` anchors to
+  `scrollTop = 0` instead of forcing a jump to the bottom. measured in real
+  Chrome: the question sits at y=4 with the graph and answer laid out below it.

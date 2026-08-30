@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ask anything</title>
 <link rel="preconnect" href="https://fonts.cdnfonts.com">
-<link href="https://fonts.cdnfonts.com/css/cmu-serif" rel="stylesheet">
-<link href="https://fonts.cdnfonts.com/css/cmu-sans-serif" rel="stylesheet">
 <link href="https://fonts.cdnfonts.com/css/cmu-typewriter-text" rel="stylesheet">
 <style>
   :root {
@@ -27,7 +25,7 @@
   html, body { height: 100%; background: var(--bg); overflow: hidden; }
 
   body {
-    font-family: "CMU Sans Serif", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "CMU Typewriter Text", "Courier New", monospace;
     -webkit-font-smoothing: antialiased;
     color: var(--ink);
   }
@@ -50,9 +48,9 @@
   /* ================================================================ */
   .about {
     margin: auto; width: min(92%, 760px); text-align: center;
-    opacity: 1; transition: opacity 0.7s ease, margin-top 0.7s ease;
+    opacity: 1; transition: opacity 0.7s ease, margin-top 0.7s ease, max-height 0.7s ease;
   }
-  .about.hide { opacity: 0; margin-top: -40px; pointer-events: none; }
+  .about.hide { opacity: 0; margin-top: -40px; max-height: 0; overflow: hidden; pointer-events: none; }
 
   .kicker {
     display: inline-block; font-family: "CMU Typewriter Text", monospace;
@@ -61,14 +59,14 @@
   }
 
   .title {
-    font-family: "CMU Serif", Georgia, serif;
+    font-family: "CMU Typewriter Text", "Courier New", monospace;
     font-size: clamp(30px, 6vw, 52px); line-height: 1.05;
     font-weight: 500; color: var(--ink);
     text-shadow: 0 0 40px rgba(230,185,110,0.15);
   }
   .subtitle {
     margin: 18px auto 0 auto; max-width: 560px;
-    font-family: "CMU Serif", Georgia, serif; font-size: 17px; line-height: 1.6;
+    font-family: "CMU Typewriter Text", "Courier New", monospace; font-size: 17px; line-height: 1.6;
     color: var(--faint); font-style: italic;
   }
 
@@ -90,7 +88,7 @@
     color: var(--honey); letter-spacing: 0.1em;
   }
   .how .step h4 {
-    font-family: "CMU Serif", Georgia, serif; font-weight: 500;
+    font-family: "CMU Typewriter Text", "Courier New", monospace; font-weight: 500;
     font-size: 15px; color: var(--ink); margin-bottom: 7px;
   }
   .how .step p {
@@ -156,7 +154,7 @@
   .fkg .fdot {
     flex: 0 0 auto; width: 15px; height: 15px; border-radius: 50%;
     border: 1px solid var(--honey-soft); color: var(--honey);
-    font-family: "CMU Sans Serif", sans-serif; font-size: 8.5px; font-weight: 700;
+    font-family: "CMU Typewriter Text", "Courier New", monospace; font-size: 8.5px; font-weight: 700;
     display: inline-flex; align-items: center; justify-content: center;
   }
   .fkg .fl {
@@ -188,12 +186,12 @@
     width: min(100%, 760px); margin: 0 auto 34px auto; text-align: left;
   }
   .turn .user {
-    font-family: "CMU Serif", Georgia, serif; font-size: 16px;
+    font-family: "CMU Typewriter Text", "Courier New", monospace; font-size: 16px;
     color: var(--ink); line-height: 1.5; margin-bottom: 6px;
     padding-left: 14px; border-left: 2px solid var(--honey-soft);
   }
   .turn .assn {
-    font-family: "CMU Serif", Georgia, serif; font-size: 16.5px;
+    font-family: "CMU Typewriter Text", "Courier New", monospace; font-size: 16.5px;
     line-height: 1.9; color: rgba(239,231,212,0.95);
     white-space: pre-wrap;
     padding-left: 14px;
@@ -226,6 +224,7 @@
   .askline { display: flex; justify-content: center; gap: 10px; width: min(100%, 700px); }
   .askline input {
     flex: 1 1 auto; font-size: 16px; letter-spacing: 0.02em; color: var(--ink);
+    font-family: "CMU Typewriter Text", "Courier New", monospace;
     background: rgba(20,16,9,0.8); border: 1px solid var(--dim); border-radius: 999px;
     padding: 14px 24px; outline: none; min-width: 0;
     transition: border-color 0.4s ease, box-shadow 0.4s ease;
@@ -644,22 +643,22 @@
   }
   function catmull(p0, p1, p2, p3, t) {
     var t2 = t * t, t3 = t2 * t;
-    return {
-      x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
-      y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)
-    };
+    var x0 = p0[0], y0 = p0[1], x1 = p1[0], y1 = p1[1], x2 = p2[0], y2 = p2[1], x3 = p3[0], y3 = p3[1];
+    return [
+      0.5 * ((2 * x1) + (-x0 + x2) * t + (2 * x0 - 5 * x1 + 4 * x2 - x3) * t2 + (-x0 + 3 * x1 - 3 * x2 + x3) * t3),
+      0.5 * ((2 * y1) + (-y0 + y2) * t + (2 * y0 - 5 * y1 + 4 * y2 - y3) * t2 + (-y0 + 3 * y1 - 3 * y2 + y3) * t3)
+    ];
   }
   function smooth(pts) {
     if (pts.length < 3) return pts;
-    var out = [pts[0]];
+    var out = [pts[0].slice()];
     for (var i = 1; i < pts.length - 2; i++) {
       var p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2];
       for (var s = 1; s <= 5; s++) {
-        var p = catmull(p0, p1, p2, p3, s / 5);
-        out.push([p.x, p.y]);
+        out.push(catmull(p0, p1, p2, p3, s / 5));
       }
     }
-    out.push(pts[pts.length - 1]);
+    out.push(pts[pts.length - 1].slice());
     return out;
   }
 
@@ -1031,6 +1030,58 @@
     return chips[0];
   }
 
+  // each keyword gives birth to its own little series of brand-new facts.
+  // a series is a small chain: from a seed fact matched to the keyword, knit
+  // fresh statements that stay tagged with that keyword, so they belong to the
+  // same panel and the graph visibly grows per keyword.
+  function factsForKeyword(kw) {
+    var pool = expand(kw);
+    var out = [];
+    for (var i = 0; i < memory.length; i++) {
+      var cell = memory[i];
+      for (var pi = 0; pi < pool.length; pi++) {
+        if (cell.k.indexOf(pool[pi]) >= 0) { out.push(cell); break; }
+      }
+    }
+    return out;
+  }
+  function birthFact(seedA, seedB, kw, chain, already) {
+    var text = buildSentence([seedA.text, seedB.text]);
+    var tags = [kw];
+    for (var t2 = 0; t2 < seedA.k.length && tags.length < 10; t2++) if (tags.indexOf(seedA.k[t2]) < 0) tags.push(seedA.k[t2]);
+    for (var t3 = 0; t3 < seedB.k.length && tags.length < 10; t3++) if (tags.indexOf(seedB.k[t3]) < 0) tags.push(seedB.k[t3]);
+    var m = {
+      id: nextId++, text: text, ch: chain, ho: 3, k: tags,
+      born: 0, generated: true, seq: 0,
+      fired: false, litIdx: 0, flashT: 0, drain: 0, charge: 0,
+      x: 0, y: 0, qx: 0, qy: 0, arbors: []
+    };
+    memory.push(m);
+    return m;
+  }
+  function generatePerKeyword(chips, chain) {
+    var created = [];
+    var everything = memory.slice();
+    for (var c = 0; c < chips.length; c++) {
+      var kw = chips[c];
+      var fam = factsForKeyword(kw);
+      if (!fam.length) fam = chainCells(chain).length ? chainCells(chain) : everything;
+      var pool2 = fam.concat(shuffle(everything));
+      var series = 2 + rInt(2);
+      var guard = 0;
+      while (series > 0 && guard < 80) {
+        guard++;
+        var a = pool2[rInt(pool2.length)];
+        var b = pool2[rInt(pool2.length)];
+        if (!a || !b || a === b) continue;
+        var fresh = birthFact(a, b, kw, chain, created);
+        created.push(fresh);
+        series--;
+      }
+    }
+    return created;
+  }
+
   // ------------------------------------------------------- answering
 
   function setBox(off) {
@@ -1039,7 +1090,7 @@
     if (off) inputEl.blur();
   }
   function scrollBottom() {
-    logEl.scrollTop = logEl.scrollHeight;
+    logEl.scrollTop = 0;
   }
 
   function resetWorking() {
@@ -1055,19 +1106,28 @@
   }
 
   function appendTurn(promptText) {
-    var turn = document.createElement('div');
-    turn.className = 'turn';
+    // fresh stage each question: question pinned at the top, working animation
+    // in the middle, answer streaming below — all on one screen, no scrolling.
+    var oldTurns = logEl.querySelectorAll('.turn');
+    for (var ok = 0; ok < oldTurns.length; ok++) oldTurns[ok].parentNode.removeChild(oldTurns[ok]);
+
+    var qTurn = document.createElement('div');
+    qTurn.className = 'turn qturn';
     var u = document.createElement('div');
     u.className = 'user';
     u.textContent = promptText;
+    qTurn.appendChild(u);
+    logEl.insertBefore(qTurn, workingEl);
+
+    var aTurn = document.createElement('div');
+    aTurn.className = 'turn aturn';
     var a = document.createElement('div');
     a.className = 'assn';
     var tx = document.createElement('span');
     tx.className = 'ats';
     a.appendChild(tx);
-    turn.appendChild(u);
-    turn.appendChild(a);
-    logEl.appendChild(turn);
+    aTurn.appendChild(a);
+    logEl.appendChild(aTurn);
     return { el: a, tx: tx };
   }
 
@@ -1107,8 +1167,7 @@
         if (seedSel.indexOf(cand) < 0) seedSel.push(cand);
       }
     }
-    var genSeed = seedSel.slice(0, 2);
-    var newborn = generateFacts(genSeed, chips, chain);
+    var newborn = generatePerKeyword(chips, chain);
     runCount++;
     if (newborn.length) { placeGenerated(); for (var nb2 = 0; nb2 < newborn.length; nb2++) { newborn[nb2].qx = newborn[nb2].x; newborn[nb2].qy = newborn[nb2].y; newborn[nb2].arbors = growArbor(newborn[nb2].x, newborn[nb2].y); } }
 
@@ -1134,9 +1193,12 @@
       for (var g = 0; g < gt.length && sel.length < nTarget; g++) sel.push(gt[g]);
     }
 
-    // the born facts are part of this round's firing & answer
-    sel = sel.slice(0, 6 - newborn.length);
-    sel = sel.concat(newborn);
+    // the born facts are part of this round's firing & answer. cap the round so
+    // panels stay legible; the rest of each keyword's series still accumulates
+    // in memory so the graph keeps growing regardless.
+    var keepNew = Math.min(newborn.length, 7);
+    sel = sel.slice(0, Math.max(1, 4 - Math.floor(keepNew / 2)));
+    sel = sel.concat(newborn.slice(0, keepNew));
 
     var spine0 = chainCells(chain, 1).filter(function (x) { return sel.indexOf(x) >= 0; })[0];
     var ordered = sel.slice().sort(function (a, b) { return a.ho - b.ho || (Math.random() < 0.5 ? -1 : 1); });
@@ -1324,7 +1386,7 @@
           grCtx.lineWidth = 1.1;
           grCtx.stroke();
           grCtx.fillStyle = ACCENT;
-          grCtx.font = '700 9px "CMU Sans Serif", sans-serif';
+          grCtx.font = '700 9px "CMU Typewriter Text", "Courier New", monospace';
           grCtx.textAlign = 'center'; grCtx.textBaseline = 'middle';
           grCtx.fillText(String(nd2.litIdx), nd2.qx + 10, nd2.qy - 5);
         }
@@ -1578,7 +1640,7 @@
   function tick(ts) {
     var dt = lastT ? Math.min(ts - lastT, 50) : 16;
     lastT = ts;
-    now = ts; frame = ts;
+    now = performance.now(); frame = now;
     update(dt);
     drawBackground();
     if (synthesis || runCount > 0) {
