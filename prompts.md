@@ -510,3 +510,55 @@ existing facts.
   synthesised sentence is verified by a node smoke harness (boot +
   ten real prompts incl. gibberish → all reach forming, chains resolve:
   sky→science, recursion→machine, weather→nature, love→myth).
+
+## 13 — staged sequence: question to the top, group of facts, nerve connections, full sentences
+
+so like after user enters prompt the prompt goes to the top of the
+page, from it the animation of keywords being chosen, and then groups
+of facts are there on screen, from which connections are made just
+like brain nerve connections — you watch how it's made — and then they
+become sentences, and the final answer is not one sentence but full
+sentences, given from the connections, from the facts.
+
+- the piece was rebuilt around a visible four-movement sequence:
+  keywords → facts → connections → answer, shown by a small stage
+  indicator that lights each phase in turn (and by the actual motion
+  on the plexus).
+- the question itself now arrives at the top of the page (the prompt
+  pill floats at ~13% height, above the plexus), and the whole run
+  flows downward from it: keywords chips type themselves in beneath
+  it; then the group of facts lights up; then the nerve links grow
+  from the question down through the group.
+- domain widened hard: ~165 facts across fourteen clusters (cosmos,
+  earth, sea, life, body, mind, craft, story, machine, code, math,
+  language, society, everything) with a broadened SYN synonym map, so
+  almost any question has a group to wake. selection now scores every
+  cell, keeps the winning chain's best up to six, then lets other
+  chains' hits join the group, then fills from ground truth — the
+  answer is a web, not a filing cabinet.
+- the group is a real group: up to six facts (min four), each firing
+  in turn with a numbered badge showing the order it was shown in;
+  the winning chain watermark lights as the group wakes.
+- connections are made visibly, brain-style: each link is an actual
+  nerve that grows point by point with a bright tip travelling the
+  path, an impulse follows over the freshly laid fibre, and the edge
+  then cools into the tissue. question→fact1→fact2→… in order, plus
+  one lateral skip-nerve between the first and third facts — the
+  brain's redundant route — drawn but not sentenced.
+- the answer is a paragraph of full sentences, not one line: every
+  fact in the group becomes its own sentence (capitalised, full stop,
+  joined), typed out sentence by sentence with a small breath at each
+  full stop, delivered with dashed threads streaming from each lit
+  fact down into the card.
+- review catches: `t0` had been dropped from the state variables
+  (strict-mode crash) — restored; SYN{y question} carried a stray
+  `polishwed` token and DRIZZLE carried `dslswap` — scrubbed; "what
+  is gravity" padded with sun/sky filler, so the cosmos chain gained
+  three gravity-relevant facts (orbits as falling, the sun's pull,
+  lighter/heavier falling together) and now answers head-on; answer
+  card re-tuned to sit at the bottom without swallowing the stage
+  line even at six sentences.
+- verified by a node harness that pumps the real animation loop:
+  phase sequence observed on every prompt is keywords > facts >
+  connections > forming > answered > settling > idle, with group
+  sizes 4–6 and full-sentence answers incl. the gibberish fallback.

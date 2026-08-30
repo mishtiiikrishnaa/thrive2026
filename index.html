@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>type something and watch what connects</title>
+<title>ask the web a question</title>
 <link rel="preconnect" href="https://fonts.cdnfonts.com">
 <link href="https://fonts.cdnfonts.com/css/cmu-serif" rel="stylesheet">
 <link href="https://fonts.cdnfonts.com/css/cmu-sans-serif" rel="stylesheet">
@@ -31,65 +31,103 @@
   #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   .title {
-    position: absolute; top: 4.5%; left: 0; right: 0;
+    position: absolute; top: 3.2%; left: 0; right: 0;
     text-align: center; pointer-events: none; user-select: none;
   }
   .title h1 {
     font-family: "CMU Serif", Georgia, "Times New Roman", serif;
-    font-weight: 500; font-size: clamp(18px, 2.5vw, 30px);
+    font-weight: 500; font-size: clamp(18px, 2.4vw, 28px);
     letter-spacing: 0.02em; line-height: 1.4; color: var(--ink);
   }
   .hint {
-    margin-top: 8px; font-size: 10px; letter-spacing: 0.28em;
+    margin-top: 6px; font-size: 10px; letter-spacing: 0.26em;
     text-transform: uppercase; color: var(--dim);
     font-family: "CMU Typewriter Text", monospace;
   }
 
-  .promptbox {
-    position: absolute; bottom: 4%; left: 0; right: 0;
+  .askline {
+    position: absolute; top: 9.5%; left: 0; right: 0;
     display: flex; justify-content: center; gap: 10px; padding: 0 20px;
-    user-select: none;
+    user-select: none; z-index: 3;
   }
-  .promptbox input {
-    flex: 0 1 420px;
-    font-size: 15px; letter-spacing: 0.02em; color: var(--ink);
-    background: rgba(18,18,28,0.75);
+  .askline input {
+    flex: 0 1 520px;
+    font-size: 16px; letter-spacing: 0.02em; color: var(--ink);
+    background: rgba(18,18,28,0.78);
     border: 1px solid var(--dim); border-radius: 999px;
-    padding: 13px 22px; outline: none;
+    padding: 14px 24px; outline: none;
     transition: border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease;
   }
-  .promptbox input::placeholder { color: #565662; }
-  .promptbox input:focus {
+  .askline input::placeholder { color: #5c5c68; font-style: italic; }
+  .askline input:focus {
     border-color: rgba(255,166,201,0.6);
-    box-shadow: 0 0 0 1px rgba(255,166,201,0.25), 0 0 26px rgba(255,166,201,0.12);
+    box-shadow: 0 0 0 1px rgba(255,166,201,0.25), 0 0 30px rgba(255,166,201,0.12);
   }
-  .promptbox input:disabled { opacity: 0.4; }
-  .promptbox button {
+  .askline input:disabled { opacity: 0.35; }
+  .askline button {
     font-size: 14px; letter-spacing: 0.05em; color: var(--ink);
     background: rgba(255,166,201,0.12);
     border: 1px solid rgba(255,166,201,0.4); border-radius: 999px;
-    padding: 0 24px; cursor: pointer; outline: none;
+    padding: 0 26px; cursor: pointer; outline: none;
     transition: background 0.3s ease, opacity 0.4s ease;
   }
-  .promptbox button:hover:not([disabled]) { background: rgba(255,166,201,0.24); }
-  .promptbox button[disabled] { opacity: 0.35; cursor: default; }
+  .askline button:hover:not([disabled]) { background: rgba(255,166,201,0.24); }
+  .askline button[disabled] { opacity: 0.35; cursor: default; }
+
+  /* keywords chosen */
+  .kwstrip {
+    position: absolute; top: 16.6%; left: 0; right: 0;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    padding: 0 20px; opacity: 0; transform: translateY(-6px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    pointer-events: none; user-select: none; z-index: 2;
+  }
+  .kwstrip.show { opacity: 1; transform: translateY(0); }
+  .kwstrip.fade { opacity: 0; transform: translateY(-6px); }
+  .kwstrip .stagekw {
+    font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--dim); font-family: "CMU Typewriter Text", monospace;
+  }
+  .kwstrip .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+  .kwstrip .chip {
+    font-size: 12px; letter-spacing: 0.03em; color: var(--accent);
+    background: rgba(255,166,201,0.08);
+    border: 1px solid rgba(255,166,201,0.35); border-radius: 999px;
+    padding: 5px 13px; font-family: "CMU Sans Serif", sans-serif;
+  }
+
+  /* phases of a question */
+  .stages {
+    position: absolute; bottom: 16%; left: 0; right: 0;
+    display: flex; justify-content: center; align-items: center; gap: 0;
+    font-family: "CMU Typewriter Text", monospace;
+    font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase;
+    pointer-events: none; user-select: none; z-index: 2;
+    transition: opacity 0.6s ease;
+  }
+  .stages.off { opacity: 0; }
+  .stages .stage-label { color: var(--dim); transition: color 0.5s ease, text-shadow 0.5s ease; }
+  .stages .stage-label.on { color: var(--accent); text-shadow: 0 0 12px rgba(255,166,201,0.45); }
+  .stages .sep { margin: 0 10px; color: #2c2c34; font-size: 8px; }
+  .stages .sep.on { color: rgba(255,166,201,0.4); }
 
   .reply {
-    position: absolute; left: 0; right: 0; bottom: 13%;
+    position: absolute; left: 0; right: 0; bottom: 5%;
     text-align: center; pointer-events: none; user-select: none;
     opacity: 0; transform: translateY(8px);
-    transition: opacity 1.2s ease, transform 1.2s ease;
+    transition: opacity 1.2s ease, transform 1.2s ease; z-index: 2;
   }
   .reply.show { opacity: 1; transform: translateY(0); }
   .reply p {
     display: inline-block; max-width: 700px; margin: 0 auto;
-    padding: 14px 28px; font-family: "CMU Serif", Georgia, serif;
-    font-size: 16px; line-height: 1.75; color: var(--ink);
+    padding: 13px 26px; font-family: "CMU Serif", Georgia, serif;
+    font-size: 14.5px; line-height: 1.62; color: var(--ink);
     background: rgba(10,10,15,0.88);
     border: 1px solid rgba(255,166,201,0.12);
     box-shadow: 0 0 60px rgba(255,166,201,0.06);
     border-radius: 10px;
     white-space: pre-wrap;
+    text-align: left;
   }
 </style>
 </head>
@@ -99,16 +137,27 @@
     <canvas id="stage"></canvas>
 
     <div class="title">
-      <h1>type something and watch what connects.</h1>
-      <div class="hint">any prompt — the answer assembles from the stored facts</div>
+      <h1>ask the web a question.</h1>
+      <div class="hint">keywords &middot; facts &middot; connections &middot; answer</div>
+    </div>
+
+    <div class="askline">
+      <input id="input" type="text" placeholder="any question…" autocomplete="off" spellcheck="false">
+      <button id="submit">ask</button>
+    </div>
+
+    <div class="kwstrip" id="kwstrip">
+      <span class="stagekw">keywords</span><span class="chips" id="chips"></span>
+    </div>
+
+    <div class="stages off" id="stages">
+      <span class="stage-label" data-s="0">keywords</span><span class="sep">·</span>
+      <span class="stage-label" data-s="1">facts</span><span class="sep">·</span>
+      <span class="stage-label" data-s="2">connections</span><span class="sep">·</span>
+      <span class="stage-label" data-s="3">answer</span>
     </div>
 
     <div class="reply"><p id="replytext"></p></div>
-
-    <div class="promptbox">
-      <input id="input" type="text" placeholder="ask something..." autocomplete="off" spellcheck="false">
-      <button id="submit">ask</button>
-    </div>
   </div>
 
 <script>
@@ -119,113 +168,221 @@
   var inputEl = document.getElementById('input');
   var submitEl = document.getElementById('submit');
   var replyEl = document.getElementById('replytext');
+  var chipsEl = document.getElementById('chips');
+  var kwstripEl = document.getElementById('kwstrip');
+  var stagesEl = document.getElementById('stages');
 
   var ACCENT = '#ffa6c9';
   var GREY = '#e9e9ee';
+  var CHIP_MS = 26;      // per character while a keyword types itself in
+  var KW_STAGGER = 150;  // between keywords
 
   // ------------------------------------------------------- the domain
+  //
+  // fourteen clusters, ~165 facts. no fixed topic set — keywords are
+  // pulled from the question itself and the closest facts answer.
 
   var CHAINS = {};
-
-  var CHAIN_KEYS = ['science', 'craft', 'myth', 'mind', 'machine', 'nature', 'everything'];
+  var CHAIN_KEYS = ['cosmos', 'earth', 'sea', 'life', 'body', 'mind', 'craft', 'story', 'machine', 'code', 'math', 'language', 'society', 'everything'];
 
   function chain(key, label, anchor, facts) {
     CHAINS[key] = { label: label, anchor: anchor, facts: facts };
   }
 
-  chain('science', 'science', [0.68, 0.22], [
-    ['the sky looks blue during the day.', 1, ['sky', 'blue', 'day']],
-    ['sunlight is many colors mixed.', 1, ['sunlight', 'color', 'light']],
-    ['each color of light has its own wavelength.', 1, ['wavelength', 'color', 'light']],
-    ['blue light\u2019s wavelength is short.', 2, ['wavelength', 'blue']],
-    ['short wavelengths scatter off small particles.', 2, ['scatter', 'particle', 'wave']],
-    ['the air is full of tiny gas molecules.', 2, ['air', 'molecule', 'gas', 'atmosphere']],
-    ['that scattering is rayleigh scattering.', 3, ['scatter', 'rayleigh', 'light']],
-    ['water bends light as it enters and leaves it.', 2, ['water', 'bend', 'refract', 'light']],
-    ['ice is water slowed into a quiet lattice.', 3, ['ice', 'cold', 'freeze', 'winter', 'snow']],
-    ['fire is light and heat grown out of fuel.', 3, ['fire', 'heat', 'flame', 'burn', 'warm']],
-    ['sound is a shake passing through the air.', 2, ['sound', 'noise', 'music', 'vibrate', 'hear']],
-    ['heavy things fall because mass pulls on mass.', 3, ['gravity', 'fall', 'weight', 'heavy', 'pull']]
+  chain('cosmos', 'cosmos', [0.34, 0.30], [
+    ['the sky looks blue because short wavelengths scatter most.', 1, ['sky', 'blue', 'scatter', 'wavelength']],
+    ['the sun is a star.', 1, ['sun', 'star']],
+    ['sunlight is a mixture of every visible color.', 2, ['sunlight', 'light', 'color']],
+    ['gravity bends light and time.', 3, ['gravity', 'bend', 'light', 'time']],
+    ['more mass means more gravity.', 2, ['gravity', 'mass', 'heavy', 'pull']],
+    ['light takes time to cross a distance.', 2, ['light', 'time', 'distance', 'travel', 'space']],
+    ['stars are suns seen from very far away.', 3, ['star', 'sun', 'distance', 'galaxy', 'space']],
+    ['moon reflects the light of the sun.', 2, ['moon', 'reflect', 'sun', 'light', 'night']],
+    ['a planet is a world circling a star.', 2, ['planet', 'orbit', 'world', 'mars']],
+    ['orbits are falling carried by sideways motion.', 2, ['orbit', 'fall', 'gravity', 'moon', 'speed']],
+    ['the sun holds the planets with its pull.', 3, ['gravity', 'sun', 'planet', 'pull', 'hold']],
+    ['heavier and lighter things fall together.', 2, ['gravity', 'fall', 'weight', 'heavy', 'feather']],
+    ['the deeper you look, the further back in time you see.', 3, ['telescope', 'past', 'time', 'far', 'space']],
+    ['ice is water slowed into a crystal lattice.', 2, ['ice', 'freeze', 'cold', 'crystal', 'winter']],
+    ['fire is light and heat released from fuel.', 2, ['fire', 'heat', 'flame', 'burn', 'fuel', 'warm']]
   ]);
 
-  chain('craft', 'craft', [0.18, 0.54], [
-    ['a poem is writing arranged in lines.', 1, ['poem', 'line', 'write']],
-    ['lines use rhythm and sometimes rhyme.', 1, ['rhyme', 'rhythm', 'line']],
-    ['a haiku is a short fixed-shape poem.', 1, ['haiku', 'poem', 'short']],
-    ['a haiku has three lines.', 2, ['haiku', 'line']],
-    ['its first line has five syllables.', 2, ['syllable', 'line']],
-    ['free verse skips fixed rhyme.', 2, ['verse', 'rhyme', 'free']],
-    ['line breaks control the reader\u2019s pause.', 3, ['line', 'pause', 'reader']],
-    ['a story is a way of carrying attention somewhere.', 2, ['story', 'narrative', 'tale', 'plot', 'fiction']],
-    ['a song is a poem held together by pitch.', 3, ['song', 'music', 'melody', 'sing', 'lyric']],
-    ['an image can carry meaning without a single word.', 2, ['image', 'picture', 'art', 'draw', 'visual']],
-    ['metaphor is saying one thing to mean another.', 3, ['metaphor', 'symbol', 'compare', 'figure']]
+  chain('earth', 'earth', [0.62, 0.28], [
+    ['rain is water returning from the sky.', 1, ['rain', 'water', 'sky', 'cloud', 'wet']],
+    ['clouds are droplets of water.', 2, ['cloud', 'water', 'sky', 'drop']],
+    ['air higher up is thinner and colder.', 2, ['air', 'atmosphere', 'cold', 'height', 'thin']],
+    ['wind is air moving toward lower pressure.', 2, ['wind', 'air', 'pressure', 'move', 'weather']],
+    ['a river ends where it meets the ocean.', 1, ['river', 'ocean', 'end', 'flow', 'water']],
+    ['mountains wear down grain by grain.', 2, ['mountain', 'erosion', 'sand', 'rock', 'wear']],
+    ['soil is weathered rock and old life.', 3, ['soil', 'earth', 'root', 'dead', 'rock']],
+    ['water flows downhill along the gentlest path.', 2, ['water', 'flow', 'valley', 'downhill', 'river']],
+    ['winter happens when the axis leans away from the sun.', 3, ['winter', 'season', 'cold', 'axis', 'sun']],
+    ['thunder is the noise of air torn by lightning.', 2, ['thunder', 'lightning', 'storm', 'noise', 'air']],
+    ['rocks record the order of the earth\u2019s changes.', 3, ['rock', 'layer', 'fossil', 'history', 'earth']],
+    ['volcanoes carry the ground\u2019s old fire upward.', 3, ['volcano', 'lava', 'magma', 'fire', 'mountain']]
   ]);
 
-  chain('myth', 'myth', [0.26, 0.22], [
-    ['arjuna is a warrior of the mahabharata.', 1, ['arjuna', 'mahabharata', 'warrior']],
-    ['arjuna hesitates before kurukshetra.', 1, ['arjuna', 'hesitate', 'kurukshetra']],
-    ['his relatives stand on the enemy side.', 1, ['family', 'enemy', 'relatives']],
-    ['krishna drives arjuna\u2019s chariot.', 2, ['krishna', 'chariot', 'arjuna']],
-    ['krishna says fighting is his duty.', 2, ['krishna', 'duty', 'fight']],
-    ['this idea of duty is called dharma.', 2, ['dharma', 'duty']],
-    ['skipping that duty would cause more harm.', 3, ['duty', 'harm', 'choose', 'choice']],
-    ['indra throws thunder from the open sky.', 3, ['indra', 'thunder', 'storm', 'god']],
-    ['agni carries offerings between the worlds.', 3, ['agni', 'offer', 'ritual', 'sacrifice']],
-    ['sita walks through fire and comes out whole.', 3, ['sita', 'rama', 'fire', 'trial', 'pure']],
-    ['icarus falls for flying too near the sun.', 2, ['icarus', 'fly', 'ambition', 'sun', 'wax']],
-    ['orpheus looks back and loses what he loved.', 2, ['orpheus', 'love', 'look', 'loss', 'underworld']]
+  chain('sea', 'sea', [0.80, 0.42], [
+    ['the sea keeps its own unhurried time.', 1, ['sea', 'ocean', 'wave', 'tide']],
+    ['tides rise with the pull of the moon.', 1, ['tide', 'moon', 'pull', 'sea', 'ocean']],
+    ['waves move energy, not the water.', 2, ['wave', 'energy', 'move', 'sea', 'water']],
+    ['salt enters the sea from the land.', 2, ['salt', 'sea', 'land', 'river', 'taste']],
+    ['most life under water never sees the sun.', 3, ['deep', 'sea', 'life', 'fish', 'dark']],
+    ['a river\u2019s mouth mixes fresh and salt water.', 2, ['river', 'mouth', 'fresh', 'salt', 'delta']],
+    ['the sea is water that has not stopped moving.', 2, ['water', 'sea', 'move', 'motion']],
+    ['sailors read the sea\u2019s surfaces.', 3, ['sailor', 'boat', 'map', 'surface', 'sea']],
+    ['an island is a mountain with the sea around it.', 2, ['island', 'mountain', 'land', 'sea']],
+    ['foam is air trapped by salt and motion.', 3, ['foam', 'air', 'wave', 'bubble', 'salt']]
   ]);
 
-  chain('mind', 'mind', [0.48, 0.42], [
-    ['signals travel along nerves as pulses.', 1, ['nerve', 'signal', 'pulse', 'neuron']],
-    ['a cell fires when inputs cross a threshold.', 1, ['threshold', 'fire', 'cell']],
-    ['stronger signals make it fire more.', 1, ['signal', 'strong', 'fire']],
-    ['cells pass the signal on at a synapse.', 2, ['synapse', 'signal', 'connect']],
-    ['repeated firing strengthens the connection.', 2, ['repeat', 'strengthen', 'memory', 'habit']],
-    ['that is how patterns become memory.', 2, ['memory', 'remember', 'pattern', 'forget']],
-    ['the whole network settles into a response.', 3, ['network', 'settle', 'response', 'answer']],
-    ['fear is the mind rehearsing a disaster.', 3, ['fear', 'anxiety', 'worry', 'afraid', 'danger']],
-    ['sleep is where the day gets sorted and filed.', 3, ['sleep', 'dream', 'night', 'rest', 'bed']],
-    ['attention is a clear, narrow stream.', 2, ['attention', 'focus', 'notice', 'concentrate']],
-    ['a feeling that lasts becomes a habit of the heart.', 3, ['feeling', 'emotion', 'habit', 'heart', 'love']]
+  chain('life', 'life', [0.47, 0.40], [
+    ['plants turn sunlight into food.', 1, ['plant', 'sun', 'food', 'grow', 'leaf']],
+    ['a seed carries everything it needs to begin.', 2, ['seed', 'grow', 'begin', 'plant', 'new']],
+    ['animals breathe what plants make.', 1, ['animal', 'breathe', 'air', 'plant', 'oxygen']],
+    ['every living thing is built of cells.', 2, ['cell', 'life', 'body', 'tiny']],
+    ['species change slowly in response to their world.', 3, ['evolve', 'change', 'species', 'adapt', 'survival']],
+    ['animals sleep to repair and sort.', 2, ['animal', 'sleep', 'rest', 'repair', 'night']],
+    ['a tree is a slow forest of its own branches.', 2, ['tree', 'branch', 'wood', 'grow', 'trunk']],
+    ['plants keep reaching for water.', 3, ['water', 'plant', 'root', 'dry', 'thirst']],
+    ['flowers trade beauty for a little pollen travel.', 3, ['flower', 'pollen', 'bee', 'beauty', 'seed']],
+    ['growth needs food, warmth and time.', 2, ['growth', 'grow', 'food', 'need', 'warm', 'time']]
   ]);
 
-  chain('machine', 'machine', [0.80, 0.64], [
-    ['a program runs steps one after another.', 1, ['program', 'code', 'run', 'step']],
-    ['some steps only run if a condition holds.', 1, ['condition', 'if', 'branch', 'logic']],
-    ['a loop repeats until a condition stops it.', 1, ['loop', 'repeat', 'condition']],
-    ['a function is a named, callable block.', 2, ['function', 'name', 'call', 'block']],
-    ['recursion is a function calling itself.', 2, ['recursion', 'function', 'self']],
-    ['the deepest call returns last.', 2, ['call', 'deep', 'return', 'stack']],
-    ['answers assemble from the deepest call up.', 3, ['assemble', 'answer', 'return']],
-    ['a network is many small pieces passing messages.', 3, ['network', 'message', 'node', 'link', 'internet']],
-    ['data is recorded experience arranged in rows.', 2, ['data', 'record', 'number', 'database', 'table']],
-    ['a bug is the gap between plan and behaviour.', 3, ['bug', 'error', 'mistake', 'fault', 'wrong']],
-    ['an ai is weighted links learning from examples.', 3, ['ai', 'artificial', 'learning', 'model', 'intelligence']]
+  chain('body', 'body', [0.63, 0.56], [
+    ['the heart is a muscle that never rests.', 1, ['heart', 'muscle', 'pulse', 'beat']],
+    ['blood carries oxygen through every part.', 2, ['blood', 'oxygen', 'carry', 'body', 'heart']],
+    ['bones anchor the body and protect its soft parts.', 2, ['bone', 'body', 'strength', 'protect', 'skeleton']],
+    ['the skin is the oldest sense.', 1, ['skin', 'touch', 'hand', 'feel', 'sense']],
+    ['lungs exchange the air you own with the air beyond.', 2, ['lung', 'air', 'breathe', 'breath']],
+    ['sleep lets the brain file the day.', 2, ['sleep', 'brain', 'rest', 'remember', 'night']],
+    ['pain is a signal tuning toward healing.', 2, ['pain', 'signal', 'heal', 'hurt', 'warning']],
+    ['the brain uses more energy than its weight.', 3, ['brain', 'energy', 'mind', 'fuel']],
+    ['the body cools by sweating into the air.', 2, ['sweat', 'cool', 'heat', 'skin', 'body']],
+    ['hunger is the body checking its stores.', 2, ['hunger', 'food', 'energy', 'need', 'eat']],
+    ['cells repair during the quiet of sleep.', 3, ['cell', 'repair', 'night', 'rest', 'grow']]
   ]);
 
-  chain('nature', 'nature', [0.63, 0.52], [
-    ['the sea keeps its own unhurried time.', 1, ['sea', 'ocean', 'wave', 'tide', 'salt']],
-    ['a river eventually finds the lowest road.', 1, ['river', 'stream', 'flow', 'path', 'valley']],
-    ['rain is water returning from where it rose.', 1, ['rain', 'water', 'cloud', 'storm', 'wet']],
-    ['a forest is a city of trees and quiet politics.', 2, ['forest', 'tree', 'wood', 'plant', 'leaf']],
-    ['mountains wear down into the sand they stand on.', 2, ['mountain', 'hill', 'rock', 'stone', 'sand']],
-    ['stars are fires too far away to burn us.', 2, ['star', 'space', 'night', 'sky', 'galaxy']],
-    ['wind is the air changing its mind.', 3, ['wind', 'air', 'breeze', 'weather', 'blow']],
-    ['the moon is a clock made of light and rock.', 3, ['moon', 'night', 'tide', 'clock', 'rock']]
+  chain('mind', 'mind', [0.33, 0.50], [
+    ['the brain is a network of cells signalling each other.', 1, ['brain', 'network', 'cell', 'signal', 'neuron']],
+    ['a thought is a pattern of firing.', 2, ['thought', 'idea', 'brain', 'pattern', 'fire']],
+    ['repeated firing makes a path easier to use.', 1, ['practice', 'memory', 'repeat', 'path', 'habit', 'learn']],
+    ['memory builds by association, not by filing.', 3, ['memory', 'associate', 'recall', 'forget', 'past']],
+    ['sleep is where the day\u2019s work gets filed.', 2, ['sleep', 'memory', 'file', 'day', 'process']],
+    ['attention is a narrow, strong beam.', 2, ['attention', 'focus', 'distraction', 'notice']],
+    ['fear rehearses what could go wrong.', 2, ['fear', 'anxiety', 'worry', 'safety', 'predict']],
+    ['emotion directs what gets remembered.', 3, ['emotion', 'feel', 'memory', 'strong', 'remember']],
+    ['awareness is the part that watches.', 3, ['awareness', 'mindful', 'watch', 'present', 'consciousness']],
+    ['habit is thought worn smooth by use.', 2, ['habit', 'repeat', 'routine', 'change', 'use']],
+    ['questions keep the mind open and ready.', 2, ['question', 'curiosity', 'learning', 'ask', 'mind']]
   ]);
 
-  chain('everything', 'everything', [0.30, 0.72], [
-    ['every fact here is already sitting in the web.', 1, ['fact', 'answer', 'know', 'exist', 'everything', 'stored']],
-    ['nothing arrives out of nowhere.', 1, ['cause', 'reason', 'origin', 'why', 'source', 'begin']],
-    ['answers are rarely far from what you already noticed.', 1, ['answer', 'notice', 'solve', 'question', 'clue', 'hint']],
-    ['a word means what the words around it give it.', 2, ['word', 'meaning', 'language', 'speak', 'say']],
-    ['what repeats becomes part of the pattern.', 2, ['pattern', 'repeat', 'again', 'cycle', 'habit']],
-    ['a small change can move a whole chain.', 2, ['change', 'small', 'effect', 'ripple', 'influence']],
-    ['almost everything is closer than it first looks.', 2, ['close', 'near', 'connect', 'together', 'alike']],
-    ['time feels faster when the mind is occupied.', 3, ['time', 'fast', 'slow', 'wait', 'busy', 'hurry']],
-    ['the present is where everything else arrives.', 3, ['now', 'present', 'moment', 'today', 'here', 'live']]
+  chain('craft', 'craft', [0.17, 0.38], [
+    ['a poem is language arranged in lines.', 1, ['poem', 'line', 'write', 'verse']],
+    ['a haiku is three short lines.', 1, ['haiku', 'line', 'short', 'japan']],
+    ['meter is the heartbeat of a line.', 2, ['meter', 'rhythm', 'beat', 'line', 'poem']],
+    ['rhyme is a meeting at a distance.', 2, ['rhyme', 'sound', 'echo', 'poem']],
+    ['a story is attention carried along a thread.', 1, ['story', 'plot', 'tale', 'narrative']],
+    ['metaphor is one thing standing for another.', 2, ['metaphor', 'symbol', 'meaning', 'image']],
+    ['an image shows instead of telling.', 2, ['image', 'show', 'art', 'detail', 'tell']],
+    ['paint is pigment\u2019s endurance across time.', 3, ['paint', 'art', 'color', 'canvas', 'pigment']],
+    ['music is time made audible.', 2, ['music', 'time', 'sound', 'beat', 'rhythm']],
+    ['a song joins words to a tune.', 2, ['song', 'words', 'tune', 'lyric', 'melody']],
+    ['practice is where roughness becomes craft.', 2, ['practice', 'craft', 'skill', 'repeat', 'rough']],
+    ['the empty part is where form is seen.', 3, ['space', 'design', 'negative', 'silence', 'form']]
+  ]);
+
+  chain('story', 'story', [0.21, 0.60], [
+    ['every story begins with someone wanting.', 1, ['story', 'want', 'desire', 'begin', 'plot']],
+    ['a hero is called and does not ask twice.', 2, ['hero', 'call', 'adventure', 'quest']],
+    ['myth is a culture dreaming out loud.', 1, ['myth', 'culture', 'legend', 'dream', 'tale']],
+    ['epic is a story as large as a world.', 2, ['epic', 'poem', 'legend', 'world', 'tale']],
+    ['arjuna hesitates before the war of kurukshetra.', 1, ['arjuna', 'hesitate', 'war', 'kurukshetra']],
+    ['krishna points arjuna to duty beyond consequence.', 2, ['krishna', 'duty', 'arjuna', 'teach', 'dharma']],
+    ['sita walks through fire and comes out whole.', 3, ['sita', 'fire', 'trial', 'rama', 'purity']],
+    ['icarus flies too near the sun and falls.', 2, ['icarus', 'fly', 'sun', 'wax', 'ambition']],
+    ['orpheus turns back and loses what he loved.', 2, ['orpheus', 'love', 'look', 'loss', 'grief']],
+    ['odysseus is a man of many turnings.', 3, ['odysseus', 'journey', 'home', 'wander', 'greek']],
+    ['a flood cleans and starts the story again.', 3, ['flood', 'myth', 'begin', 'water', 'world']],
+    ['every folktale is a handled gem.', 3, ['folktale', 'fable', 'told', 'moral', 'tale']]
+  ]);
+
+  chain('machine', 'machine', [0.73, 0.68], [
+    ['a lever trades distance for force.', 1, ['lever', 'force', 'distance', 'simple', 'machine']],
+    ['a wheel repeats its stillness as it rolls.', 1, ['wheel', 'motion', 'circle', 'axle', 'roll']],
+    ['engines burn fuel to spin their load.', 2, ['engine', 'fuel', 'energy', 'motor', 'power']],
+    ['gears change speed by changing size.', 2, ['gear', 'speed', 'size', 'teeth', 'machine']],
+    ['steam carries heat into motion.', 3, ['steam', 'heat', 'motion', 'boiler', 'power']],
+    ['friction turns effort into warmth.', 2, ['friction', 'heat', 'rub', 'force', 'warm']],
+    ['a machine does work with structure instead of strain.', 2, ['machine', 'work', 'structure', 'simple', 'design']],
+    ['cold shrinks and heat expands.', 2, ['cold', 'shrink', 'heat', 'expand', 'metal']],
+    ['a piston is a car\u2019s heartbeat.', 3, ['piston', 'car', 'engine', 'cylinder', 'motor']],
+    ['material is chosen by how it holds.', 3, ['material', 'steel', 'wood', 'strong', 'choose']]
+  ]);
+
+  chain('code', 'code', [0.45, 0.68], [
+    ['a program is a list of steps for a machine.', 1, ['program', 'code', 'computer', 'step', 'software']],
+    ['loops repeat until the condition turns.', 1, ['loop', 'repeat', 'condition', 'code']],
+    ['a function is a named block you can call.', 2, ['function', 'call', 'block', 'name', 'code']],
+    ['recursion is a function calling itself.', 2, ['recursion', 'function', 'self', 'depth']],
+    ['the deepest call returns last.', 3, ['deep', 'return', 'stack', 'order', 'call']],
+    ['data is recorded fact arranged for use.', 2, ['data', 'record', 'store', 'database', 'fact']],
+    ['a network is packages of messages finding routes.', 2, ['network', 'message', 'route', 'internet', 'packet']],
+    ['encryption keeps a secret travelling in public.', 3, ['secret', 'encryption', 'password', 'lock', 'private']],
+    ['a bug is a gap between plan and behaviour.', 2, ['bug', 'error', 'mistake', 'fault', 'behaviour']],
+    ['ai learns patterns from examples.', 2, ['ai', 'pattern', 'learn', 'example', 'model', 'intelligence']],
+    ['a compiler translates intent into machine.', 3, ['compiler', 'translate', 'machine', 'language', 'code']]
+  ]);
+
+  chain('math', 'math', [0.56, 0.44], [
+    ['numbers are names for how many.', 1, ['number', 'count', 'many', 'math']],
+    ['zero is the space that makes counting possible.', 2, ['zero', 'count', 'empty', 'digit', 'nothing']],
+    ['a circle has no corners and no end.', 1, ['circle', 'shape', 'round', 'geometry']],
+    ['pi is the shadow of a circle\u2019s edge.', 3, ['circle', 'pi', 'ratio', 'edge', 'round']],
+    ['division shares fairly or keeps the rest.', 2, ['divide', 'share', 'rest', 'fraction']],
+    ['a pattern repeats to make order from none.', 1, ['pattern', 'repeat', 'order', 'predict']],
+    ['probability shrinks surprise into a number.', 2, ['probability', 'chance', 'odds', 'random', 'predict']],
+    ['a proof is a path that cannot slip.', 2, ['proof', 'logic', 'reason', 'truth', 'math']],
+    ['the same shape hides in larger and larger rooms.', 3, ['pattern', 'scale', 'shape', 'similarity']],
+    ['prime numbers are the atoms of counting.', 3, ['prime', 'number', 'multiply', 'factor']],
+    ['symmetry is change that leaves the picture whole.', 2, ['symmetry', 'mirror', 'balance', 'shape', 'pattern']]
+  ]);
+
+  chain('language', 'language', [0.30, 0.72], [
+    ['a word means what its neighbours give it.', 1, ['word', 'meaning', 'context', 'sentence', 'language']],
+    ['grammar is a habit of arrangement.', 2, ['grammar', 'sentence', 'order', 'rule', 'structure']],
+    ['a sentence is a thought wearing a shape.', 2, ['sentence', 'thought', 'clause', 'shape']],
+    ['translation is carrying sense across a river.', 2, ['translation', 'language', 'meaning', 'cross', 'foreign']],
+    ['names give power over what is named.', 2, ['name', 'title', 'word', 'power', 'call']],
+    ['tone gives the same word two different lives.', 2, ['tone', 'voice', 'meaning', 'mood', 'speak']],
+    ['every language is a way of carving the world.', 3, ['language', 'world', 'see', 'speak', 'differ']],
+    ['silence is a word the ear knows.', 3, ['silence', 'pause', 'word', 'speak', 'listen']],
+    ['metaphor lets one language borrow another\u2019s light.', 3, ['metaphor', 'borrow', 'image', 'language', 'light']],
+    ['a question marks where understanding waits.', 2, ['question', 'ask', 'understand', 'mark', 'answer']]
+  ]);
+
+  chain('society', 'society', [0.66, 0.80], [
+    ['money is a promise that travels.', 1, ['money', 'trade', 'value', 'promise', 'market']],
+    ['a city is a forest of agreements.', 2, ['city', 'agreement', 'town', 'live', 'rule']],
+    ['law is a people\u2019s memory of dealing fairly.', 2, ['law', 'rule', 'judge', 'fair', 'justice']],
+    ['war is the failure of words.', 3, ['war', 'words', 'conflict', 'peace', 'failure']],
+    ['a family is the first society.', 1, ['family', 'home', 'belong', 'raise', 'child']],
+    ['borders are agreements drawn across the land.', 2, ['border', 'country', 'land', 'map', 'line']],
+    ['a market is many private needs made public.', 2, ['market', 'need', 'trade', 'money', 'price']],
+    ['history is the story we tell about the evidence.', 2, ['history', 'evidence', 'past', 'tell', 'record']],
+    ['culture is a pattern of shared attention.', 2, ['culture', 'share', 'tradition', 'ritual', 'habit']],
+    ['work is value arranged into time.', 2, ['work', 'value', 'time', 'labour', 'effort']],
+    ['books carry conversation across centuries.', 3, ['book', 'library', 'learn', 'scholar', 'read']]
+  ]);
+
+  chain('everything', 'everything', [0.86, 0.42], [
+    ['every answer here is assembled from stored facts.', 1, ['answer', 'store', 'fact', 'assemble', 'system']],
+    ['nothing arrives without a cause.', 1, ['cause', 'reason', 'origin', 'why', 'source']],
+    ['the closest fact is usually the truest one.', 2, ['true', 'close', 'fact', 'usually', 'answer']],
+    ['associations are how the web grows.', 2, ['associate', 'link', 'web', 'connect', 'grow']],
+    ['keywords are the hooks a question offers.', 2, ['keyword', 'question', 'hook', 'match', 'term']],
+    ['a question is already a small theory.', 3, ['question', 'theory', 'ask', 'think', 'hypothesis']],
+    ['facts stay quiet until a question wakes them.', 2, ['wake', 'fact', 'question', 'light', 'fire']],
+    ['connections make the answer more than its parts.', 3, ['connect', 'answer', 'part', 'whole', 'web']]
   ]);
 
   // token -> related concepts, so off-the-shelf words still land somewhere
@@ -236,10 +393,10 @@
     hot: ['fire', 'heat', 'sun', 'burn', 'warm', 'summer'],
     sun: ['light', 'heat', 'star', 'sky', 'warm', 'day'],
     night: ['moon', 'star', 'sleep', 'dark', 'dream'],
-    animal: ['bird', 'cat', 'dog', 'fish', 'fish', 'snake'],
+    animal: ['bird', 'cat', 'dog', 'fish', 'snake', 'beast'],
     eat: ['food', 'hunger', 'taste', 'meal', 'cook'],
     feel: ['love', 'fear', 'anger', 'sad', 'happy', 'emotion', 'lonely'],
-    fast: ['speed', 'quick', 'velocity', 'hurry'],
+    fast: ['speed', 'quick', 'quickly', 'velocity', 'hurry'],
     money: ['buy', 'sell', 'trade', 'work', 'price', 'market'],
     love: ['heart', 'feeling', 'loss', 'care', 'want'],
     sad: ['loss', 'cry', 'pain', 'alone', 'sorry'],
@@ -249,21 +406,29 @@
     death: ['die', 'gone', 'loss', 'end', 'grave'],
     beginning: ['start', 'born', 'origin', 'first', 'new'],
     inside: ['inner', 'within', 'core', 'heart', 'secret'],
-    together: ['connect', 'link', 'join', 'bond', 'together', 'union'],
+    together: ['connect', 'link', 'join', 'bond', 'union'],
     apart: ['separate', 'alone', 'distance', 'divide', 'split'],
     choice: ['choose', 'decision', 'duty', 'path', 'pick'],
-    grow: ['growth', 'plant', 'tall', 'life', 'increase']
+    grow: ['growth', 'growing', 'plant', 'tall', 'life', 'increase'],
+    sleep: ['rest', 'night', 'dream', 'tired'],
+    fight: ['war', 'conflict', 'struggle', 'battle', 'combat'],
+    read: ['book', 'literature', 'story', 'learn', 'page', 'writing'],
+    write: ['writing', 'words', 'poem', 'book', 'story', 'letter'],
+    learn: ['study', 'practice', 'skill', 'memory', 'teach', 'understand'],
+    become: ['turn', 'grow', 'change', 'enter'],
+    different: ['differ', 'change', 'vary', 'other'],
+    question: ['ask', 'wonder', 'doubt', 'curiosity']
   };
 
   var STOP = {};
-  ['what','is','why','how','do','does','did','the','a','an','of','to','me','my','your','can','i','you','it','that','this','and','or','but','for','about','will','would','could','should','please','tell','give','make','want','need','like','let','about','there','its','it\u2019s','when','where','who','are','were','was','be','has','have','too','so','very','really','just','about','on','in','at','with','from','by','up','down','out','over','under','again','then','than'].forEach(function (w) { STOP[w] = true; });
+  ['what','is','why','how','do','does','did','the','a','an','of','to','me','my','your','can','i','you','it','that','this','and','or','but','for','about','will','would','could','should','please','tell','give','make','want','need','like','let','there','its','it','when','where','who','are','were','was','be','has','have','too','so','very','really','just','on','in','at','with','from','by','up','down','out','over','under','again','then','than','all','any','some','much','more','most','nothing','list','explain','describe'].forEach(function (w) { STOP[w] = true; });
 
   // ------------------------------------------------------- state
 
   var W = 0, H = 0, DPR = 1;
   var cells = [];           // one per fact
   var cables = [];          // spine + decorative, smooth curves
-  var assocEdges = [];      // freshly discovered paths during a cascade
+  var assocEdges = [];      // freshly discovered paths that then cool
   var boutons = [];
   var threads = [];         // long gentle arcs
   var drizzle = [];
@@ -274,11 +439,27 @@
 
   var promptCell = null;
   var impulses = [];
+  var edgesBuilt = [];      // the answer's new connections, drawn as they grow
   var synthesis = null;     // current answering run
 
   var now = 0, frame = 0, lastT = 0, t0 = 0;
-  var state = 'idle';       // idle | running | forming | answered | settling
+  var state = 'idle';       // idle | keywords | facts | connections | forming | answered | settling
   var answerAt = 0, settleStart = 0;
+
+  var stageLabels = [];
+  for (var sl = 0; sl < stagesEl.children.length; sl++) stageLabels.push(stagesEl.children[sl]);
+
+  function setStage(n) {
+    for (var i = 0; i < stageLabels.length; i++) {
+      var label = stageLabels[i];
+      if (label.classList.contains('stage-label')) {
+        var idx = +label.getAttribute('data-s');
+        label.classList.toggle('on', idx <= n);
+      } else {
+        label.classList.toggle('on', n > 0);
+      }
+    }
+  }
 
   // ------------------------------------------------------- helpers
 
@@ -325,7 +506,6 @@
     };
   }
 
-  // smooth a polyline into a gentle curve
   function smooth(pts) {
     if (pts.length < 3) return pts;
     var out = [pts[0]];
@@ -349,11 +529,11 @@
   // a neuron's dendrites: smooth tapered branches with twigs and beads
   function growArbor(sx, sy) {
     var out = [];
-    var n = 3 + Math.floor(Math.random() * 2);
+    var n = 3;
     for (var b = 0; b < n; b++) {
       var ang = rand(0, Math.PI * 2);
       var ctrl = [[sx, sy]];
-      var len = rand(52, 92);
+      var len = rand(46, 82);
       for (var i = 1; i <= 4; i++) {
         ang += rand(-0.35, 0.35);
         ctrl.push([sx + Math.cos(ang) * len * i / 4, sy + Math.sin(ang) * len * i / 4]);
@@ -362,10 +542,8 @@
       out.push(branch);
       var tip = branch[branch.length - 1];
       addBouton(tip[0], tip[1], null);
-      // twigs near the tip
-      var twigs = 1 + Math.floor(Math.random() * 2);
-      for (var w2 = 0; w2 < twigs; w2++) {
-        var k0 = Math.max(1, branch.length - 4 - w2 * 2);
+      if (Math.random() < 0.6) {
+        var k0 = Math.max(1, branch.length - 4);
         var base = branch[k0];
         var twAng = Math.atan2(tip[1] - base[1], tip[0] - base[0]) + rand(-0.9, 0.9);
         var twig = [base];
@@ -396,8 +574,8 @@
 
   // a long shallow arc across the field
   function growArcPath() {
-    var x0 = rand(W * 0.06, W * 0.5), y0 = rand(H * 0.2, H * 0.7);
-    var x1 = rand(W * 0.55, W * 0.94), y1 = rand(H * 0.18, H * 0.76);
+    var x0 = rand(W * 0.06, W * 0.5), y0 = rand(H * 0.26, H * 0.6);
+    var x1 = rand(W * 0.55, W * 0.94), y1 = rand(H * 0.26, H * 0.7);
     var mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
     var dx = x1 - x0, dy = y1 - y0;
     var len = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -417,25 +595,25 @@
   function buildLayout() {
     cells = [];
     boutons = [];
-    var zx0 = W * 0.10, zx1 = W * 0.90, zy0 = H * 0.19, zy1 = H * 0.78;
+    var zx0 = W * 0.07, zx1 = W * 0.93, zy0 = H * 0.24, zy1 = H * 0.74;
 
     for (var c = 0; c < CHAIN_KEYS.length; c++) {
       var key = CHAIN_KEYS[c];
       var def = CHAINS[key];
-      var ax = (def.anchor[0] + rand(-0.015, 0.015)) * W;
-      var ay = (def.anchor[1] + rand(-0.015, 0.015)) * H;
+      var ax = (def.anchor[0] + rand(-0.012, 0.012)) * W;
+      var ay = (def.anchor[1] + rand(-0.012, 0.012)) * H;
       var pts = [];
 
       for (var f = 0; f < def.facts.length; f++) {
         var fact = def.facts[f];
-        var ring = fact[1] === 1 ? rand(50, 88) : fact[1] === 2 ? rand(85, 132) : rand(120, 165);
+        var ring = fact[1] === 1 ? rand(42, 74) : fact[1] === 2 ? rand(70, 110) : rand(100, 140);
         var a2 = rand(0, Math.PI * 2);
         var n = {
           text: fact[0], ch: key, ho: fact[1], k: fact[2],
-          fired: false, flashT: 0, drain: 0, charge: 0,
+          fired: false, litIdx: 0, flashT: 0, drain: 0, charge: 0,
           trem: rand(0, Math.PI * 2), glowph: rand(0, Math.PI * 2),
           sparkT: rand(800, 7000), sparkF: 0,
-          x: clamp(ax + Math.cos(a2) * ring, zx0 + 20, zx1 - 20),
+          x: clamp(ax + Math.cos(a2) * ring, zx0 + 16, zx1 - 16),
           y: clamp(ay + Math.sin(a2) * ring, zy0, zy1)
         };
         n.w = measureW(n.text);
@@ -444,20 +622,20 @@
         pts.push(n);
       }
 
-      for (var it = 0; it < 80; it++) {
+      for (var it = 0; it < 40; it++) {
         for (var i = 0; i < pts.length; i++) {
           for (var j = i + 1; j < pts.length; j++) {
             var a = pts[i], b = pts[j];
             var dx = b.x - a.x, dy = b.y - a.y;
             var d = Math.sqrt(dx * dx + dy * dy) || 0.0001;
-            var minD = (a.w + b.w) / 2 * 0.6 + 14;
+            var minD = (a.w + b.w) / 2 * 0.55 + 12;
             if (d < minD) {
               var push = (minD - d) / 2;
               a.x -= (dx / d) * push; a.y -= (dy / d) * push;
               b.x += (dx / d) * push; b.y += (dy / d) * push;
-              a.x = clamp(a.x, zx0 + 16, zx1 - 16);
+              a.x = clamp(a.x, zx0 + 14, zx1 - 14);
               a.y = clamp(a.y, zy0, zy1);
-              b.x = clamp(b.x, zx0 + 16, zx1 - 16);
+              b.x = clamp(b.x, zx0 + 14, zx1 - 14);
               b.y = clamp(b.y, zy0, zy1);
             }
           }
@@ -470,7 +648,7 @@
 
       var cx = 0, cy = 0;
       for (var m = 0; m < pts.length; m++) { cx += pts[m].x; cy += pts[m].y; }
-      chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: 170 };
+      chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: 150 };
       cells = cells.concat(pts);
     }
   }
@@ -479,27 +657,20 @@
     cables = [];
     threads = [];
     assocEdges = [];
+    edgesBuilt = [];
 
-    // spine cables per chain: ho1 -> ho2 -> ho3 (indices within chain order)
     for (var c = 0; c < CHAIN_KEYS.length; c++) {
       var key = CHAIN_KEYS[c];
       var h1 = chainCells(key, 1);
       var h2 = chainCells(key, 2);
       var h3 = chainCells(key, 3);
-      if (h1.length && h2.length) {
-        cables.push(makeCable(h1[0], h2[0]));
-      }
-      if (h2.length && h3.length) {
-        cables.push(makeCable(h2[0], h3[0]));
-      }
-      // a decorative branch for texture
-      if (h2.length > 1 && h3.length) {
-        cables.push(makeCable(h2[1 % h2.length], h3[0]));
-      }
+      if (h1.length && h2.length) cables.push(makeCable(h1[0], h2[0]));
+      if (h2.length && h3.length) cables.push(makeCable(h2[0], h3[0]));
+      if (h2.length > 1 && h3.length) cables.push(makeCable(h2[1 % h2.length], h3[0]));
     }
 
-    // one or two long connecting arcs between distant chains
-    var farPairs = 3;
+    // long gentle arcs between distant chains
+    var farPairs = 5;
     while (farPairs-- > 0) {
       var a = cells[Math.floor(Math.random() * cells.length)];
       var b = cells[Math.floor(Math.random() * cells.length)];
@@ -507,7 +678,7 @@
       threads.push({ path: smooth([[a.x, a.y], [rand(minX(), maxX()), rand(minY(), maxY())], [b.x, b.y]]), t0: 0 });
     }
 
-    for (var t = 0; t < 3; t++) {
+    for (var t = 0; t < 4; t++) {
       var arc = growArcPath();
       var mid = arc[Math.floor(arc.length / 2)];
       addBouton(mid[0], mid[1], null);
@@ -517,10 +688,10 @@
     }
   }
 
-  function minX() { return W * 0.1; }
-  function maxX() { return W * 0.9; }
-  function minY() { return H * 0.19; }
-  function maxY() { return H * 0.78; }
+  function minX() { return W * 0.07; }
+  function maxX() { return W * 0.93; }
+  function minY() { return H * 0.24; }
+  function maxY() { return H * 0.74; }
 
   function chainCells(key, ho) {
     var out = [];
@@ -537,12 +708,12 @@
   function buildDrizzle() {
     drizzle = [];
     var tries = 0;
-    while (drizzle.length < 40 && tries < 800) {
+    while (drizzle.length < 36 && tries < 800) {
       tries++;
-      var x = rand(W * 0.08, W * 0.92), y = rand(H * 0.16, H * 0.80);
+      var x = rand(W * 0.06, W * 0.94), y = rand(H * 0.16, H * 0.82);
       var ok = true;
       for (var i = 0; i < cells.length; i++) {
-        if (dist(x, y, cells[i].x, cells[i].y) < cells[i].w / 2 + 44) { ok = false; break; }
+        if (dist(x, y, cells[i].x, cells[i].y) < cells[i].w / 2 + 42) { ok = false; break; }
       }
       if (!ok) continue;
       drizzle.push({ t: DRIZZLE[Math.floor(Math.random() * DRIZZLE.length)], x: x, y: y, size: rand(8.5, 11), op: rand(0.04, 0.09), ph: rand(0, Math.PI * 2), dp: rand(0, Math.PI * 2) });
@@ -550,19 +721,16 @@
   }
 
   var DRIZZLE = [
-    'refraction', 'prism', 'ozone', 'violet', 'resonance', 'entropy', 'gravity', 'velocity', 'photon',
-    'couplet', 'sestina', 'iamb', 'trochee', 'anaphora', 'imagery', 'meter', 'cadence', 'ink',
-    'bhagavad', 'kaurava', 'partha', 'shakuni', 'svadharma', 'austerity', 'lotus', 'prayer', 'horizon',
-    'dendrite', 'axon', 'soma', 'myelin', 'glutamate', 'dopamine', 'cortex', 'hippocampus', 'resting',
-    'stack', 'heap', 'cache', 'compiler', 'pointer', 'byte', 'kernel', 'thread', 'parser',
-    'indigo', 'static', 'thunder', 'tide', 'echo', 'quartz', 'velvet', 'mist', 'fracture',
-    'kuruk', 'ganga', 'samudra', 'vayu', 'agni', 'prana', 'marga', 'seva',
-    'cadence', 'tempo', 'attack', 'decay', 'sustain', 'release', 'pulse', 'breath', 'pause'
+    'wavelength', 'gravity', 'entropy', 'photon', 'orbital', 'vapour', 'erosion', 'sediment', 'fathom', 'brine',
+    'synapse', 'dendrite', 'myelin', 'glutamate', 'cortex', 'resting', 'iamb', 'sestina', 'anaphora', 'couplet',
+    'bhagavad', 'dharma', 'icarus', 'orpheus', 'odysseus', 'piston', 'compiler', 'pointer', 'kernel',
+    'lambda', 'quadrant', 'axiom', 'cosine', 'lexicon', 'phoneme', 'syntax', 'guild', 'bazaar',
+    'cadence', 'tempo', 'attack', 'decay', 'sustain', 'release', 'breath', 'pause'
   ];
 
   function buildMotes() {
     motes = [];
-    for (var i = 0; i < 34; i++) {
+    for (var i = 0; i < 30; i++) {
       motes.push({ x: rand(0, W), y: rand(0, H), r: rand(0.6, 1.7), ph: rand(0, Math.PI * 2), vx: rand(-0.08, 0.08), vy: rand(-0.07, 0.07), pink: Math.random() < 0.3, swirl: rand(-0.005, 0.005) });
     }
   }
@@ -578,15 +746,18 @@
     tctx.fillRect(0, 0, TW, TH);
   }
 
-  // ------------------------------------------------------- answering
+  // ------------------------------------------------------- matching
 
   function tokens(text) {
     var raw = text.toLowerCase().split(/[^a-z\u2019]+/);
     var out = [];
     for (var i = 0; i < raw.length; i++) {
-      var w = raw[i].replace(/s$/, '').replace(/ing$/, '').replace(/ed$/, '').replace(/e$/, '');
-      if (!w || STOP[w]) continue;
-      out.push(w);
+      var w = raw[i];
+      if (w.length > 4 && /ing$/.test(w)) w = w.slice(0, -3);
+      if (w.length > 5 && /ed$/.test(w)) w = w.slice(0, -2);
+      if (w.length > 4 && /s$/.test(w)) w = w.slice(0, -1);
+      if (!w || w.length < 2 || STOP[w]) continue;
+      if (out.indexOf(w) < 0) out.push(w);
     }
     return out;
   }
@@ -617,7 +788,6 @@
             if (pool[pi] === keyword) { s += 1; break; }
             if (keyword.length >= 4 && pool[pi].indexOf(keyword) >= 0) { s += 0.5; break; }
           }
-          if (s > 1000) break;
         }
       }
       if (s > 0) scores[cells.indexOf(cell)] = s;
@@ -651,6 +821,8 @@
     return parts.join('  ');
   }
 
+  // ------------------------------------------------------- answering
+
   function run(text) {
     if (state !== 'idle') return;
     setBox(true);
@@ -658,96 +830,134 @@
     _deliveryCache = {};
     document.querySelector('.reply').classList.remove('show');
     replyEl.textContent = '';
+    chipsEl.textContent = '';
+    kwstripEl.classList.remove('show');
+    stagesEl.classList.remove('off');
+    setStage(-1);
     for (var i = 0; i < cells.length; i++) {
-      cells[i].fired = false; cells[i].flashT = 0; cells[i].drain = 0; cells[i].charge = 0;
+      cells[i].fired = false; cells[i].litIdx = 0; cells[i].flashT = 0; cells[i].drain = 0; cells[i].charge = 0;
     }
     for (var j = 0; j < boutons.length; j++) boutons[j].flare = 0;
     assocEdges = [];
+    impulses = [];
+    edgesBuilt = [];
+
+    var chips = tokens(text).slice(0, 6);
+    if (!chips.length) chips = ['answer'];
 
     var scores = scoreFacts(text);
     var chain = pickChain(scores);
 
-    // pick the chain's best facts
-    var sel = [];
-    if (chain) {
-      var pool = cells.filter(function (c) {
-        return c.ch === chain && scores[cells.indexOf(c)] > 0;
-      });
-      sel = pool.sort(function (a, b) { return scores[cells.indexOf(b)] - scores[cells.indexOf(a)]; })
-        .slice(0, 4);
+    // everything that scored, best first — then keep the winning
+    // chain's facts for the group, and let other chains' hits join the
+    // group too (a web, not a filing cabinet)
+    var scoredAll = cells.map(function (c, idx) { return { c: c, s: scores[idx] || 0 }; })
+      .filter(function (x) { return x.s > 0; })
+      .sort(function (a, b) { return b.s - a.s; });
+    var chainBest = scoredAll.filter(function (x) { return x.c.ch === chain; });
+    var sel = chainBest.slice(0, 6).map(function (x) { return x.c; });
+
+    if (sel.length < 4) {
+      var cross = scoredAll.filter(function (x) { return x.c.ch !== chain; });
+      for (var cs = 0; cs < cross.length && sel.length < 4; cs++) {
+        if (sel.indexOf(cross[cs].c) < 0) sel.push(cross[cs].c);
+      }
     }
 
-    if (sel.length < 3 && chain) {
-      // pad with more facts from the winning chain so the answer is richer
+    if (sel.length < 4 && chain) {
       var rest = chainCells(chain, 1).concat(chainCells(chain, 2), chainCells(chain, 3));
-      for (var r = 0; r < rest.length && sel.length < 3; r++) {
+      for (var r = 0; r < rest.length && sel.length < 4; r++) {
         if (sel.indexOf(rest[r]) < 0) sel.push(rest[r]);
       }
     }
 
-    if (sel.length < 3) {
-      // nothing scored: assemble from the ground-truth facts so every prompt answers
+    if (sel.length < 4) {
       var gt = chainCells('everything', 1).concat(chainCells('everything', 2), chainCells('everything', 3));
-      for (var g = 0; g < gt.length && sel.length < 3; g++) {
+      for (var g = 0; g < gt.length && sel.length < 4; g++) {
         if (sel.indexOf(gt[g]) < 0) sel.push(gt[g]);
       }
     }
 
-    // stable order: spine first (if in set), then by score
     var spine0 = chainCells(chain, 1)[0];
     var ordered = sel.slice().sort(function (a, b) { return a.ho - b.ho || (scores[cells.indexOf(b)] || 0) - (scores[cells.indexOf(a)] || 0); });
     if (spine0 && sel.indexOf(spine0) >= 0) {
       ordered = [spine0].concat(ordered.filter(function (x) { return x !== spine0; }));
     }
+    for (var oi = 0; oi < ordered.length; oi++) ordered[oi].litIdx = oi + 1;
 
-    promptCell = mkPromptCell(text);
-    impulses = [];
+    var answerText = compose(ordered);
 
-    var chainFired = {};
-
-    var pre = 0;
-    for (var o = 0; o < ordered.length; o++) {
-      var cur = ordered[o];
-      var delay = 240 + pre * 190;
-      var from = o === 0 ? promptCell : ordered[o - 1];
-      var cbl = cableBetween(from, cur);
-      if (!cbl) cbl = { path: growCablePath(from.qx || from.x, from.qy || from.y, cur.x, cur.y), a: from, b: cur };
-      impulses.push(mkImpulse(cbl, delay, fireNode.bind(null, cur)));
-      if (o > 0 && !cableExists(from, cur)) {
-        assocEdges.push({ a: from, b: cur, path: cbl.path, t0: performance.now() });
-      }
-      pre++;
-    }
-
+    // schedule of the four movements
     t0 = performance.now();
-
-    // the sentence that will form
+    var avgLen = Math.max(30, Math.round(answerText.length / Math.max(1, ordered.length)));
     synthesis = {
       chain: chain,
       ordered: ordered,
-      text: compose(ordered),
+      chips: chips,
+      text: answerText,
+      kwStart: t0 + 300,
+      kwStagger: KW_STAGGER,
+      kwEnd: 0,
+      factStart: 0,
+      factEach: 430,
+      factEnd: 0,
+      conStart: 0,
+      conEach: 130,
+      conEnd: 0,
+      answerStart: 0,
+      builtEdges: [],
       flowStart: 0,
-      perFact: 1050,
+      perFact: 620 + 16 * avgLen,
       typeHold: 0,
       typeIdx: 0
     };
+    synthesis.kwEnd = synthesis.kwStart + chips.length * synthesis.kwStagger + 240;
+    synthesis.factStart = synthesis.kwEnd + 360;
+    synthesis.factEnd = synthesis.factStart + (ordered.length - 1) * synthesis.factEach + 460;
+    synthesis.conStart = synthesis.factEnd + 320;
+    synthesis.conEnd = synthesis.conStart + ordered.length * synthesis.conEach;
+    // one lateral skip-nerve between the first two group members, like the
+    // brain's own redundant routes — drawn but not part of the sentences
+    var lateralT = synthesis.conEnd + 140;
+    synthesis.answerStart = lateralT + 560;
 
-    // border of the answer card, for delivery threads
-    var lastDur = 0;
-    for (var e2 = 0; e2 < impulses.length; e2++) {
-      var imp = impulses[e2];
-      var dur = imp.cum[imp.cum.length - 1] / imp.speed;
-      if (imp.started - t0 + dur > lastDur) lastDur = imp.started - t0 + dur;
+    promptCell = mkPromptCell(text);
+
+    // edges the answer will draw: question -> fact1 -> fact2 -> ...
+    var from = promptCell;
+    for (var o = 0; o < ordered.length; o++) {
+      var to = ordered[o];
+      var cbl = cableBetween(from, to);
+      if (!cbl) cbl = { path: growCablePath(from.qx || from.x, from.qy || from.y, to.x, to.y), a: from, b: to };
+      synthesis.builtEdges.push({
+        a: from, b: to, path: cbl.path,
+        cum: pathCum(cbl.path),
+        buildT: synthesis.conStart + o * synthesis.conEach,
+        launched: false
+      });
+      if (o === 0 ? !cableExists(promptCell, to) : !cableExists(from, to)) {
+        assocEdges.push({ a: from, b: to, path: cbl.path, t0: 0 });
+      }
+      from = to;
+    }
+    if (ordered.length >= 3) {
+      var la = ordered[0], lb = ordered[2];
+      var lcbl = cableBetween(la, lb);
+      if (!lcbl) lcbl = { path: growCablePath(la.qx, la.qy, lb.x, lb.y), a: la, b: lb };
+      synthesis.builtEdges.push({
+        a: la, b: lb, path: lcbl.path,
+        cum: pathCum(lcbl.path),
+        buildT: lateralT,
+        launched: false
+      });
+      if (!cableExists(la, lb)) assocEdges.push({ a: la, b: lb, path: lcbl.path, t0: 0 });
     }
 
-    setTimeout(function () {
-      state = 'forming';
-      synthesis.flowStart = performance.now();
-      document.querySelector('.reply').classList.add('show');
-    }, lastDur + 340);
-
+    setStage(0);
+    kwstripEl.classList.add('show');
     inputEl.value = '';
-    state = 'running';
+    state = 'keywords';
+    inputEl.focus();
   }
 
   function cableExists(a, b) {
@@ -760,31 +970,31 @@
   function cableBetween(a, b) {
     for (var i = 0; i < cables.length; i++) {
       if (cables[i].a === a && cables[i].b === b) return cables[i];
-      if (cables[i].a === b && cables[i].b === a) return cables[i]; // allow either direction
+      if (cables[i].a === b && cables[i].b === a) return cables[i];
     }
     return null;
   }
 
   function mkPromptCell(text) {
     var n = {
-      text: text, fired: true, flashT: 1, drain: 0, charge: 1.4,
-      x: W / 2, y: H * 0.17, w: 0, h: 22, trem: 0, glowph: 0,
-      qx: W / 2, qy: H * 0.17, arbors: []
+      text: text, fired: true, litIdx: 0, flashT: 1, drain: 0, charge: 1.4,
+      x: W / 2, y: H * 0.135, w: 0, h: 22, trem: 0, glowph: 0,
+      qx: W / 2, qy: H * 0.135, arbors: []
     };
     ctx.font = '700 13px "CMU Sans Serif", sans-serif';
     n.w = Math.min(560, ctx.measureText(text).width + 30);
     return n;
   }
 
-  function mkImpulse(cbl, delay, onEnd) {
+  function mkImpulse(cbl, started, onEnd) {
     var cum = pathCum(cbl.path);
     var len = cum[cum.length - 1];
-    var dur = clamp(len * 1.15, 300, 760);
+    var dur = clamp(len * 1.15, 320, 720);
     return {
       cum: cum, path: cbl.path, len: len,
       d: 0, speed: len / dur,
       wake: new Array(14).fill(null), wi: 0,
-      started: t0 + delay, done: false, onEnd: onEnd
+      started: started, done: false, onEnd: onEnd
     };
   }
 
@@ -797,6 +1007,24 @@
   }
 
   // ------------------------------------------------------- update
+
+  function renderChips() {
+    if (!synthesis) return;
+    var fragments = [];
+    for (var i = 0; i < synthesis.chips.length; i++) {
+      var t0c = synthesis.kwStart + i * synthesis.kwStagger;
+      if (now < t0c) break;
+      var spent = now - t0c;
+      var full = synthesis.chips[i];
+      var shown = Math.min(full.length, Math.floor(spent / CHIP_MS));
+      var s = document.createElement('span');
+      s.className = 'chip';
+      s.textContent = shown < full.length ? full.slice(0, shown) + '\u258b' : full;
+      fragments.push(s);
+    }
+    chipsEl.textContent = '';
+    for (var fi = 0; fi < fragments.length; fi++) chipsEl.appendChild(fragments[fi]);
+  }
 
   function update(dt) {
     for (var i = 0; i < cells.length; i++) {
@@ -814,12 +1042,103 @@
     if (promptCell) promptCell.charge *= 0.992;
     for (var b = 0; b < boutons.length; b++) boutons[b].flare = Math.max(0, boutons[b].flare - 0.006);
 
-    // assoc edges cool down
     for (var ae = assocEdges.length - 1; ae >= 0; ae--) {
-      if (now - assocEdges[ae].t0 > 4200) assocEdges.splice(ae, 1);
+      if (assocEdges[ae].t0 > 0 && now - assocEdges[ae].t0 > 4200) assocEdges.splice(ae, 1);
     }
 
-    // pulses
+    if (synthesis) {
+      var skd = synthesis;
+
+      // movement one: keywords chosen
+      if (state === 'keywords') {
+        renderChips();
+        if (now >= skd.factStart) { state = 'facts'; setStage(1); }
+      }
+
+      // movement two: the facts for those keywords are shown
+      if (state === 'facts') {
+        for (var fo = 0; fo < skd.ordered.length; fo++) {
+          var ft = skd.factStart + fo * skd.factEach;
+          if (now >= ft && !skd.ordered[fo].fired) fireNode(skd.ordered[fo]);
+        }
+        if (now >= skd.conStart) { state = 'connections'; setStage(2); }
+      }
+
+      // movement three: the connections are made
+      if (state === 'connections') {
+        var allLaunched = true;
+        for (var be = 0; be < skd.builtEdges.length; be++) {
+          var edge = skd.builtEdges[be];
+          if (!edge.launched) {
+            if (now >= edge.buildT) {
+              edge.launched = true;
+              impulses.push(mkImpulse(edge, now, fireNode.bind(null, edge.b)));
+            } else {
+              allLaunched = false;
+            }
+          }
+        }
+        if (allLaunched) {
+          for (var ce = 0; ce < skd.builtEdges.length; ce++) {
+            var edge2 = skd.builtEdges[ce];
+            if (edge2.buildT + 520 > now) { allLaunched = false; break; }
+          }
+        }
+        if (allLaunched && now >= skd.answerStart) {
+          state = 'forming';
+          setStage(3);
+          skd.flowStart = now;
+          document.querySelector('.reply').classList.add('show');
+        }
+      }
+
+      // movement four: the answer — a full paragraph of sentences,
+      // each one given straight from the facts the connections lit
+      while (state === 'forming' && skd.typeIdx < skd.text.length) {
+        skd.typeHold += dt;
+        if (skd.typeHold < 16) break;
+        skd.typeHold -= 16;
+        skd.typeIdx++;
+        if (skd.text[skd.typeIdx - 1] === '.') skd.typeHold -= 300; // breathe at the end of a sentence
+        replyEl.textContent = skd.text.slice(0, skd.typeIdx) + (skd.typeIdx < skd.text.length ? '\u2009\u258b' : '');
+      }
+      if (state === 'forming' && skd.typeIdx >= skd.text.length) {
+        replyEl.textContent = skd.text;
+        state = 'answered';
+        answerAt = now;
+      } else if (state === 'answered') {
+        if (now - answerAt > 4300) {
+          state = 'settling';
+          settleStart = now;
+          var aek = kwstripEl.classList;
+          aek.add('fade');
+          for (var z = 0; z < cells.length; z++) cells[z].drain = 1;
+          if (promptCell) promptCell.drain = 1;
+        }
+      } else if (state === 'settling') {
+        var dec = (now - settleStart) / 850;
+        var done = true;
+        for (var u = 0; u < cells.length; u++) {
+          if (cells[u].drain > 0) {
+            cells[u].drain = Math.max(0, 1 - dec);
+            if (cells[u].drain !== 0) done = false;
+          }
+        }
+        if (done) {
+          state = 'idle';
+          for (var v = 0; v < cells.length; v++) {
+            cells[v].fired = false; cells[v].litIdx = 0; cells[v].drain = 0; cells[v].flashT = 0; cells[v].charge = 0;
+          }
+          promptCell = null; impulses = []; assocEdges = []; edgesBuilt = [];
+          synthesis = null;
+          kwstripEl.classList.remove('show');
+          stagesEl.classList.add('off');
+          setBox(false);
+        }
+      }
+    }
+
+    // pulses (mostly decorative now; the sequence is schedule-driven)
     for (var k = 0; k < impulses.length; k++) {
       var imp = impulses[k];
       if (imp.done) continue;
@@ -839,49 +1158,34 @@
         if (d2 < 30) bo.flare = Math.min(1, bo.flare + 0.5);
       }
     }
-
-    // typing the formed sentence
-    if (state === 'forming' && synthesis) {
-      if (synthesis.typeIdx < synthesis.text.length) {
-        synthesis.typeHold += dt;
-        while (synthesis.typeHold >= 21 && synthesis.typeIdx < synthesis.text.length) {
-          synthesis.typeHold -= 21;
-          synthesis.typeIdx++;
-          replyEl.textContent = synthesis.text.slice(0, synthesis.typeIdx) + (synthesis.typeIdx < synthesis.text.length ? '\u2009\u258b' : '');
-        }
-      } else {
-        replyEl.textContent = synthesis.text;
-        state = 'answered';
-        answerAt = now;
-      }
-    } else if (state === 'answered') {
-      if (now - answerAt > 4300) {
-        state = 'settling';
-        settleStart = now;
-        for (var z = 0; z < cells.length; z++) cells[z].drain = 1;
-        if (promptCell) promptCell.drain = 1;
-      }
-    } else if (state === 'settling') {
-      var decay = (now - settleStart) / 850;
-      var done = true;
-      for (var u = 0; u < cells.length; u++) {
-        if (cells[u].drain > 0) {
-          cells[u].drain = Math.max(0, 1 - decay);
-          if (cells[u].drain !== 0) done = false;
-        }
-      }
-      if (done) {
-        state = 'idle';
-        for (var v = 0; v < cells.length; v++) {
-          cells[v].fired = false; cells[v].drain = 0; cells[v].flashT = 0; cells[v].charge = 0;
-        }
-        promptCell = null; impulses = []; assocEdges = [];
-        setBox(false);
-      }
-    }
   }
 
   // ------------------------------------------------------- draw
+
+  function drawPathT(c, path, cum, frac, alpha, width) {
+    if (frac <= 0) return;
+    var total = cum[cum.length - 1];
+    var d = total * Math.min(1, frac);
+    var lo = 0, hi = cum.length - 1;
+    while (hi - lo > 1) {
+      var mid = (lo + hi) >> 1;
+      if (cum[mid] <= d) lo = mid; else hi = mid;
+    }
+    c.globalAlpha = alpha;
+    c.strokeStyle = ACCENT;
+    c.lineWidth = width;
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    c.beginPath();
+    c.moveTo(path[0][0], path[0][1]);
+    for (var i = 1; i <= lo; i++) c.lineTo(path[i][0], path[i][1]);
+    if (lo < path.length - 1) {
+      var p = pointAt(path, cum, d);
+      c.lineTo(p.x, p.y);
+    }
+    c.stroke();
+    c.globalAlpha = 1;
+  }
 
   function drawFibre(c, path, alpha, width) {
     c.strokeStyle = ACCENT;
@@ -950,11 +1254,11 @@
     var dmax = 0;
     for (var dd = 0; dd < cells.length; dd++) if (cells[dd].drain > dmax) dmax = cells[dd].drain;
     var drainAll = 1 - dmax * 0.92;
-    var interact = state === 'running' || state === 'forming' || state === 'answered' ? 1 : 0;
+    var interact = state === 'running' || state === 'keywords' || state === 'facts' || state === 'connections' || state === 'forming' || state === 'answered' ? 1 : 0;
 
     // ---- background wash + faint breathing core
     var throb = 0.5 + 0.5 * Math.sin(breath);
-    var bg = ctx.createRadialGradient(W / 2, H * 0.58, 0, W / 2, H * 0.58, H * 0.95);
+    var bg = ctx.createRadialGradient(W / 2, H * 0.5, 0, W / 2, H * 0.5, H * 0.95);
     bg.addColorStop(0, lerpColor(0.008 + 0.010 * throb));
     bg.addColorStop(0.6, lerpColor(0.003 + 0.002 * throb));
     bg.addColorStop(1, 'rgba(255,166,201,0)');
@@ -990,9 +1294,17 @@
     for (var th = 0; th < threads.length; th++) {
       drawFibre(tctx, threads[th].path, 0.005, 0.9);
     }
-    for (var ae = 0; ae < assocEdges.length; ae++) {
-      var eA = Math.min(0.05, (1 - (now - assocEdges[ae].t0) / 4200) * 0.05);
-      if (eA > 0.001) drawFibre(tctx, assocEdges[ae].path, eA, 1.1);
+
+    // connections that were made this run (hot while building, then cooling)
+    if (synthesis) {
+      for (var be = 0; be < synthesis.builtEdges.length; be++) {
+        var eg = synthesis.builtEdges[be];
+        if (!eg.launched) continue;
+        var frac = clamp((now - eg.buildT) / 520, 0, 1);
+        var coolA = state === 'connections' && frac < 1 ? 0 : Math.max(0, 1 - (now - eg.buildT - 520) / 4200) * 0.05;
+        if (frac < 1) drawPathT(tctx, eg.path, eg.cum, frac, 0.028, 1.1);
+        else if (coolA > 0.001) drawFibre(tctx, eg.path, coolA, 1.1);
+      }
     }
 
     // impulse wakes — soft comet trails
@@ -1043,8 +1355,7 @@
         if (now < t0f - 400) continue;
         if (now > t1f) continue;
         var phased = clamp((now - t0f) / 700, 0, 1);
-        var keyf = fI;
-        var dpth = _deliveryCache.hasOwnProperty(keyf) ? _deliveryCache[keyf] : (_deliveryCache[keyf] = deliveryPath(synthesis.ordered[fI], H * 0.82));
+        var dpth = _deliveryCache.hasOwnProperty(fI) ? _deliveryCache[fI] : (_deliveryCache[fI] = deliveryPath(synthesis.ordered[fI], H * 0.82));
         drawFlow(tctx, dpth, (0.05 + 0.05 * phased) * drainAll, 1.1, -now * 0.03);
       }
     }
@@ -1095,15 +1406,41 @@
       drawFibre(ctx, threads[c3].path, 0.012 * drainAll, 0.5);
     }
 
+    // growing connection tips, drawn crisp
+    if (synthesis && state === 'connections') {
+      for (var gb = 0; gb < synthesis.builtEdges.length; gb++) {
+        var gEdge = synthesis.builtEdges[gb];
+        if (!gEdge.launched) continue;
+        var gT = clamp((now - gEdge.buildT) / 520, 0, 1);
+        if (gT <= 0) continue;
+        // the nerve itself, visibly being laid
+        if (gT < 1) drawPathT(ctx, gEdge.path, gEdge.cum, gT, 0.22 * drainAll, 1.0);
+        var tHead = pointAt(gEdge.path, gEdge.cum, gEdge.cum[gEdge.cum.length - 1] * Math.min(1, gT));
+        var hg = ctx.createRadialGradient(tHead.x, tHead.y, 0, tHead.x, tHead.y, 9);
+        hg.addColorStop(0, lerpColor(0.6 * drainAll));
+        hg.addColorStop(1, 'rgba(255,166,201,0)');
+        ctx.fillStyle = hg;
+        ctx.beginPath();
+        ctx.arc(tHead.x, tHead.y, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = ACCENT;
+        ctx.globalAlpha = 0.9 * drainAll;
+        ctx.beginPath();
+        ctx.arc(tHead.x, tHead.y, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
     // crisp pulse heads
     for (var ph = 0; ph < impulses.length; ph++) {
       var imp2 = impulses[ph];
       if (imp2.done || now < imp2.started) continue;
       var pos = pointAt(imp2.path, imp2.cum, imp2.d);
-      var hg = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 8);
-      hg.addColorStop(0, lerpColor(0.55 * drainAll));
-      hg.addColorStop(1, 'rgba(255,166,201,0)');
-      ctx.fillStyle = hg;
+      var hg2 = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 8);
+      hg2.addColorStop(0, lerpColor(0.55 * drainAll));
+      hg2.addColorStop(1, 'rgba(255,166,201,0)');
+      ctx.fillStyle = hg2;
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
       ctx.fill();
@@ -1137,10 +1474,10 @@
       var ck = CHAIN_KEYS[lk];
       var meta = chainMeta[ck];
       if (!meta) continue;
-      var hot = synthesis && synthesis.chain === ck && (state === 'forming' || state === 'answered' || state === 'running');
+      var hot = synthesis && synthesis.chain === ck && (state === 'facts' || state === 'connections' || state === 'forming' || state === 'answered');
       var la = hot ? 0.5 + 0.2 * Math.sin(now * 0.005) : 0.09;
       ctx.fillStyle = lerpColor(la * drainAll);
-      ctx.fillText(CHAINS[ck].label.toUpperCase(), meta.x, clamp(meta.y - meta.r - 22, 26, H - 10));
+      ctx.fillText(CHAINS[ck].label.toUpperCase(), meta.x, clamp(meta.y - meta.r - 22, 30, H - 10));
     }
 
     // ---- cells
@@ -1172,6 +1509,22 @@
         ctx.fillStyle = ACCENT;
         ctx.globalAlpha = ndr * (0.6 + 0.4 * ch2);
         ctx.fillText(nd2.text, 0, 0);
+        // the order the fact was shown in
+        if (nd2.litIdx > 0) {
+          ctx.font = '700 9px "CMU Sans Serif", sans-serif';
+          ctx.globalAlpha = ndr * 0.85;
+          ctx.beginPath();
+          ctx.arc(nd2.w / 2 - 6, -nd2.h / 2 + 6, 7, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(10,10,15,0.9)';
+          ctx.fill();
+          ctx.strokeStyle = lerpColor(0.8 * ndr);
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = ACCENT;
+          ctx.textAlign = 'center';
+          ctx.fillText(String(nd2.litIdx), nd2.w / 2 - 6, -nd2.h / 2 + 6);
+          ctx.textAlign = 'center';
+        }
         ctx.restore();
         ctx.globalAlpha = 1;
       } else {
@@ -1231,8 +1584,8 @@
     if (off) inputEl.blur();
   }
 
-  submitEl.addEventListener('click', function () { run(inputEl.value); inputEl.focus(); });
-  inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { run(inputEl.value); inputEl.focus(); } });
+  submitEl.addEventListener('click', function () { run(inputEl.value); });
+  inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { run(inputEl.value); } });
 
   function tick(ts) {
     var dt = lastT ? Math.min(ts - lastT, 50) : 16;
@@ -1255,8 +1608,11 @@
     buildNerveNet();
     buildDrizzle();
     buildMotes();
-    state = 'idle'; impulses = []; promptCell = null; synthesis = null; assocEdges = [];
+    state = 'idle'; impulses = []; promptCell = null; synthesis = null; assocEdges = []; edgesBuilt = [];
     _deliveryCache = {};
+    chipsEl.textContent = '';
+    kwstripEl.classList.remove('show');
+    stagesEl.classList.add('off');
     document.querySelector('.reply').classList.remove('show');
     replyEl.textContent = '';
     setBox(false);
