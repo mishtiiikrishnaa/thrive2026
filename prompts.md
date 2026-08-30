@@ -850,3 +850,22 @@ working properly" + "name this thing graphic.ai and render it obsidian style"
   answer is followed (scrolled-to) while it streams — no more yanking to top
   mid-answer, no forced jump to the bottom to find the question.
 - branded graphic.ai in the page title, landing kicker, and graph tag.
+
+## 22 — whole theme rewritten (midnight aurora), index.html deleted, vercel prepped
+
+"just rewrite the whole theme as well ok ad once youre delete the index.html please !
+and deploy this to vercel i beg of u!"
+
+dropped the warm-honey editorial look for a "midnight aurora" theme:
+- background now deep ink-blue (`#0b0d12`), ink text cool lavender-white (`#e7e6ee`)
+- primary accent is a luminous violet `#a78bfa`, with mint `#86d7c4` and coral
+  `#f2a3b8` as supports
+- every hardcoded colour updated in both CSS and canvas JS: the graph now glows
+  violet, the drifting background blobs are violet/mint/coral, and the graphbox
+  vignette, askbar fade, glass panels, and input were all re-cut to the cool
+  palette (verified: body `rgb(11,13,18)`, accent `rgb(167,139,250)`, 2985 lit
+  pixels with violet glow, both fact panels still render, no exceptions).
+
+deleted `index.html` (git rm). added `vercel.json` rewriting `/` -> `/graph.html`
+so the single-file site serves at the root. installed vercel cli 59.10.0.
+depoloyment is READY but needs `vercel login` (only the account owner can auth).

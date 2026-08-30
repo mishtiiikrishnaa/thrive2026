@@ -8,16 +8,16 @@
 <link href="https://fonts.cdnfonts.com/css/cmu-typewriter-text" rel="stylesheet">
 <style>
   :root {
-    --bg: #0c0906;
-    --ink: #efe7d4;
-    --dim: #4b402c;
-    --faint: #6f6349;
-    --honey: #e6b96e;
-    --honey-soft: rgba(230,185,110,0.55);
-    --rose: #d88fa1;
-    --sage: #a8b893;
-    --glass: rgba(28,22,13,0.55);
-    --line: rgba(230,185,110,0.24);
+    --bg: #0b0d12;
+    --ink: #e7e6ee;
+    --dim: #343a49;
+    --faint: #6f7585;
+    --honey: #a78bfa;
+    --honey-soft: rgba(167,139,250,0.55);
+    --rose: #f2a3b8;
+    --sage: #86d7c4;
+    --glass: rgba(24,28,42,0.55);
+    --line: rgba(167,139,250,0.28);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -41,7 +41,7 @@
     padding: 44px clamp(18px, 4vw, 40px) 30px;
   }
   .log::-webkit-scrollbar { width: 8px; }
-  .log::-webkit-scrollbar-thumb { background: rgba(230,185,110,0.16); border-radius: 8px; }
+  .log::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.16); border-radius: 8px; }
 
   /* ================================================================ */
   /* LANDING — a whole essay of "how this works", ethereal            */
@@ -62,7 +62,7 @@
     font-family: "CMU Typewriter Text", "Courier New", monospace;
     font-size: clamp(30px, 6vw, 52px); line-height: 1.05;
     font-weight: 500; color: var(--ink);
-    text-shadow: 0 0 40px rgba(230,185,110,0.15);
+    text-shadow: 0 0 40px rgba(167,139,250,0.15);
   }
   .subtitle {
     margin: 18px auto 0 auto; max-width: 560px;
@@ -128,7 +128,7 @@
   .chip {
     font-family: "CMU Typewriter Text", monospace; font-size: 12px;
     letter-spacing: 0.12em; text-transform: lowercase; color: var(--honey);
-    background: rgba(230,185,110,0.07); border: 1px solid rgba(230,185,110,0.32);
+    background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.32);
     border-radius: 999px; padding: 7px 16px;
   }
   .tag {
@@ -137,7 +137,7 @@
     color: var(--dim); margin-bottom: 14px;
     transition: color 0.5s ease, text-shadow 0.5s ease;
   }
-  .tag.hot { color: var(--honey); text-shadow: 0 0 14px rgba(230,185,110,0.35); }
+  .tag.hot { color: var(--honey); text-shadow: 0 0 14px rgba(167,139,250,0.35); }
 
   .factcols.on { margin-top: 26px; max-height: 900px; }
   .fcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
@@ -159,7 +159,7 @@
   }
   .fkg .fl {
     font-family: "CMU Typewriter Text", monospace; font-size: 12.5px;
-    color: rgba(239,231,212,0.92); line-height: 1.55;
+    color: rgba(231,230,238,0.92); line-height: 1.55;
   }
   .fkg .fl .hl { color: var(--honey); }
 
@@ -168,9 +168,9 @@
     position: relative; height: 54vh; min-height: 360px;
     border-radius: 18px; overflow: hidden;
     background:
-      radial-gradient(120% 90% at 50% 20%, rgba(16,11,6,0.9) 0%, rgba(6,4,2,0.96) 70%);
-    border: 1px solid rgba(230,185,110,0.16);
-    box-shadow: 0 0 60px rgba(230,185,110,0.06) inset, 0 8px 40px rgba(0,0,0,0.5);
+      radial-gradient(120% 90% at 50% 20%, rgba(24,28,44,0.94) 0%, rgba(8,9,15,0.97) 70%);
+    border: 1px solid rgba(167,139,250,0.16);
+    box-shadow: 0 0 60px rgba(167,139,250,0.06) inset, 0 8px 40px rgba(0,0,0,0.5);
   }
   #graph { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .graphbox .stagehint {
@@ -194,10 +194,10 @@
   }
   .turn .assn {
     font-family: "CMU Typewriter Text", "Courier New", monospace; font-size: 16.5px;
-    line-height: 1.9; color: rgba(239,231,212,0.95);
+    line-height: 1.9; color: rgba(231,230,238,0.95);
     white-space: pre-wrap;
     padding-left: 14px;
-    text-shadow: 0 0 18px rgba(230,185,110,0.08);
+    text-shadow: 0 0 18px rgba(167,139,250,0.08);
   }
   .turn .think {
     font-family: "CMU Typewriter Text", monospace; font-size: 12px;
@@ -221,30 +221,30 @@
   .askbar {
     flex: 0 0 auto; padding: 14px clamp(18px, 4vw, 40px) 26px;
     display: flex; flex-direction: column; align-items: center;
-    background: linear-gradient(to top, rgba(12,9,6,0.95), rgba(12,9,6,0));
+    background: linear-gradient(to top, rgba(11,13,18,0.95), rgba(11,13,18,0));
   }
   .askline { display: flex; justify-content: center; gap: 10px; width: min(100%, 700px); }
   .askline input {
     flex: 1 1 auto; font-size: 16px; letter-spacing: 0.02em; color: var(--ink);
     font-family: "CMU Typewriter Text", "Courier New", monospace;
-    background: rgba(20,16,9,0.8); border: 1px solid var(--dim); border-radius: 999px;
+    background: rgba(30,34,50,0.85); border: 1px solid var(--dim); border-radius: 999px;
     padding: 14px 24px; outline: none; min-width: 0;
     transition: border-color 0.4s ease, box-shadow 0.4s ease;
   }
   .askline input::placeholder { color: var(--faint); font-style: italic; }
   .askline input:focus {
     border-color: var(--honey-soft);
-    box-shadow: 0 0 0 1px rgba(230,185,110,0.16), 0 0 30px rgba(230,185,110,0.09);
+    box-shadow: 0 0 0 1px rgba(167,139,250,0.16), 0 0 30px rgba(167,139,250,0.09);
   }
   .askline input:disabled { opacity: 0.5; }
   .askline button {
     font-family: "CMU Typewriter Text", monospace; font-size: 13px;
     letter-spacing: 0.14em; text-transform: lowercase; color: var(--ink);
-    background: rgba(230,185,110,0.10); border: 1px solid var(--honey-soft);
+    background: rgba(167,139,250,0.10); border: 1px solid var(--honey-soft);
     border-radius: 999px; padding: 0 28px; cursor: pointer; outline: none;
     transition: background 0.3s ease, opacity 0.4s ease;
   }
-  .askline button:hover:not([disabled]) { background: rgba(230,185,110,0.20); }
+  .askline button:hover:not([disabled]) { background: rgba(167,139,250,0.20); }
   .askline button[disabled] { opacity: 0.35; cursor: default; }
 </style>
 </head>
@@ -330,8 +330,8 @@
   var graphtagEl = document.getElementById('graphtag');
   var stagehint = document.querySelector('.stagehint');
 
-  var ACCENT = '#e6b96e';
-  var GREY = '#efe7d4';
+  var ACCENT = '#a78bfa';
+  var GREY = '#e7e6ee';
   var CHIP_MS = 28;
   var KW_STAGGER = 150;
 
@@ -616,8 +616,8 @@
   }
   var R = srand(20260830);
   function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
-  function lerpColor(a) { return 'rgba(230,185,110,' + a.toFixed(3) + ')'; }
-  function lerpColorA(a, al) { return 'rgba(230,185,110,' + (a * al).toFixed(3) + ')'; }
+  function lerpColor(a) { return 'rgba(167,139,250,' + a.toFixed(3) + ')'; }
+  function lerpColorA(a, al) { return 'rgba(167,139,250,' + (a * al).toFixed(3) + ')'; }
 
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
@@ -1389,7 +1389,7 @@
       var pos = pointAt(imp.path, imp.cum, imp.d);
       var grad = grCtx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 9);
       grad.addColorStop(0, lerpColorA(1, fade));
-      grad.addColorStop(1, 'rgba(230,185,110,0)');
+      grad.addColorStop(1, 'rgba(167,139,250,0)');
       grCtx.fillStyle = grad;
       grCtx.beginPath(); grCtx.arc(pos.x, pos.y, 9, 0, Math.PI * 2); grCtx.fill();
     }
@@ -1402,7 +1402,7 @@
         var rad = grCtx.createRadialGradient(nd2.qx, nd2.qy, 0, nd2.qx, nd2.qy, g);
         rad.addColorStop(0, lerpColor(0.55 * fade));
         rad.addColorStop(0.35, lerpColor(0.16 * fade));
-        rad.addColorStop(1, 'rgba(230,185,110,0)');
+        rad.addColorStop(1, 'rgba(167,139,250,0)');
         grCtx.fillStyle = rad;
         grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, g, 0, Math.PI * 2); grCtx.fill();
         // bright honey core
@@ -1414,7 +1414,7 @@
           grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, (1 - nd2.flashT) * 22 + 8, 0, Math.PI * 2); grCtx.stroke();
         }
         if (nd2.litIdx > 0) {
-          grCtx.fillStyle = 'rgba(9,7,4,0.95)';
+          grCtx.fillStyle = 'rgba(8,9,15,0.95)';
           grCtx.beginPath(); grCtx.arc(nd2.qx + 11, nd2.qy - 6, 7, 0, Math.PI * 2); grCtx.fill();
           grCtx.strokeStyle = lerpColor(0.8 * fade);
           grCtx.lineWidth = 1;
@@ -1639,16 +1639,16 @@
   function drawBackground() {
     bgCtx.clearRect(0, 0, BW, BH);
     var base = bgCtx.createRadialGradient(BW / 2, BH * 0.45, 0, BW / 2, BH * 0.45, BH * 1.0);
-    base.addColorStop(0, 'rgba(30,24,14,0.35)');
-    base.addColorStop(1, 'rgba(8,6,3,0)');
+    base.addColorStop(0, 'rgba(26,30,46,0.35)');
+    base.addColorStop(1, 'rgba(8,9,15,0)');
     bgCtx.fillStyle = base;
     bgCtx.fillRect(0, 0, BW, BH);
 
     var t = now * 0.00008;
     var blobs = [
-      { x: BW * (0.3 + 0.13 * Math.sin(t * 1.1)), y: BH * (0.30 + 0.12 * Math.cos(t * 0.9)), r: Math.max(BW, BH) * 0.34, c: '230,185,110', a: 0.05 },
-      { x: BW * (0.68 + 0.15 * Math.sin(t * 0.8 + 2)), y: BH * (0.60 + 0.10 * Math.cos(t * 1.2)), r: Math.max(BW, BH) * 0.30, c: '168,184,147', a: 0.045 },
-      { x: BW * (0.5 + 0.18 * Math.sin(t * 0.6 + 4)), y: BH * (0.48 + 0.16 * Math.cos(t * 0.7 + 1)), r: Math.max(BW, BH) * 0.42, c: '216,143,161', a: 0.025 }
+      { x: BW * (0.3 + 0.13 * Math.sin(t * 1.1)), y: BH * (0.30 + 0.12 * Math.cos(t * 0.9)), r: Math.max(BW, BH) * 0.34, c: '167,139,250', a: 0.05 },
+      { x: BW * (0.68 + 0.15 * Math.sin(t * 0.8 + 2)), y: BH * (0.60 + 0.10 * Math.cos(t * 1.2)), r: Math.max(BW, BH) * 0.30, c: '134,215,196', a: 0.045 },
+      { x: BW * (0.5 + 0.18 * Math.sin(t * 0.6 + 4)), y: BH * (0.48 + 0.16 * Math.cos(t * 0.7 + 1)), r: Math.max(BW, BH) * 0.42, c: '242,163,184', a: 0.025 }
     ];
     for (var i = 0; i < blobs.length; i++) {
       var bl = blobs[i];
