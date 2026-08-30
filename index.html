@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>the room where it decides</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --ink: #e8e8ec;
+    --grey: #8a8a94;
+    --dim: #4a4a52;
+    --accent: #ffa6c9;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  /* hero occupies the viewport height, then copy + footer sit below,
+     one scroll of reach — total about one and a half screens */
+  .hero {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #stage {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    display: block;
+    touch-action: manipulation;
+  }
+
+  .band-label {
+    position: absolute;
+    left: 14px;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    transform: translateY(-50%);
+    user-select: none;
+    pointer-events: none;
+    transition: color 0.6s ease;
+  }
+  .band-label.lit { color: var(--accent); }
+
+  .band-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--dim) 12%, var(--dim) 88%, transparent);
+    pointer-events: none;
+  }
+
+  .caption {
+    position: absolute;
+    bottom: 14px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--grey);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .copy {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 72px 24px 44px;
+    text-align: center;
+    /* blend out of the dark so it feels continuous, not a new screen */
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 100%);
+  }
+
+  .copy h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    font-size: clamp(30px, 5vw, 44px);
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+  }
+
+  .copy .sub {
+    margin-top: 16px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--grey);
+  }
+
+  .copy p.body {
+    margin-top: 40px;
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--grey);
+  }
+  .copy p.body strong { color: var(--accent); font-weight: 500; }
+  .copy p.body em { color: var(--ink); font-style: normal; }
+
+  .footer {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 16px 24px 56px;
+    text-align: center;
+  }
+
+  .footer span {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--dim);
+  }
+</style>
+</head>
+<body>
+
+  <section class="hero">
+    <canvas id="stage"></canvas>
+    <div class="band-line" style="top: 33.333%; background: linear-gradient(to right, transparent, #2a2a32 15%, #2a2a32 85%, transparent);"></div>
+    <div class="band-line" style="top: 55.555%; background: linear-gradient(to right, transparent, #2a2a32 15%, #2a2a32 85%, transparent);"></div>
+    <div class="band-line" style="top: 77.777%; background: linear-gradient(to right, transparent, #2a2a32 15%, #2a2a32 85%, transparent);"></div>
+    <div class="band-label" id="l-pattern" style="top: 33.333%;">pattern</div>
+    <div class="band-label" id="l-weight"   style="top: 55.555%;">weight</div>
+    <div class="band-label" id="l-connection" style="top: 77.777%;">connection</div>
+    <div class="caption">click to feed it a thought</div>
+  </section>
+
+  <section class="copy">
+    <h1>the room where it decides</h1>
+    <p class="sub">every choice a model makes happens in a space you can't see. here, you can.</p>
+    <p class="body">
+      a thought enters the room hungry for form. it passes first through
+      <strong>pattern</strong>, where shape is pulled from noise and what doesn't fit is
+      already thinning out. it passes through <strong>weight</strong>, where some
+      paths are honoured and most are quietly dismissed. it passes through
+      <strong>connection</strong>, where what survives is bound to everything else,
+      until only one decision is left standing — and that, in the dark,
+      small and lit, is the choice. it looks obvious from the outside.
+      that's the trick of it.
+    </p>
+  </section>
+
+  <footer class="footer">
+    <span>every answer you read was once a cloud of almosts.</span>
+  </footer>
+
+<script>
+(function () {
+  var hero = document.querySelector('.hero');
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+
+  var labels = {
+    pattern:    document.getElementById('l-pattern'),
+    weight:     document.getElementById('l-weight'),
+    connection: document.getElementById('l-connection')
+  };
+
+  var ACCENT = '#ffa6c9';
+  var GREY = '#9a9aa4';
+  var DIMMED = '#45454d';
+
+  var W, H, DPR;
+  var bands = [0.333, 0.555, 0.777];   // fraction of height each band sits at
+  var running = false;
+  var raf = null;
+  var pulse = 0;
+
+  // ---------------------------------------------------------------- particles
+
+  // each particle: x, y, vy, vx, size, hueLerp (0 = grey, 1 = pink),
+  // lit (will stay bright), alive, band spirit (which band it's "from")
+  var parts = [];
+  var MAX_LIVE = 46;
+  var SPAWN = 220; // particles spawned per feed
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  function spawnWave() {
+    var pruned = parts.filter(function (p) { return p.state === 'falling'; });
+    parts = pruned;
+    for (var i = 0; i < SPAWN; i++) {
+      // lit particles: a shrinking pool, a few pink, rest grey-and-doomed
+      var survival = 1 - Math.random() * 0.97;
+      parts.push({
+        x: rand(W * 0.08, W * 0.92),
+        y: -rand(0, H * 0.18),
+        vx: rand(-0.15, 0.15),
+        vy: rand(0.55, 1.3),
+        size: rand(0.8, 2.2),
+        hue: survival > 0.35 ? 1 : 0,     // 1 = stays pink
+        lit: survival > 0.45,
+        state: 'falling',                 // falling | converging | joined
+        band: null,
+        vibr: rand(0, Math.PI * 2),
+        bandFall: [undefined, undefined, undefined]
+      });
+    }
+    // hard floor so the ending node always has something lit
+    var litCount = parts.filter(function (p) { return p.lit; }).length;
+    if (litCount < 7) {
+      for (var j = 0; j < 7 - litCount; j++) {
+        parts.push({
+          x: rand(W * 0.3, W * 0.7),
+          y: -rand(0, H * 0.12),
+          vx: rand(-0.1, 0.1),
+          vy: rand(0.6, 1.1),
+          size: rand(1.2, 2.0),
+          hue: 1,
+          lit: true,
+          state: 'falling',
+          band: null,
+          vibr: rand(0, Math.PI * 2),
+          bandFall: [undefined, undefined, undefined]
+        });
+      }
+    }
+  }
+
+  function bandAt(y) { return (y - 30) / (H - 90); }
+
+  function updatePart(p) {
+    p.vibr += 0.05;
+    p.x += p.vx + Math.sin(p.vibr) * 0.12;
+    p.y += p.vy;
+
+    if (p.state === 'falling') {
+      var f = bandAt(p.y);
+      for (var i = 0; i < 3; i++) {
+        var b = bands[i];
+        if (p.bandFall[i] === undefined && f >= b) {
+          p.bandFall[i] = true;
+          p.band = i;
+          crossBand(p, i);
+          break;
+        }
+      }
+      if (f > 1) p.state = 'converging';
+      return;
+    }
+
+    if (p.state === 'converging') {
+      // pull toward the node point (bottom centre)
+      var nx = W / 2, ny = H - 26;
+      var dx = nx - p.x, dy = ny - p.y;
+      p.x += dx * 0.035 + p.vx * 0.4;
+      p.y += dy * 0.045 + p.vy * 0.25;
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) p.state = 'joined';
+    }
+  }
+
+  function crossBand(p, i) {
+    var r = Math.random();
+    if (i === 0) {
+      // pattern: most shed and dim
+      if (r < 0.55) { dim(p); return; }
+      // split into a daughter particle
+      if (r < 0.75) {
+        parts.push({
+          x: p.x + rand(-10, 10), y: p.y + rand(2, 12),
+          vx: rand(-0.6, 0.6), vy: rand(0.6, 1.1),
+          size: p.size * rand(0.6, 0.85),
+          hue: p.hue, lit: p.lit && Math.random() < 0.8,
+          state: 'falling',
+          bandFall: p.bandFall ? p.bandFall.slice() : [true, undefined, undefined],
+          band: null,
+          vibr: rand(0, Math.PI * 2)
+        });
+      }
+      return;
+    }
+    if (i === 2) {
+      // connection: survivors bind — dim almost everything here
+      if (r < 0.7 && !p.lit) { dim(p); return; }
+      return;
+    }
+    // weight (middle): reroute
+    if (r < 0.5) {
+      p.vx += rand(-0.8, 0.8);
+      p.vy *= rand(0.85, 1.1);
+    } else if (r < 0.72 && p.lit) {
+      // a pair may merge on a line — attract souls
+      var siblings = parts.filter(function (q) { return q !== p && q.state !== 'joined' && q.hue === 1; });
+      if (siblings.length) {
+        var s = siblings[Math.floor(Math.random() * siblings.length)];
+        s.vx += 0.25 * (p.x - s.x) / 100;
+        s.vy = p.vy;
+      }
+    } else if (r > 0.82) {
+      p.lit = false; p.hue = Math.min(p.hue, 0.3);
+      p.vx = 0; p.vy *= 0.3;
+    }
+  }
+
+  function dim(p) {
+    p.lit = false;
+    if (Math.random() < 0.3) p.hue = 0.35;
+    else p.hue = 0;
+    p.vy *= 0.85;
+  }
+
+  // ---------------------------------------------------------------- draw
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // faint translucent bands
+    for (var i = 0; i < 3; i++) {
+      var y = bands[i] * H;
+      var g = ctx.createLinearGradient(0, y - 24, 0, y + 24);
+      g.addColorStop(0, 'rgba(255,166,201,0)');
+      g.addColorStop(0.5, 'rgba(255,166,201,' + (0.035 + pulse * 0.02) + ')');
+      g.addColorStop(1, 'rgba(255,166,201,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, y - 24, W, 48);
+    }
+
+    var litN = 0, cx = 0, cy = 0;
+
+    for (var j = 0; j < parts.length; j++) {
+      var p = parts[j];
+      var alpha = 1;
+      if (p.state === 'converging') alpha = Math.min(1, 1.2 - bandAt(p.y) + 0.15);
+      var glow = p.lit ? 1 : 0;
+      var col = mix(GREY, ACCENT, p.hue);
+      ctx.globalAlpha = p.lit ? (0.55 + glow * 0.45) : (0.18 + alpha * 0.3);
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (p.lit && p.state !== 'joined') { litN++; cx += p.x; cy += p.y; }
+    }
+
+    ctx.globalAlpha = 1;
+
+    // the convergent node: pulsing pink
+    var shutter = 0.5 + 0.5 * Math.sin(pulse * 2.4);
+    if (litN > 0) {
+      var t = Math.min(1, (parts.length ? litN / 14 : 0) * 1.6);
+      nodeX = nodeX + (W / 2 - nodeX) * 0.12;
+      nodeY = nodeY + ((H - 26) - nodeY) * 0.12;
+    }
+    var rNode = 5 + shutter * 3.5 + Math.sin(pulse * 5) * 0.8;
+    var ng = ctx.createRadialGradient(nodeX, nodeY, 0, nodeX, nodeY, rNode * 4);
+    ng.addColorStop(0, 'rgba(255,166,201,0.95)');
+    ng.addColorStop(0.35, 'rgba(255,166,201,0.35)');
+    ng.addColorStop(1, 'rgba(255,166,201,0)');
+    ctx.fillStyle = ng;
+    ctx.beginPath();
+    ctx.arc(nodeX, nodeY, rNode * 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = ACCENT;
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.arc(nodeX, nodeY, rNode, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // prune joined particles after a beat so DOM/GC stays light
+    for (var k = parts.length - 1; k >= 0; k--) {
+      var q = parts[k];
+      if (q.state === 'joined' && Math.random() < 0.02) parts.splice(k, 1);
+      else if (q.y > H + 40 && q.state === 'falling') parts.splice(k, 1);
+    }
+  }
+
+  var nodeX = 0, nodeY = 0;
+
+  function mix(a, b, t) {
+    var ca = hex(a), cb = hex(b);
+    var r = Math.round(ca[0] + (cb[0] - ca[0]) * t);
+    var g = Math.round(ca[1] + (cb[1] - ca[1]) * t);
+    var bl = Math.round(ca[2] + (cb[2] - ca[2]) * t);
+    return rgb(r, g, bl);
+  }
+  function hex(c) {
+    var n = parseInt(c.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function rgb(r, g, b) { return 'rgb(' + r + ',' + g + ',' + b + ')'; }
+
+  // ---------------------------------------------------------------- loop
+
+  function tick() {
+    pulse += 0.016;
+    if (pulse > 100) pulse = 0;
+    var t = pulse / 6.2; // ~1 breath per second
+    for (var i = 0; i < 3; i++) {
+      var on = Math.sin(t + i * 0.9) > 0.75;
+      labels[['pattern','weight','connection'][i]].classList.toggle('lit', on);
+    }
+    for (var j = parts.length - 1; j >= 0; j--) updatePart(parts[j]);
+    draw();
+    raf = requestAnimationFrame(tick);
+  }
+
+  function feed() {
+    if (running) spawnWave();
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    // init node position centre
+    nodeX = W / 2; nodeY = H - 26;
+    spawnWave();
+    raf = requestAnimationFrame(tick);
+  }
+
+  function resize() {
+    DPR = Math.max(1, window.devicePixelRatio || 1);
+    W = canvas.clientWidth;
+    H = canvas.clientHeight;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    nodeX = W / 2; nodeY = H - 26;
+  }
+
+  // ---------------------------------------------------------------- events
+
+  canvas.addEventListener('click', feed);
+  canvas.addEventListener('touchstart', function (e) { e.preventDefault(); feed(); }, { passive: false });
+
+  window.addEventListener('resize', resize);
+  resize();
+  start();
+})();
+</script>
+</body>
+</html>
