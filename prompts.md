@@ -611,3 +611,62 @@ sentences, (5) sentence displayed.
   fallback with ≥4 facts), the answer is a single capitalised
   sentence, every fact row fades in, all zones clear between runs,
   and a quick re-run works (delivery-thread cache reset confirmed).
+
+## 15 — don't want a single sentence, want a whole random block like a real llm
+
+redo the entire thing, take your sweet time. i don't want a single
+sentence — i want a whole block of text, sometimes a sentence,
+sometimes a whole block, random each time, like a real llm (the ai is
+hardly deterministic, every time it gives a different answer for the
+same prompt). don't make me look like a fool. why does the landing
+page already have stuff — the landing page should have nothing, just
+the prompt box. the flow: i get to the page and put my prompt; i hit
+enter and the prompt page goes above; the keywords are chosen; the
+page splits appropriately into parts where facts related to the
+keywords are generated fast with little dots next to each; another
+part of the page is like a graph where as the facts are generated the
+graph grows slowly and connections form like a brain's synapses; once
+the graph is fully formed it disappears, only for the prompt to come
+back centre; the answer — a collection of sentences relevant to the
+prompt, like the graph in sentence form — is shown; and below it the
+user is prompted for their next sentence.
+
+- the answer generator is now a small llm stand-in: `generateBlock`
+  rolls a shape each run — ~20% one folded sentence of 2-3 facts,
+  ~35% a short 2-3 sentence paragraph, ~45% a full block of
+  collapsed units — plus ~30% chance of a lead-in ("so, about
+  “sky”: ", "here's how the graph answers: ", "honestly it comes
+  down to this: ") and ~40% chance of a closing line ("and that is
+  the shape of it." / "the nerves hold it together."), so the same
+  prompt produces a different answer every time.
+- fact selection is randomised too: nTarget now rolls 4-6, the
+  anchor is still the best-match fact but the wander set is
+  shuffled, cross-chain and filler picks are rolled fresh, and the
+  display-order tie-break flips on a coin; `buildSentence` strips
+  trailing `.!?` from every folded part so merges never read "…the
+  moon.; and so…".
+- the end-state matches the brief: when the web is fully formed it
+  dissolves (delivery threads retarget to H*0.62 and the plexus
+  fades twice as fast as it grew) while the answer types into the
+  column; zones are cleared and the column slides back to centre;
+  the answer persists below and the prompt returns to the middle and
+  the input is re-enabled, refocused, placeholder "ask anything
+  else…" — ready for the next sentence.
+- typing speed scales with the answer: `typeRate =
+  clamp(3400/len, 6, 16) ms/char` so a long block doesn't drag.
+- verdict on voice sampled across two dozen throws of "sky blue",
+  "recursion", "gravity", "a poem": reads like a person who folds
+  connected facts — run-on mega-sentences got capped at three facts,
+  and the follow-up tails were promoted to their own capitalised
+  line instead of dangling off a full stop mid-thought.
+- verified by the node harness at 30/30: full phase sequence with
+  zones/links/dots snapshotted during connections (the zones are
+  cleared when the web dissolves, so the harness looks before the
+  vanish), answer typed fully and persisting into idle with the col
+  centred and input handed back; recursion resolves to the code
+  chain and actually mentions recursion; gibberish falls back to
+  ≥4 facts; four live runs of one prompt give ≥2 distinct answer
+  blocks of varying length; and both shapes are proven deterministically
+  by forcing the roll through a seeded override (0.05 → one folded
+  line, 0.45 → short paragraph, 0.9 → longer block) with the real
+  RNG restored afterwards.

@@ -64,14 +64,6 @@
   .askline button:hover:not([disabled]) { background: rgba(255,166,201,0.24); }
   .askline button[disabled] { opacity: 0.35; cursor: default; }
 
-  .hintline {
-    margin-top: 16px; font-size: 10px; letter-spacing: 0.24em; line-height: 1.9;
-    text-transform: uppercase; color: var(--dim);
-    font-family: "CMU Typewriter Text", monospace;
-    transition: opacity 0.6s ease;
-  }
-  .hintline.gone { opacity: 0; }
-
   .zone {
     opacity: 0; max-height: 0; overflow: hidden;
     transition: opacity 0.7s ease, max-height 0.8s ease, margin-top 0.8s ease;
@@ -99,6 +91,16 @@
     display: flex; align-items: baseline; gap: 12px; padding: 5px 2px;
     opacity: 0; transition: opacity 0.7s ease;
   }
+  .fkg .fdot {
+    flex: 0 0 auto;
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1px solid rgba(255,166,201,0.7);
+    color: var(--accent);
+    font-family: "CMU Sans Serif", sans-serif;
+    font-size: 8.5px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    transform: translateY(2px);
+  }
   .fkg .fk {
     flex: 0 0 84px; text-align: right;
     font-family: "CMU Typewriter Text", monospace; font-size: 10px;
@@ -123,18 +125,20 @@
   }
   .clink.on { opacity: 1; transform: translateY(0); }
 
-  /* the final sentence */
+  /* the final block of text, in-flow under the prompt */
   .answer {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    bottom: 7%; width: min(92vw, 720px); text-align: center;
+    margin-top: 34px;
     opacity: 0; transition: opacity 1.1s ease;
-    pointer-events: none; user-select: none; z-index: 3;
+    pointer-events: none; user-select: none;
+    text-align: left;
   }
   .answer.show { opacity: 1; }
   .answer .ans {
-    font-family: "CMU Serif", Georgia, serif; font-style: italic;
-    font-size: 19px; line-height: 1.7; color: rgba(233,233,238,0.97);
-    text-shadow: 0 0 18px rgba(255,166,201,0.18);
+    font-family: "CMU Serif", Georgia, serif;
+    font-size: 16.5px; line-height: 1.85;
+    color: rgba(233,233,238,0.95);
+    letter-spacing: 0.01em;
+    text-shadow: 0 0 18px rgba(255,166,201,0.12);
     white-space: pre-wrap;
   }
 </style>
@@ -149,7 +153,6 @@
         <input id="input" type="text" placeholder="ask anything…" autocomplete="off" spellcheck="false">
         <button id="submit">ask</button>
       </div>
-      <div class="hintline" id="hintline">the web wakes behind your words &mdash; keywords, the facts they hold, the links between them, then one sentence.</div>
 
       <div class="zone" id="kwzone">
         <span class="ztag" id="kwtag">keywords</span>
@@ -165,11 +168,10 @@
         <span class="ztag" id="conntag">connections</span>
         <div class="clist" id="clist"></div>
       </div>
-    </div>
 
-    <div class="answer" id="answerzone">
-      <span class="atag hot">answer</span>
-      <p class="ans" id="ans"></p>
+      <div class="answer" id="answerzone">
+        <p class="ans" id="ans"></p>
+      </div>
     </div>
   </div>
 
@@ -181,7 +183,6 @@
   var inputEl = document.getElementById('input');
   var submitEl = document.getElementById('submit');
   var colEl = document.getElementById('col');
-  var hintEl = document.getElementById('hintline');
   var chipsEl = document.getElementById('chips');
   var flistEl = document.getElementById('flist');
   var clistEl = document.getElementById('clist');
@@ -794,6 +795,7 @@
   }
 
   // one sentence, folded from however many facts the nerves joined
+  // (kept as a building block for the generator below)
   function composeSentence(group) {
     var parts = group.slice(0, 4).map(function (f, i) {
       var t = f.text.replace(/[.!?]+$/, '');
@@ -803,6 +805,108 @@
     if (parts.length === 1) return parts[0] + '.';
     if (parts.length === 2) return parts[0] + ', and ' + parts[1] + '.';
     return parts.slice(0, -1).join(', ') + ', and ' + parts[parts.length - 1] + '.';
+  }
+
+  // ------------------------------------------------------- the voice
+
+  var COMBINERS = [
+    ', because ',
+    ', which is why ',
+    '; in fact, ',
+    '; that is, ',
+    ', and so ',
+    ', and in turn ',
+    '; from there, ',
+    ', after all, '
+  ];
+  var FOLLOW_UPS = [
+    'that is the whole of it.',
+    'and that is the shape of it.',
+    'which is to say the graph already knew.',
+    'and the nerves hold it together.',
+    'so there it is, in one breath.',
+    'and that, roughly, is the answer.'
+  ];
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function rInt(n) { return Math.floor(Math.random() * n); }
+  function lowerFirst(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+
+  function buildSentence(parts) {
+    var cleaned = parts.map(function (p) { return p.replace(/[.!?]+$/, ''); });
+    var s;
+    if (cleaned.length === 1) {
+      s = cleaned[0];
+    } else {
+      s = cleaned[0];
+      for (var i = 1; i < cleaned.length; i++) {
+        s += COMBINERS[rInt(COMBINERS.length)] + lowerFirst(cleaned[i]);
+      }
+    }
+    return s.charAt(0).toUpperCase() + s.slice(1) + '.';
+  }
+
+  // the heart of it: same nerves, different voice every time — one
+  // folded sentence, or a led paragraph, or a longer plain block.
+  function generateBlock(group, chips) {
+    var facts = group.slice(0, 6).map(function (f) { return f.text.replace(/[.!?]+$/, ''); });
+    var chip = chips[rInt(chips.length)];
+    var roll = Math.random();
+
+    // units: each is one or two facts fused, order shuffled each run
+    var order = shuffle(facts.slice());
+    var units = [];
+    var i = 0;
+    while (i < order.length) {
+      if (i + 1 < order.length && Math.random() < 0.5) {
+        units.push(buildSentence([order[i], order[i + 1]]));
+        i += 2;
+      } else {
+        units.push(buildSentence([order[i]]));
+        i += 1;
+      }
+    }
+
+    var text;
+    if (roll < 0.2) {
+      // sometimes: one folded sentence (2-3 of the facts, no run-ons)
+      var one = shuffle(facts.slice()).slice(0, 2 + rInt(2));
+      text = buildSentence(one);
+    } else if (roll < 0.55) {
+      // sometimes: a short 2-3 sentence paragraph
+      while (units.length > 2 + rInt(2)) {
+        var a = units.shift(), b = units.shift();
+        units.unshift(buildSentence([a, b]));
+      }
+      text = units.join('\n');
+    } else {
+      // sometimes: the full block, whatever it came to
+      text = units.join('\n');
+    }
+
+    if (Math.random() < 0.3) {
+      var lead = [
+        'here\u2019s how the graph answers: ',
+        'the short version: ',
+        'in plain terms, ',
+        'so, about \u201c' + chip + '\u201d: ',
+        'look, ',
+        'honestly it comes down to this: '
+      ][rInt(6)];
+      text = lead + lowerFirst(text);
+    }
+    if (Math.random() < 0.4 && text.length > 80 && text.indexOf('\n') >= 0) {
+      var fu = FOLLOW_UPS[rInt(FOLLOW_UPS.length)];
+      text += '\n' + fu.charAt(0).toUpperCase() + fu.slice(1);
+    }
+    text = text.charAt(0).toUpperCase() + text.slice(1);
+    return text;
   }
 
   // which keyword a fact belongs under, for the elaboration list
@@ -818,27 +922,36 @@
 
   // ------------------------------------------------------- answering
 
-  function resetDom() {
+  function resetZones() {
     chipsEl.textContent = '';
     flistEl.textContent = '';
     clistEl.textContent = '';
-    ansEl.textContent = '';
     kwzoneEl.classList.remove('on');
     factzoneEl.classList.remove('on');
     connzoneEl.classList.remove('on');
     kwtagEl.classList.remove('hot');
     facttagEl.classList.remove('hot');
     conntagEl.classList.remove('hot');
+  }
+
+  function clearAnswer() {
+    ansEl.textContent = '';
     answerEl.classList.remove('show');
-    hintEl.classList.remove('gone');
+  }
+
+  function resetDom() {
+    resetZones();
+    clearAnswer();
   }
 
   function run(text) {
-    if (state !== 'idle') return;
+    if (state === 'keywords' || state === 'facts' || state === 'connections' || state === 'forming') return;
     setBox(true);
+    inputEl.placeholder = 'ask anything\u2026';
     t0 = performance.now();
     _deliveryCache = {};
-    resetDom();
+    resetZones();
+    clearAnswer();
     for (var i = 0; i < cells.length; i++) {
       cells[i].fired = false; cells[i].litIdx = 0; cells[i].flashT = 0; cells[i].drain = 0; cells[i].charge = 0;
     }
@@ -848,7 +961,6 @@
     edgesBuilt = [];
 
     colEl.classList.add('raised');
-    hintEl.classList.add('gone');
 
     var chips = tokens(text).slice(0, 6);
     if (!chips.length) chips = ['answer'];
@@ -860,39 +972,48 @@
       .filter(function (x) { return x.s > 0; })
       .sort(function (a, b) { return b.s - a.s; });
     var chainBest = scoredAll.filter(function (x) { return x.c.ch === chain; });
-    var sel = chainBest.slice(0, 6).map(function (x) { return x.c; });
 
-    if (sel.length < 4) {
-      var cross = scoredAll.filter(function (x) { return x.c.ch !== chain; });
-      for (var cs = 0; cs < cross.length && sel.length < 4; cs++) {
+    // selection is deliberately loose: anchor on the strongest hit, then let
+    // the run wander among the near-misses so the same prompt lights a
+    // different subgraph — and writes a different sentence — every time.
+    var nTarget = 4 + Math.floor(Math.random() * 3);
+    var sel = [];
+    if (chainBest.length) sel.push(chainBest[0].c);
+    var wander = shuffle(chainBest.slice(1, 8));
+    for (var wi = 0; wi < wander.length && sel.length < nTarget; wi++) {
+      if (sel.indexOf(wander[wi].c) < 0) sel.push(wander[wi].c);
+    }
+    if (sel.length < nTarget) {
+      var cross = shuffle(scoredAll.filter(function (x) { return x.c.ch !== chain; }));
+      for (var cs = 0; cs < cross.length && sel.length < nTarget; cs++) {
         if (sel.indexOf(cross[cs].c) < 0) sel.push(cross[cs].c);
       }
     }
-
-    if (sel.length < 4 && chain) {
-      var rest = chainCells(chain, 1).concat(chainCells(chain, 2), chainCells(chain, 3));
-      for (var r = 0; r < rest.length && sel.length < 4; r++) {
+    if (sel.length < nTarget && chain) {
+      var rest = shuffle(chainCells(chain, 1).concat(chainCells(chain, 2), chainCells(chain, 3)));
+      for (var r = 0; r < rest.length && sel.length < nTarget; r++) {
         if (sel.indexOf(rest[r]) < 0) sel.push(rest[r]);
       }
     }
-
-    if (sel.length < 4) {
-      var gt = chainCells('everything', 1).concat(chainCells('everything', 2), chainCells('everything', 3));
-      for (var g = 0; g < gt.length && sel.length < 4; g++) {
+    if (sel.length < nTarget) {
+      var gt = shuffle(chainCells('everything', 1).concat(chainCells('everything', 2), chainCells('everything', 3)));
+      for (var g = 0; g < gt.length && sel.length < nTarget; g++) {
         if (sel.indexOf(gt[g]) < 0) sel.push(gt[g]);
       }
     }
+    sel = sel.slice(0, 6);
 
     var spine0 = chainCells(chain, 1)[0];
-    var ordered = sel.slice().sort(function (a, b) { return a.ho - b.ho || (scores[cells.indexOf(b)] || 0) - (scores[cells.indexOf(a)] || 0); });
+    var ordered = sel.slice().sort(function (a, b) { return a.ho - b.ho || (Math.random() < 0.5 ? -1 : 1); });
     if (spine0 && sel.indexOf(spine0) >= 0) {
       ordered = [spine0].concat(ordered.filter(function (x) { return x !== spine0; }));
     }
     for (var oi = 0; oi < ordered.length; oi++) ordered[oi].litIdx = oi + 1;
 
     // schedule of the movements
-    var answerText = composeSentence(ordered);
-    var avgLen = Math.max(30, Math.round(answerText.length / 4));
+    var answerText = generateBlock(ordered, chips);
+    var sentences = answerText.split('\n').length;
+    var avgLen = Math.max(30, Math.round(answerText.length / (sentences || 1)));
     synthesis = {
       chain: chain,
       ordered: ordered,
@@ -913,6 +1034,9 @@
       perFact: 620 + 16 * avgLen,
       typeHold: 0,
       typeIdx: 0,
+      typeRate: 16,
+      fade: 1,
+      ground: H * 0.62,
       shownLinks: []
     };
     synthesis.kwEnd = synthesis.kwStart + chips.length * synthesis.kwStagger + 240;
@@ -969,12 +1093,16 @@
         var row = document.createElement('div');
         row.className = 'fkg';
         row.dataset.lit = String(cell.litIdx);
+        var dEl = document.createElement('span');
+        dEl.className = 'fdot';
+        dEl.textContent = String(cell.litIdx);
         var kEl = document.createElement('span');
         kEl.className = 'fk';
         kEl.textContent = kw;
         var tEl = document.createElement('span');
         tEl.className = 'fl';
         tEl.textContent = cell.text;
+        row.appendChild(dEl);
         row.appendChild(kEl);
         row.appendChild(tEl);
         flistEl.appendChild(row);
@@ -1140,26 +1268,35 @@
         buildLinkList();
         if (allLaunched && now >= skd.answerStart && now - skd.startedLinksAt > 700) {
           state = 'forming';
+          resetZones();
+          colEl.classList.remove('raised');
           conntagEl.classList.remove('hot');
           answerEl.classList.add('show');
+          skd.fade = 1;
+          skd.typeRate = Math.max(6, Math.min(16, Math.round(3400 / skd.text.length)));
           skd.flowStart = now;
         }
       }
 
       if (state === 'forming') {
         skd.typeHold += dt;
-        while (skd.typeIdx < skd.text.length && skd.typeHold >= 16) {
-          skd.typeHold -= 16;
+        while (skd.typeIdx < skd.text.length && skd.typeHold >= skd.typeRate) {
+          skd.typeHold -= skd.typeRate;
           skd.typeIdx++;
           ansEl.textContent = skd.text.slice(0, skd.typeIdx) + (skd.typeIdx < skd.text.length ? '\u2009\u258b' : '');
         }
+        skd.fade = Math.max(0, skd.fade - dt / 1100);
       }
       if (state === 'forming' && skd.typeIdx >= skd.text.length) {
         ansEl.textContent = skd.text;
         state = 'answered';
         answerAt = now;
+        setBox(false);
+        inputEl.focus();
+        inputEl.placeholder = 'ask anything else\u2026';
       } else if (state === 'answered') {
-        if (now - answerAt > 4600) {
+        skd.fade = Math.max(0, skd.fade - dt / 500);
+        if (now - answerAt > 1400) {
           state = 'settling';
           settleStart = now;
           for (var z = 0; z < cells.length; z++) cells[z].drain = 1;
@@ -1181,8 +1318,7 @@
           }
           promptCell = null; impulses = []; assocEdges = []; edgesBuilt = [];
           synthesis = null;
-          resetDom();
-          colEl.classList.remove('raised');
+          resetZones();
           setBox(false);
         }
       }
@@ -1302,7 +1438,8 @@
 
     var dmax = 0;
     for (var dd = 0; dd < cells.length; dd++) if (cells[dd].drain > dmax) dmax = cells[dd].drain;
-    var drainAll = 1 - dmax * 0.92;
+    var plexusExtra = synthesis && (state === 'forming' || state === 'answered') ? synthesis.fade : 1;
+    var drainAll = (1 - dmax * 0.92) * plexusExtra;
     var interact = state === 'keywords' || state === 'facts' || state === 'connections' || state === 'forming' || state === 'answered' ? 1 : 0;
 
     // ---- quiet wash
@@ -1405,7 +1542,7 @@
         var t1f = t0f + 900;
         if (now < t0f - 400 || now > t1f) continue;
         var phased = clamp((now - t0f) / 700, 0, 1);
-        var dpth = _deliveryCache.hasOwnProperty(fI) ? _deliveryCache[fI] : (_deliveryCache[fI] = deliveryPath(synthesis.ordered[fI], H * 0.82));
+        var dpth = _deliveryCache.hasOwnProperty(fI) ? _deliveryCache[fI] : (_deliveryCache[fI] = deliveryPath(synthesis.ordered[fI], synthesis.ground));
         drawFlow(tctx, dpth, (0.05 + 0.05 * phased) * drainAll, 1.1, -now * 0.03);
       }
     }
