@@ -196,11 +196,16 @@
 
   /* ---------- play ---------- */
   .play{position:relative;z-index:2;padding:4vw 4vw 8vw}
-  .stage{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:1.2rem;align-items:stretch}
-  @media(min-width:1020px){.stage{grid-template-columns:44fr 56fr}}
+  .stage{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:1.2rem;align-items:stretch}
 
+  /* the graph is the star: full width and tall on top */
+  .graph-hero{display:flex;flex-direction:column;gap:0.8rem}
+  .graph-wrap.hero{height:68vh;min-height:460px}
   .left-panel{display:flex;flex-direction:column;gap:0.9rem;min-width:0}
   .right-panel{display:flex;flex-direction:column;gap:0.9rem;min-width:0}
+  .controls{max-width:820px;margin:0 auto;width:100%}
+  .workings{display:grid;grid-template-columns:1fr;gap:1rem}
+  @media(min-width:900px){.workings{grid-template-columns:1.3fr 1fr}}
 
   .promptbox{
     background:var(--bg-2);border:1px solid var(--border);border-radius:16px;
@@ -513,35 +518,13 @@
 
 <!-- ============ THE PLAY AREA ============ -->
 <section class="play" id="play">
-  <h2 class="sec-title">grow the <span>graph</span></h2>
-  <p class="sec-sub">left: your prompt sprouts keywords and facts. right: the graph grows, node by node. find the shared words, connect them, and read the final answer. the graph survives a browser reset — the chat starts fresh.</p>
+  <h2 class="sec-title">the graph is the <span>answer</span></h2>
+  <p class="sec-sub">front and centre: your prompts grow the graph. every keyword becomes a cluster, every fact a node, every shared idea a connector. below it, the answer — assembled from every node — lives in the chat.</p>
 
-  <div class="stage">
-    <!-- LEFT: prompt + chat (the answer lives here) + facts -->
-    <div class="left-panel">
-      <div class="promptbox">
-        <label for="prompt">your prompt</label>
-        <div class="promptrow">
-          <textarea id="prompt" placeholder="why is the sky blue?"></textarea>
-          <button class="btn" id="go">grow</button>
-        </div>
-        <div class="keywords" id="keywords"></div>
-      </div>
-
-      <div class="panel chat-panel">
-        <div class="panel-t">chat — the answer appears here</div>
-        <div class="chatwin" id="chatwin"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-t">fact generation</div>
-        <div class="logs" id="logs"></div>
-      </div>
-    </div>
-
-    <!-- RIGHT: the persistent graph -->
-    <div class="right-panel">
-      <div class="graph-wrap">
+  <div class="stage graph-first">
+    <!-- the graph, front and centre -->
+    <div class="graph-hero">
+      <div class="graph-wrap hero">
         <div class="graph-head">
           <span class="t">the graph — persists across reloads</span>
           <span class="stats"><span><b id="stat-n">0</b> nodes</span> <span><b id="stat-e">0</b> edges</span></span>
@@ -562,6 +545,30 @@
         <div class="it"><span class="dot" style="background:var(--pink)"></span> keyword cluster</div>
         <div class="it"><span class="dot" style="background:var(--lilac)"></span> fact node</div>
         <div class="it"><span class="dot" style="background:var(--mint)"></span> shared word (connector)</div>
+      </div>
+    </div>
+
+    <!-- prompt controls below the graph -->
+    <div class="controls">
+      <div class="promptbox">
+        <label for="prompt">your prompt — each one grows the graph</label>
+        <div class="promptrow">
+          <textarea id="prompt" placeholder="why is the sky blue?"></textarea>
+          <button class="btn" id="go">grow</button>
+        </div>
+        <div class="keywords" id="keywords"></div>
+      </div>
+    </div>
+
+    <!-- workings: chat (the answer) + fact feed -->
+    <div class="workings">
+      <div class="panel chat-panel">
+        <div class="panel-t">chat — the answer appears here</div>
+        <div class="chatwin" id="chatwin"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-t">fact generation</div>
+        <div class="logs" id="logs"></div>
       </div>
     </div>
   </div>
@@ -680,13 +687,134 @@
   };
 
   const GENERIC=[
-    "a broad theme from your prompt — the model connects it to the larger picture of ai.",
-    "this keyword trails across the field; follow its edges to nearby facts.",
-    "worth one node: ideas that repeat across prompts tend to matter most.",
-    "linked here because your prompt touched it, so the graph records it.",
-    "an open thread in the map — click it to weave it into the answer.",
-    "a small node with big neighbours; the graph grows around it."
+    "this keyword is a bridge word — it keeps showing up across your prompts, tying the clusters together.",
+    "ask about it and the graph grows a fresh cluster around it, pulling in nearby facts.",
+    "a real starting point: once it becomes a node, every related fact hangs off it.",
+    "this concept, when added to the graph, tends to connect to the other clusters you have built.",
+    "a seed word — from it, a handful of related facts will branch off.",
+    "the more you revisit this idea, the denser the graph gets around it."
   ];
+  function factsFor(word){
+    if(FACTS[word])return FACTS[word].slice();
+    const base={
+      sky:[
+        "the sky looks blue because air scatters shorter (blue) wavelengths of sunlight far more than longer ones — a process called rayleigh scattering.",
+        "on a clear day the other colours reach your eye almost undisguised, but blue is the one that bounces around the most.",
+        "near sunset the path through air lengthens, blue scatters away, and what is left is red and orange."
+      ],
+      blue:[
+        "blue is a short wavelength of visible light, around 450 nanometres, and it scatters hardest off tiny particles.",
+        "your eye, sky, sea and screens all get 'blue' by lighting up the same short-wavelength receptors.",
+        "in the graph of physics, blue is the colour that travels least in a straight line and bounces the most."
+      ],
+      color:[
+        "colour is what your brain makes when light of different wavelengths lands on your retina.",
+        "objects have no colour of their own; they simply reflect some wavelengths and absorb the rest.",
+        "to a machine, colour is just three numbers — red, green, blue — that it can compare and mix."
+      ],
+      light:[
+        "light is an electromagnetic wave, and its wavelength decides the colour your eye perceives.",
+        "in physics, light is both wave and particle, and both descriptions predict how it scatters.",
+        "light travels fast, but through air it is slowed and bent differently by wavelength — the root of blue skies and rainbows."
+      ],
+      water:[
+        "water is a polar molecule, so it absorbs red light first and scatters blue — which is why deep seas look blue.",
+        "water bends and reflects light, and even a few metres change which wavelengths get through."
+      ],
+      sun:[
+        "the sun emits white light, a blend of every colour, before the atmosphere starts picking it apart.",
+        "when the sun sits low, its light crosses more air and arrives reddened — the reason sunsets are warm."
+      ],
+      moon:[
+        "the moon has no light of its own; it only bounces sunlight back at us.",
+        "a lunar eclipse happens when the earth passes between sun and moon, and only red light skirts the earth to reach it."
+      ],
+      star:[
+        "a star is a giant fusion reactor whose colour betrays its temperature — blue-white is hot, red is cool.",
+        "the light from a star tells you what it is made of before you ever get near it."
+      ],
+      temperature:[
+        "temperature is a measure of the average jiggle of atoms — hotter things jiggle faster.",
+        "colour and temperature are linked: hot objects glow white, hotter ones shift toward blue."
+      ],
+      energy:[
+        "energy is the capacity to make things happen — it moves, changes form, but is never destroyed.",
+        "light carries energy, and more energetic light means shorter wavelengths, which means bluer colour."
+      ],
+      gravity:[
+        "gravity is the curvature of spacetime that pulls mass together and keeps planets in orbit.",
+        "the same invisible force that drops an apple keeps the moon from flying off into space."
+      ],
+      time:[
+        "time is what a clock measures; in physics it is treated as a dimension alongside the three of space.",
+        "gravity slows time — near a massive body, seconds tick a little slower."
+      ],
+      space:[
+        "space is mostly empty, but it curves, stretches and carries waves of gravity and light through it.",
+        "between the stars, 'nothing' still holds fields, dust, and the light that crosses it."
+      ],
+      love:[
+        "love is a bond your brain encodes through chemicals and repeated habits, reshaped by every memory.",
+        "romantic love, friendship and attachment each run on different but overlapping brain chemistry."
+      ],
+      brain:[
+        "the brain is a network of ~86 billion neurons that encode memory and thought as weighted connections — the same shape your graph takes.",
+        "learning, to a brain, is strengthening the paths you use and pruning the ones you do not."
+      ],
+      sleep:[
+        "sleep is when the brain consolidates memory, moving the day's information into long-term storage.",
+        "your brain prunes and reorganises connections while you sleep — like the graph tidying itself."
+      ],
+      dream:[
+        "dreams can replay and recombine the day's memories, mixing fragments into strange new shapes.",
+        "in dreaming, the brain rehearses acquired patterns — a kind of creative re-run."
+      ],
+      body:[
+        "your body is a dense network of sensors and muscles coordinated by a nervous system of ~86 billion neurons.",
+        "hormones and nerves let the body talk to itself — a signalling loop much like a neural net."
+      ],
+      machine:[
+        "a machine is a tool that does work by applying predictable rules — a robot does it mindlessly, a machine learning system improves.",
+        "an ai is a machine that learns the rules from examples instead of being handed them."
+      ],
+      computer:[
+        "a computer is a machine that manipulates numbers according to instructions — the substrate on which every ai runs.",
+        "what we call 'thinking' in a computer is literally billions of arithmetic steps done very fast."
+      ],
+      human:[
+        "a human mind is a pattern-recognising machine built from neurons, shaped by culture and experience.",
+        "humans generalise from a handful of examples; machines need thousands — that gap is the frontier of ai."
+      ],
+      future:[
+        "predicting the future is the core trick of ai — from the next token to the next day.",
+        "the future of ai hinges on whether it can move from pattern-matching to genuine reasoning."
+      ],
+      hope:[
+        "hope is an expectation about a possible future — a prediction about what could still happen.",
+        "to plan at all is to run a small simulation of a hoped-for future."
+      ],
+      fear:[
+        "fear is a fast, ancient alarm system wired to protect you before you have time to think.",
+        "in the brain, fear runs through the amygdala — a shortcut that bypasses slow reasoning.",
+        "fear can be unlearned: the brain rewrites a threat's meaning through new, safer experiences."
+      ],
+      ai:[
+        "ai is software that learns patterns from data instead of following hand-written rules.",
+        "modern ai is mostly statistics at a planetary scale — prediction, not magic.",
+        "an ai model has no understanding; it has probabilities and a good memory."
+      ],
+      learning:[
+        "learning in ai means nudging weights until the output matches the training data.",
+        "machine learning is curve-fitting that scales until it seems like thought."
+      ],
+      data:[
+        "data is the fuel — the more varied it is, the more robust the learning.",
+        "an ai is only as good as the data it was taught on."
+      ]
+    };
+    const pool=base[word]||GENERIC;
+    return pool.slice().sort(()=>Math.random()-0.5).slice(0,3);
+  }
 
   const STOP=["a","an","the","is","are","was","were","be","been","being","do","does","did","to","of","in","on","for","and","or","but","why","how","what","when","where","who","it","its","so","my","me","even","can","with","you","i","that","this","there","than","as","at","by","from","your","have","has","not","just","which","will","would","should","could","about"];
 
@@ -969,11 +1097,6 @@
     return {known,unknowns};
   }
 
-  function factsFor(word){
-    if(FACTS[word])return FACTS[word].slice();
-    return [...GENERIC].sort(()=>Math.random()-0.5).slice(0,3);
-  }
-
   // ---------- mutations ----------
   function ensureGroup(word){
     let g=NODES.find(n=>n.group===word);
@@ -1055,41 +1178,53 @@
   // ---------- shared-word connectors ----------
   // find words that appear inside the facts of two (or more) keyword clusters,
   // add a small connector node in the middle and link the clusters to it.
-  const CONNECTOR_WORDS=['light','data','predict','learn','pattern','brain','text','math','matter','guess'];
+  // every connector keeps a distinct label so you never see "data, data, data".
+  const CONNECTOR_WORDS=['light','data','predict','learn','pattern','brain','text','math','matter','guess','colour','color','water','air','energy','time','wavelength','connection','memory','maths','language','weight','training','attention','output','number','example','rule','story','wave','particle','molecule','nerve','scatter','sun','sunlight','visible','surface','field','force','motion','signal','image','sound','code','warm','cool'];
   function tokenizeFact(f){
-    return f.toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>3);
+    return f.toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).map(stemWord).filter(w=>w.length>3);
+  }
+  function stemWord(w){
+    // crude plural/suffix normalisation so "wavelengths" matches "wavelength"
+    if(w.length>5&&w.endsWith('ies'))return w.slice(0,-3)+'y';
+    if(w.length>4&&w.endsWith('es'))return w.slice(0,-2);
+    if(w.length>4&&w.endsWith('s')&&!w.endsWith('ss'))return w.slice(0,-1);
+    return w;
+  }
+  function freqWord(w){
+    // a whitelist of genuinely connective words
+    return ['light','color','colour','water','air','sun','time','energy','shape','motion','rule','word','idea','fact','link','part','kind','way','need','make','see','use','wavelength','wave','particle','molecule','memory','nerve','signal','brain','network','connection','pattern','data','prediction','scatter','visible','warm','cool','blue','red','green','white','short','long','tiny','hot','cold'].includes(w);
   }
   function finishConnectors(){
     const groups=groupLabels();
     if(groups.length<2)return;
+    const used=new Set(connectorNodes().map(c=>c.label));
     let added=0;
     for(let i=0;i<groups.length;i++){
       for(let j=i+1;j<groups.length;j++){
         const a=groups[i],b=groups[j];
         const fa=factLabelsInGroup(a),fb=factLabelsInGroup(b);
-        const wa={},wb={};
-        fa.forEach(f=>tokenizeFact(f.label).forEach(w=>{if(CONNECTOR_WORDS.includes(w)||freqWord(w))wa[w]=1;}));
-        fb.forEach(f=>tokenizeFact(f.label).forEach(w=>{if(CONNECTOR_WORDS.includes(w)||freqWord(w))wb[w]=1;}));
-        // choose the first word shared by both clusters
-        let shared=null;
-        for(let w in wa){if(wb[w]){shared=w;break;}}
-        if(!shared)continue;
-        // connector node between the two clusters
+        const shared=[]
+        const wa=new Set(),wb=new Set();
+        fa.forEach(f=>tokenizeFact(f.label).forEach(w=>{if(CONNECTOR_WORDS.includes(w)||freqWord(w))wa.add(w);}));
+        fb.forEach(f=>tokenizeFact(f.label).forEach(w=>{if(CONNECTOR_WORDS.includes(w)||freqWord(w))wb.add(w);}));
+        // shared words in insertion-friendly order, skipping already-used connectors
+        for(let w of wa){if(wb.has(w)&&!used.has(w)&&!shared.includes(w))shared.push(w);}
+        // if all distinct connectors are taken for this pair, allow reuse only as a fallback
+        if(shared.length===0){for(let w of wa){if(wb.has(w)&&!shared.includes(w))shared.push(w);}}
+        if(shared.length===0)continue;
+        const chosen=shared.find(s=>s!==a.group&&s!==b.group)||shared[0];
+        used.add(chosen);
         const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
-        const c={group:null,label:shared,color:2 /*mint*/,conn:2,x:cx+rnd(-10,10),y:cy+rnd(-10,10),pinned:false,connector:true,age:0};
+        const c={group:null,label:chosen,color:2 /*mint*/,conn:2,x:cx+rnd(-10,10),y:cy+rnd(-10,10),pinned:false,connector:true,age:0};
         NODES.push(c);
         EDGES.push({a:a,b:c,len:rnd(60,90)});
         EDGES.push({a:b,b:c,len:rnd(60,90)});
         a.conn++;b.conn++;c.conn=2;
         added++;
-        if(added>=4)return;
+        if(added>=6)return;
       }
     }
     if(added>0)saveGraph();
-  }
-  function freqWord(w){
-    // a whitelist of genuinely connective words
-    return ['light','color','colour','water','air','sun','time','energy','shape','motion','rule','word','idea','fact','link','part','kind','way','need','make','see','use'].includes(w);
   }
   function factLabelsInGroup(g){
     return NODES.filter(n=>!n.group&&EDGES.some(e=>e.a===g&&e.b===n));
@@ -1138,8 +1273,10 @@
     const shared=connectors.map(c=>c.label);
     let conclusion;
     if(shared.length){
+      const shareList=shared.slice(0,3).join(', ');
       conclusion='putting it together: the graph connects <b>'+escapeHtml(kws)+'</b> through the shared idea'+
-        (shared.length>1?'s':'')+' <b>'+escapeHtml(shared.join(', '))+'</b>. click the facts in the graph to see how each one feeds the answer.';
+        (shared.length>1?'s':'')+' <b>'+escapeHtml(shareList)+(shared.length>3?' and more':'')+'</b>. '+
+        'click the facts in the graph to see how each one feeds the answer.';
     }else{
       conclusion='about <b>'+escapeHtml(kws)+'</b>: the facts are laid out in the graph. keep asking and the shared ideas between topics will appear as mint connector nodes.';
     }
