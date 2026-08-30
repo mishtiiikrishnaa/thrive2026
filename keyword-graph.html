@@ -3,96 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>graphic.ai — obsidian graph view</title>
+<title>graphic.ai — obsidian graph</title>
 <style>
 @import url('https://fonts.cdnfonts.com/css/cmu-typewriter-text');
   :root{
-    --pink:#ffa6c9;--lilac:#cbb0e8;--mint:#a9e8d4;--bg:#0d0a10;--card:#16101a;
-    --txt:#f6e7ee;--txt-dim:#b895a8;--txt-faint:#8a6a7d;
+    --pink:#ffa6c9;--lilac:#cbb0e8;--mint:#a9e8d4;--peach:#ffd3b3;
+    --bg:#0d0a10;--card:#16101a;--txt:#f6e7ee;--txt-dim:#b895a8;--txt-faint:#8a6a7d;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-family:'Computer Modern Typewriter','CMU Typewriter Text',monospace;color:var(--txt);letter-spacing:0.01em;}
-  /* background dots like obsidian */
+  /* dot grid background */
   body::before{
-    content:"";position:fixed;inset:0;
-    background-image:radial-gradient(circle,rgba(255,166,201,0.08) 1px,transparent 1px);
-    background-size:28px 28px;pointer-events:none;z-index:0;opacity:0.6;
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(circle,rgba(255,166,201,0.07) 1px,transparent 1px);
+    background-size:24px 24px;
   }
-  /* grid overlay lines like obsidian */
+  /* subtle cross grid like obsidian */
   body::after{
-    content:"";position:fixed;inset:0;
-    background:linear-gradient(rgba(255,166,201,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,166,201,0.03) 1px,transparent 1px);
-    background-size:60px 60px;pointer-events:none;z-index:0;opacity:0.4;
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:linear-gradient(rgba(255,166,201,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,166,201,0.025) 1px,transparent 1px);
+    background-size:80px 80px;
   }
-  .graph{position:relative;z-index:1;width:100vw;height:100vh;padding:3vh 3vw;display:flex;gap:3vw;align-items:center;justify-content:center;flex-wrap:wrap;}
-  /* node = card as circle */
+  /* graph container */
+  #graph-area{position:fixed;inset:0;z-index:1;}
+  /* nodes: small dots by default */
   .node{
-    position:relative;width:200px;height:200px;border-radius:50%;
-    background:var(--card);border:1.5px solid rgba(255,166,201,0.2);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
-    padding:1.2rem;transition:all 0.35s ease;box-shadow:0 4px 20px rgba(255,166,201,0.06),inset 0 0 30px rgba(255,166,201,0.05);
-    cursor:pointer;z-index:2;flex-shrink:0;
+    position:absolute;width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,var(--pink),rgba(255,166,201,0.4));
+    border:1px solid rgba(255,166,201,0.45);
+    box-shadow:0 0 6px rgba(255,166,201,0.4);
+    cursor:pointer;transition:all 0.3s ease;z-index:5;
   }
-  .node:hover{border-color:rgba(255,166,201,0.7);box-shadow:0 0 40px rgba(255,166,201,0.25),inset 0 0 40px rgba(255,166,201,0.12);transform:translateY(-4px);z-index:10;}
-  .node h3{font-family:'Computer Modern Serif',serif;font-size:1.05rem;color:var(--pink-soft);margin-bottom:0.6rem;letter-spacing:0.02em;}
-  .node .ic{font-size:1.8rem;margin-bottom:0.4rem;filter:drop-shadow(0 0 8px rgba(255,166,201,0.3));}
-  .node p{font-size:0.78rem;color:var(--txt-dim);line-height:1.55;opacity:0.9;}
-  .node .dot-indicator{
-    position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;
-    background:var(--lilac);border:2px solid var(--bg);box-shadow:0 0 8px var(--lilac);
+  /* hover: show title only */
+  .node:hover .node-label{opacity:1;transform:translateY(0) scale(1);pointer-events:none;}
+  .node-label{
+    position:absolute;top:-28px;left:50%;transform:translateX(-50%) translateY(4px) scale(0.95);
+    white-space:nowrap;font-size:0.75rem;color:var(--pink-soft);opacity:0;transition:all 0.25s ease;
+    text-shadow:0 0 12px rgba(255,166,201,0.5);
   }
-  /* edges drawn as thin lines between nodes */
-  .graph .edge{
-    position:absolute;background:rgba(255,166,201,0.18);height:1.5px;z-index:0;pointer-events:none;
+  /* click: show card */
+  .node.active{width:220px;height:260px;border-radius:16px;background:var(--card);border:1.5px solid rgba(255,166,201,0.35);box-shadow:0 0 40px rgba(255,166,201,0.35),inset 0 0 40px rgba(255,166,201,0.08);z-index:20;transition:all 0.35s ease;}
+  .node.active:hover{transform:translateY(-6px);box-shadow:0 0 60px rgba(255,166,201,0.45),inset 0 0 40px rgba(255,166,201,0.12);}
+  .node.active .node-label{display:none;}
+  .node.active .card-body{display:block;}
+  /* card content hidden by default */
+  .card-body{
+    display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;padding:1rem;text-align:center;
   }
-  /* header minimal */
-  header{position:fixed;top:0;left:0;right:0;z-index:50;padding:0.8rem 2rem;display:flex;justify-content:space-between;align-items:center;background:rgba(13,10,16,0.6);backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,166,201,0.06);}
-  header h1{font-family:'Computer Modern Serif',serif;font-size:1rem;color:var(--pink-soft);}
+  .card-body h3{font-family:'Computer Modern Serif',serif;font-size:1rem;color:var(--pink-soft);margin-bottom:0.5rem;text-shadow:0 0 15px rgba(255,166,201,0.4);}
+  .card-body p{font-size:0.8rem;color:var(--txt-dim);line-height:1.55;}
+  /* connections (edges) */
+  .edge{position:absolute;height:1px;background:rgba(255,166,201,0.2);z-index:1;pointer-events:none;transform-origin:left center;}
+  /* header */
+  header{position:fixed;top:0;left:0;right:0;z-index:50;padding:0.7rem 2rem;display:flex;justify-content:space-between;align-items:center;background:rgba(13,10,16,0.55);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,166,201,0.08);}
+  header h1{font-family:'Computer Modern Serif',serif;font-size:1.05rem;color:var(--pink-soft);}
   header span{color:var(--txt-faint);font-size:0.75rem;letter-spacing:0.08em;text-transform:lowercase;}
-  /* responsive shrink for small screens */
-  @media(max-width:1000px){.node{width:140px;height:140px;padding:0.6rem;}.node h3{font-size:0.85rem;}.node p{font-size:0.68rem;}.node .ic{font-size:1.3rem;}}
+  /* close hint */
+  .hint{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:40;color:var(--txt-faint);font-size:0.75rem;letter-spacing:0.08em;text-transform:lowercase;opacity:0.6;pointer-events:none;}
 </style>
 </head>
 <body>
-<header><h1>graphic<b style="color:#fff">.</b>ai</h1><span>obsidian knowledge graph</span></header>
-<div class="graph" id="graph">
-  <!-- nodes placed with inline styles for positioning -->
-  <div class="node" style="left:5%;top:15%;"><div class="dot-indicator"></div><h3>training</h3><div class="ic">🍞</div><p>an ai learns from staggering amounts of text — books, code, conversations — and finds statistical patterns within them. no rules are written by hand.</p></div>
-  <div class="node" style="left:25%;top:8%;"><div class="dot-indicator" style="background:var(--mint)"></div><h3>weights</h3><div class="ic">🧠</div><p>millions of small numbers nudged during training. the model stores its memory as these weights, adjusted slowly by error.</p></div>
-  <div class="node" style="left:48%;top:5%;"><div class="dot-indicator" style="background:var(--pink)"></div><h3>attention</h3><div class="ic">🌐</div><p>transformers don't read linearly. attention weighs every token against every other to decide what matters for the next prediction.</p></div>
-  <div class="node" style="left:72%;top:12%;"><div class="dot-indicator" style="background:var(--peach)"></div><h3>inference</h3><div class="ic">🪄</div><p>prompt runs the maths forward: predict next token, repeat. an answer emerges from pure probability, not understanding.</p></div>
-  <div class="node" style="left:82%;top:30%;"><div class="dot-indicator" style="background:var(--lilac)"></div><h3>backprop</h3><div class="ic">📉</div><p>error is measured, then pushed backward through every layer. weights shift slightly. repeated billions of times, mistakes shrink.</p></div>
-  <div class="node" style="left:85%;top:55%;"><div class="dot-indicator"></div><h3>generation</h3><div class="ic">🔁</div><p>nothing is truly created. the model joins probable pieces of what it has seen into something that feels original.</p></div>
-  <div class="node" style="left:62%;top:60%;"><div class="dot-indicator" style="background:var(--mint)"></div><h3>tokenization</h3><div class="ic">🔤</div><p>text is chopped into pieces — tokens — then mapped to numbers. the model never sees words, only arithmetic on ids.</p></div>
-  <div class="node" style="left:42%;top:75%;"><div class="dot-indicator" style="background:var(--pink)"></div><h3>creativity</h3><div class="ic">🎲</div><p>temperature controls randomness. high: vivid, risky, sometimes wrong. low: safe, dull, predictable. imagination is a dial.</p></div>
-  <div class="node" style="left:18%;top:62%;"><div class="dot-indicator"></div><h3>hallucination</h3><div class="ic">👻</div><p>the model confidently invents false facts. it predicts what sounds right, not what is true. grounding in real facts fixes this.</p></div>
-  <div class="node" style="left:30%;top:10%;"><div class="dot-indicator" style="background:var(--lilac)"></div><h3>embedding</h3><div class="ic">🧮</div><p>each token becomes a high-dimensional vector. similar meanings live near each other. arithmetic works on meaning.</p></div>
-  <div class="node" style="left:50%;top:12%;"><div class="dot-indicator" style="background:#ffd3b3"></div><h3>gradient</h3><div class="ic">🌊</div><p>backprop sends corrections backward. in deep networks, signals can vanish or explode. careful plumbing keeps learning alive.</p></div>
-  <div class="node" style="left:40%;top:82%;"><div class="dot-indicator" style="background:var(--mint)"></div><h3>temperature</h3><div class="ic">🎲</div><p>a randomness dial for the next token. low = safe. high = wild. creativity and accuracy trade off directly.</p></div>
+<header><h1>graphic<b style="color:#fff">.</b>ai</h1><span>obsidian graph view</span></header>
+<div class="hint">hover — title · click — expand</div>
+<div id="graph-area">
+  <!-- nodes -->
+  <div class="node" data-title="training" data-content="an ai is not programmed with rules. it is fed staggering amounts of text — books, code, conversations — and learns the statistical shape of language within them." style="left:12%;top:20%;">
+    <span class="node-label">training</span>
+    <div class="card-body"><h3>training</h3><p>an ai learns from staggering amounts of text — books, code, conversations — and finds statistical patterns within them. no rules are written by hand.</p></div>
+  </div>
+  <div class="node" data-title="weights" data-content="millions of small numbers called weights are nudged during training. adjusting them is how the model stores what it has learned." style="left:30%;top:12%;">
+    <span class="node-label">weights</span>
+    <div class="card-body"><h3>weights</h3><p>millions of small numbers nudged during training. the model stores its memory as these weights, adjusted slowly by error.</p></div>
+  </div>
+  <div class="node" data-title="attention" data-content="transformers don't read linearly. attention weighs every token against every other to decide what matters for the next prediction." style="left:50%;top:8%;">
+    <span class="node-label">attention</span>
+    <div class="card-body"><h3>attention</h3><p>transformers don't read linearly. attention weighs every token against every other to decide what matters for the next prediction.</p></div>
+  </div>
+  <div class="node" data-title="inference" data-content="prompt runs the maths forward: predict next token, repeat. an answer emerges from pure probability, not understanding." style="left:68%;top:15%;">
+    <span class="node-label">inference</span>
+    <div class="card-body"><h3>inference</h3><p>prompt runs the maths forward: predict next token, repeat. an answer emerges from pure probability, not understanding.</p></div>
+  </div>
+  <div class="node" data-title="backprop" data-content="error is measured, then pushed backward through every layer. weights shift slightly. repeated billions of times, mistakes shrink." style="left:82%;top:28%;">
+    <span class="node-label">backprop</span>
+    <div class="card-body"><h3>backprop</h3><p>error measured, pushed backward through every layer. weights shift slightly. repeated billions of times, mistakes shrink.</p></div>
+  </div>
+  <div class="node" data-title="generation" data-content="nothing is truly created. the model joins probable pieces of what it has seen into something that feels original." style="left:85%;top:55%;">
+    <span class="node-label">generation</span>
+    <div class="card-body"><h3>generation</h3><p>nothing truly created. the model joins probable pieces of what it has seen into something that feels original.</p></div>
+  </div>
+  <div class="node" data-title="tokenization" data-content="text is chopped into pieces — tokens — then mapped to numbers. the model never sees words, only arithmetic on ids." style="left:60%;top:62%;">
+    <span class="node-label">tokenization</span>
+    <div class="card-body"><h3>tokenization</h3><p>text chopped into pieces — tokens — mapped to numbers. the model never sees words, only arithmetic on ids.</p></div>
+  </div>
+  <div class="node" data-title="creativity" data-content="temperature controls randomness. high: vivid, risky, sometimes wrong. low: safe, dull, predictable. imagination is a dial." style="left:38%;top:78%;">
+    <span class="node-label">creativity</span>
+    <div class="card-body"><h3>creativity</h3><p>temperature controls randomness. high: vivid, risky, sometimes wrong. low: safe, dull. imagination is a dial.</p></div>
+  </div>
+  <div class="node" data-title="hallucination" data-content="the model confidently invents false facts. it predicts what sounds right, not what is true. grounding in real facts fixes this." style="left:18%;top:58%;">
+    <span class="node-label">hallucination</span>
+    <div class="card-body"><h3>hallucination</h3><p>confidently invents false facts. predicts what sounds right, not true. grounding in real facts fixes this.</p></div>
+  </div>
+  <div class="node" data-title="embedding" data-content="each token becomes a high-dimensional vector. similar meanings live near each other. arithmetic works on meaning." style="left:28%;top:12%;">
+    <span class="node-label">embedding</span>
+    <div class="card-body"><h3>embedding</h3><p>each token a high-dimensional vector. similar meanings live near each other. arithmetic works on meaning.</p></div>
+  </div>
+  <div class="node" data-title="gradient" data-content="backprop sends corrections backward. in deep networks, signals can vanish or explode. careful plumbing keeps learning alive." style="left:52%;top:14%;">
+    <span class="node-label">gradient</span>
+    <div class="card-body"><h3>gradient</h3><p>backprop sends corrections backward. in deep networks signals vanish or explode. careful plumbing keeps learning alive.</p></div>
+  </div>
+  <div class="node" data-title="temperature" data-content="a randomness dial for the next token. low = safe. high = wild. creativity and accuracy trade off directly." style="left:42%;top:86%;">
+    <span class="node-label">temperature</span>
+    <div class="card-body"><h3>temperature</h3><p>a randomness dial. low = safe. high = wild. creativity and accuracy trade off directly.</p></div>
+  </div>
 </div>
 <script>
-// draw connection lines between nodes
 const nodes=[...document.querySelectorAll('.node')];
-const graph=document.getElementById('graph');
-function connect(a,b){
-  const rectA=a.getBoundingClientRect(),rectB=b.getBoundingClientRect();
-  const cxA=rectA.left+rectA.width/2,cyA=rectA.top+rectA.height/2;
-  const cxB=rectB.left+rectB.width/2,cyB=rectB.top+rectB.height/2;
-  const dx=cxB-cxA,dy=cyB-cyA,len=Math.sqrt(dx*dx+dy*dy);
-  const angle=Math.atan2(dy,dx)*180/Math.PI;
-  const line=document.createElement('div');
-  line.style.cssText='position:absolute;height:1px;background:rgba(255,166,201,0.18);transform-origin:left center;pointer-events:none;z-index:0;';
-  line.style.width=len+'px';line.style.left=cxA+'px';line.style.top=cyA+'px';line.style.transform='rotate('+angle+'deg)';
-  document.body.appendChild(line);
-}
-// connect nodes that are close
-nodes.forEach((a,i)=>{
-  nodes.slice(i+1).forEach(b=>{
-    const rA=a.getBoundingClientRect(),rB=b.getBoundingClientRect();
-    const d=Math.hypot(rA.left-rB.left,rA.top-rB.top);
-    if(d<350)connect(a,b);
+// click to expand card, hover shows label (already css), second click closes
+nodes.forEach(n=>{
+  n.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const was=n.classList.contains('active');
+    nodes.forEach(x=>x.classList.remove('active'));
+    if(!was) n.classList.add('active');
   });
 });
+document.addEventListener('click',()=>{
+  nodes.forEach(x=>x.classList.remove('active'));
+});
+// draw edges
+function drawEdges(){
+  nodes.forEach((a,i)=>{
+    nodes.slice(i+1).forEach(b=>{
+      const rA=a.getBoundingClientRect(),rB=b.getBoundingClientRect();
+      const cxA=rA.left+rA.width/2,cyA=rA.top+rA.height/2;
+      const cxB=rB.left+rB.width/2,cyB=rB.top+rB.height/2;
+      const dx=cxB-cxA,dy=cyB-cyA,len=Math.sqrt(dx*dx+dy*dy);
+      const angle=Math.atan2(dy,dx)*180/Math.PI;
+      if(len>400)return;
+      const line=document.createElement('div');
+      line.style.cssText='position:absolute;height:1px;background:rgba(255,166,201,0.22);transform-origin:left center;pointer-events:none;z-index:0;';
+      line.style.width=len+'px';line.style.left=cxA+'px';line.style.top=cyA+'px';
+      line.style.transform='rotate('+angle+'deg)';document.body.appendChild(line);
+    });
+  });
+}
+window.addEventListener('load',drawEdges);
 </script>
 </body>
 </html>
