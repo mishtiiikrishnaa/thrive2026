@@ -9,138 +9,75 @@
     --bg: #0a0a0f;
     --ink: #e9e9ee;
     --grey: #8e8e98;
-    --dim: #45454d;
+    --dim: #40404a;
     --accent: #ffa6c9;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--ink);
-    overflow: hidden;
-  }
+  html, body { height: 100%; background: var(--bg); overflow: hidden; }
 
   body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
-  }
-
-  .scene {
-    position: relative;
-    height: 100vh;
-    overflow: hidden;
-  }
-
-  #stage {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-
-  .title {
-    position: absolute;
-    top: 7%;
-    left: 0;
-    right: 0;
-    text-align: center;
-    pointer-events: none;
-    user-select: none;
-  }
-  .title h1 {
-    font-family: Georgia, "Times New Roman", serif;
-    font-weight: 400;
-    font-size: clamp(22px, 3.4vw, 40px);
-    letter-spacing: 0.02em;
-    line-height: 1.3;
     color: var(--ink);
   }
 
+  .scene { position: relative; height: 100vh; }
+  #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .title {
+    position: absolute; top: 6%; left: 0; right: 0;
+    text-align: center; pointer-events: none; user-select: none;
+  }
+  .title h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400; font-size: clamp(22px, 3.4vw, 40px);
+    letter-spacing: 0.02em; line-height: 1.3; color: var(--ink);
+  }
   .hint {
-    margin-top: 14px;
-    font-size: 12px;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: var(--dim);
+    margin-top: 14px; font-size: 12px; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--dim);
   }
 
   .ui {
-    position: absolute;
-    bottom: 7%;
-    left: 0;
-    right: 0;
-    text-align: center;
-    user-select: none;
+    position: absolute; bottom: 6%; left: 0; right: 0;
+    text-align: center; user-select: none;
   }
-
-  .chips {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
+  .chips { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
   .chip {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 13.5px;
-    letter-spacing: 0.03em;
-    color: var(--grey);
-    background: transparent;
-    border: 1px solid var(--dim);
-    border-radius: 999px;
-    padding: 10px 22px;
-    cursor: pointer;
-    outline: none;
+    font-size: 13.5px; letter-spacing: 0.03em; color: var(--grey);
+    background: transparent; border: 1px solid var(--dim);
+    border-radius: 999px; padding: 10px 22px; cursor: pointer; outline: none;
     transition: color 0.35s ease, border-color 0.35s ease, opacity 0.35s ease;
   }
   .chip:hover:not(.off) { color: var(--accent); border-color: rgba(255,166,201,0.5); }
-  .chip.off { opacity: 0.35; cursor: default; pointer-events: none; }
+  .chip.off { opacity: 0.3; cursor: default; pointer-events: none; }
 
   .again {
-    display: inline-block;
-    margin-top: 22px;
-    font-size: 12px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--grey);
-    opacity: 0;
-    cursor: pointer;
+    display: inline-block; margin-top: 20px; font-size: 12px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--grey); opacity: 0; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--dim);
     transition: opacity 0.8s ease, color 0.3s ease;
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    text-decoration-color: var(--dim);
   }
   .again:hover { color: var(--accent); }
   .again.show { opacity: 1; }
 
   .reply {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 61%;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(6px);
-    transition: opacity 1.2s ease, transform 1.2s ease;
-    user-select: none;
+    position: absolute; left: 0; right: 0; top: 63%;
+    text-align: center; pointer-events: none; user-select: none;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 1.3s ease, transform 1.3s ease;
   }
-  .reply.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .reply.show { opacity: 1; transform: translateY(0); }
   .reply p {
-    max-width: 560px;
-    margin: 0 auto;
-    font-size: 16px;
-    line-height: 1.7;
-    letter-spacing: 0.02em;
-    color: var(--grey);
+    display: inline-block; max-width: 620px; margin: 0 auto; padding: 14px 26px;
+    font-family: Georgia, "Times New Roman", serif; font-style: italic;
+    font-size: 17px; line-height: 1.7; color: var(--ink);
+    background: rgba(10,10,15,0.72);
+    box-shadow: 0 0 0 1px rgba(255,166,201,0.08), 0 0 60px rgba(255,166,201,0.05);
+    border-radius: 6px;
   }
-  .reply p .soft { color: var(--ink); font-style: italic; font-family: Georgia, serif; }
 </style>
 </head>
 <body>
@@ -170,81 +107,165 @@
   var againEl = document.getElementById('again');
 
   var ACCENT = '#ffa6c9';
-  var DIMGREY = 'rgba(230,230,236,0.30)';
+
+  // ------------------------------------------------------------- the field
+
+  var WORDS_ALL = [
+    // science pocket
+    { t: 'rayleigh' },  { t: 'wavelength' }, { t: 'photon' },    { t: 'scatter' },
+    { t: 'atmosphere' },{ t: 'entropy' },    { t: 'gravity' },   { t: 'velocity' },
+    // craft pocket
+    { t: 'meter' },     { t: 'cadence' },    { t: 'stanza' },    { t: 'metaphor' },
+    { t: 'imagery' },   { t: 'rhyme' },      { t: 'silence' },   { t: 'ink' },
+    // appetite pocket
+    { t: 'hunger' },    { t: 'spice' },      { t: 'comfort' },   { t: 'craving' },
+    { t: 'warmth' },    { t: 'ritual' },     { t: 'coffee' },    { t: 'salt' },
+    // noise — no cluster
+    { t: 'arjuna' },    { t: 'dharma' },     { t: 'indigo' },    { t: 'static' },
+    { t: 'thunder' },   { t: 'lotus' },      { t: 'recursion' }, { t: 'horizon' },
+    { t: 'quartz' },    { t: 'mirror' },     { t: 'pulse' },     { t: 'tide' },
+    { t: 'fracture' },  { t: 'orbit' },      { t: 'whisper' },   { t: 'carnatic' },
+    { t: 'velvet' },    { t: 'echo' }
+  ];
 
   var PROMPTS = [
     {
-      text: 'why is the sky blue',
-      words: ['why','is','the','sky','blue'],
-      reply: 'light comes in <span class="soft">white</span> and leaves as blue.'
+      text: 'why is the sky blue', words: ['why','is','the','sky','blue'],
+      edges: {
+        why:  ['rayleigh'],
+        is:   [],
+        the:  [],
+        sky:  ['rayleigh','wavelength','atmosphere'],
+        blue: ['scatter','wavelength','photon','atmosphere']
+      },
+      reply: 'blue light scatters more than any other wavelength when it hits the atmosphere.'
     },
     {
-      text: 'write me a poem',
-      words: ['write','me','a','poem'],
-      reply: 'the stars are small holes where the dark keeps its light.'
+      text: 'write me a poem', words: ['write','me','a','poem'],
+      edges: {
+        write: ['meter','cadence'],
+        me:    [],
+        a:     [],
+        poem:  ['cadence','stanza','metaphor','rhyme','silence']
+      },
+      reply: 'something with cadence, and one line that means more than it says.'
     },
     {
-      text: 'what should i eat',
-      words: ['what','should','i','eat'],
-      reply: 'eat what the day has already warmed.'
+      text: 'what should i eat', words: ['what','should','i','eat'],
+      edges: {
+        what:   [],
+        should: [],
+        i:      ['hunger'],
+        eat:    ['hunger','comfort','spice','warmth','craving']
+      },
+      reply: 'something warm. something that isn\u2019t just calories.'
     }
   ];
 
+  // per-word state: matchBy = prompt-word indices that lit it
+  var words = [];
+  var wordIndex = {};   // text -> index
+
   var W, H, DPR;
-  var dots = [];          // the standing constellation
-  var seeds = [];         // words entering from the top
-  var now = 0;            // ms clock (updated per frame)
-  var started = 0;        // when the current sequence began
-  var state = 'idle';     // idle | sequence | condensing | answered
-  var frame = 0;
+  var now = 0, frame = 0;
+  var state = 'idle';        // idle | sequence | answered
+  var seeds = [];
+  var started = 0;
 
-  var condensation = null;   // { members, target, start, dur }
-  var node = null;           // { x, y, born } the single lit answer
+  // ------------------------------------------------------------ field build
 
-  // ---------------------------------------------------------------- dots
+  function makeWordObjects() {
+    words = [];
+    wordIndex = {};
+    var base = [
+      { t: 'rayleigh', cl: 0 },  { t: 'wavelength', cl: 0 }, { t: 'photon', cl: 0 },   { t: 'scatter', cl: 0 },
+      { t: 'atmosphere', cl: 0 },{ t: 'entropy', cl: 0 },    { t: 'gravity', cl: 0 },  { t: 'velocity', cl: 0 },
+      { t: 'meter', cl: 1 },     { t: 'cadence', cl: 1 },    { t: 'stanza', cl: 1 },   { t: 'metaphor', cl: 1 },
+      { t: 'imagery', cl: 1 },   { t: 'rhyme', cl: 1 },      { t: 'silence', cl: 1 },  { t: 'ink', cl: 1 },
+      { t: 'hunger', cl: 2 },    { t: 'spice', cl: 2 },      { t: 'comfort', cl: 2 },  { t: 'craving', cl: 2 },
+      { t: 'warmth', cl: 2 },    { t: 'ritual', cl: 2 },     { t: 'coffee', cl: 2 },   { t: 'salt', cl: 2 }
+    ];
+    for (var j = 0; j < 18; j++) base.push({ t: WORDS_ALL[24 + j].t, cl: -1 });
 
-  function makeConstellation() {
-    dots = [];
-    var n = 50;
-    // 4 loose clusters imply structure
-    var clusters = [];
-    for (var c = 0; c < 4; c++) {
-      clusters.push({
-        x: W * rand(0.15, 0.85),
-        y: H * rand(0.2, 0.82),
-        count: 9 + Math.floor(Math.random() * 4)
-      });
+    for (var i = 0; i < base.length; i++) {
+      var w = {
+        text: base[i].t,
+        size: rand(10, 22),
+        idleOp: rand(0.2, 0.5),
+        cl: base[i].cl,
+        x: 0, y: 0,
+        dp: rand(0, Math.PI * 2),
+        ph: rand(0, Math.PI * 2),
+        drift: rand(1.5, 6),
+        matchBy: [],
+        flashT: 0,
+        dims: null
+      };
+      words.push(w);
+      wordIndex[w.text] = i;
     }
-    var per = [];
-    for (var i = 0; i < clusters.length; i++) {
-      for (var j = 0; j < clusters[i].count; j++) per.push(i);
-    }
-    while (per.length < n - 8) per.push(-1);         // stragglers
-    while (per.length < n) per.push(-1);
+    placeWords();
+  }
 
-    for (var k = 0; k < per.length; k++) {
-      var cl = per[k] >= 0 ? clusters[per[k]] : null;
-      var x, y;
-      if (cl) {
-        x = cl.x + rand(-1, 1) * 160;
-        y = cl.y + rand(-1, 1) * 130;
-      } else {
-        x = rand(0.04, 0.96) * W;
-        y = rand(0.14, 0.9) * H;
+  function placeWords() {
+    // pockets for themed clusters
+    var pockets = [
+      { x: W * 0.26, y: H * 0.42, r: 150 },   // science
+      { x: W * 0.72, y: H * 0.52, r: 150 },   // craft
+      { x: W * 0.5,  y: H * 0.76, r: 150 }    // appetite
+    ];
+
+    var idxs = [], order = [];
+    for (var i = 0; i < words.length; i++) idxs.push(i);
+    // shuffle slightly so placement isn't predictable
+    order = idxs.slice();
+    for (var k = order.length - 1; k > 0; k--) {
+      var r = Math.floor(Math.random() * (k + 1));
+      var tmp = order[k]; order[k] = order[r]; order[r] = tmp;
+    }
+
+    var rects = [];
+    ctx.save();
+    for (var n = 0; n < order.length; n++) {
+      var wi = order[n];
+      var w = words[wi];
+      ctx.font = w.size + 'px "Helvetica Neue", sans-serif';
+      var twid = ctx.measureText(w.text).width + 14;
+      var theight = w.size * 1.6;
+      var cx, cy, ok = false;
+      for (var att = 0; att < 500 && !ok; att++) {
+        if (w.cl >= 0) {
+          var pc = pockets[w.cl];
+          cx = pc.x + (gauss() * pc.r) * 0.55;
+          cy = pc.y + (gauss() * pc.r) * 0.55;
+        } else {
+          cx = rand(0.03, 0.97) * W;
+          cy = rand(0.13, 0.94) * H;
+        }
+        cx = clamp(cx, 30, W - 30);
+        cy = clamp(cy, 40, H - 34);
+        ok = true;
+        for (var q = 0; q < rects.length; q++) {
+          var rr = rects[q];
+          if (cx + twid / 2 > rr.x - rr.w / 2 - 8 &&
+              cx - twid / 2 < rr.x + rr.w / 2 + 8 &&
+              cy + theight / 2 > rr.y - rr.h / 2 - 8 &&
+              cy - theight / 2 < rr.y + rr.h / 2 + 8) {
+            ok = false; break;
+          }
+        }
       }
-      dots.push({
-        cx: clamp(x, 8, W - 8),
-        cy: clamp(y, 8, H - 8),
-        r: rand(1.4, 2.6),
-        ph: rand(0, Math.PI * 2),       // twinkle phase
-        dp: rand(0, Math.PI * 2),       // drift phase
-        drift: rand(1.5, 5),
-        lit: false,
-        caughtBy: [],
-        bright: false,
-        fade: 1                         // used when condensing away non-members
-      });
+      w.x = cx; w.y = cy; w.dims = { w: twid, h: theight, x: cx, y: cy };
+      rects.push(w.dims);
     }
+    ctx.restore();
+  }
+
+  function gauss() {
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   }
 
   // ---------------------------------------------------------------- seeds
@@ -253,381 +274,250 @@
     seeds = [];
     var n = prompt.words.length;
     for (var i = 0; i < n; i++) {
+      var targets = prompt.edges[prompt.words[i]] || [];
       seeds.push({
         idx: i,
-        x: W * (0.18 + i * (0.64 / (n > 1 ? n - 1 : 1))) + rand(-14, 14),
-        y: -24,
-        ty: H * (0.3 + (i % 2) * 0.05),
-        vy: 0,
+        text: prompt.words[i],
+        x: W * (0.2 + i * (0.6 / (n > 1 ? n - 1 : 1))) + rand(-20, 20),
+        y: -30,
+        ty: H * (0.2 + (i % 2) * 0.06),
         spawned: t0 + 150 * i,
         state: 'pending',
         stateAt: 0,
-        testDelay: 320 + 130 * (i % 3),
+        testDelay: 300 + 120 * (i % 3),
         testStart: 0,
         probes: [],
-        resolvedAt: 0
+        resolvedP: null
       });
     }
-  }
 
-  function makeProbes(seed) {
-    var ordered = dots.slice().sort(function (a, b) {
-      return dist2(seed.x, seed.y, a.cx, a.cy) - dist2(seed.x, seed.y, b.cx, b.cy);
-    }).slice(0, 13);
-
-    var probes = [], caught = 0;
-    for (var i = 0; i < ordered.length; i++) {
-      var d = ordered[i];
-      if (probes.some(function (p) { return p.dot === d; })) continue;
-      if (i >= 4 && caught >= 6) break;
-      var closeness = 1 - Math.sqrt(dist2(seed.x, seed.y, d.cx, d.cy)) / (W * 0.5);
-      var pCatch = clamp(0.28 + closeness * 0.55, 0.25, 0.9);
-      var hit = (i < 2) || Math.random() < pCatch;
-      if (hit && caught < 6) caught++;
-      probes.push({ dot: d, catch: hit, p: 0, resolved: false, start: 0 });
+    // assign probes after words exist (wordIndex map ready)
+    for (var s = 0; s < seeds.length; s++) {
+      var sd = seeds[s];
+      sd.targets = (prompt.edges[sd.text] || []).map(function (t) { return wordIndex[t]; });
+      sd.decoys = [];
+      // a few nearby words that won't match — near-misses
+      var n2 = 4 + Math.floor(Math.random() * 3);
+      var tries = 0;
+      while (sd.decoys.length < n2 && tries < 60) {
+        tries++;
+        var wi = Math.floor(Math.random() * words.length);
+        if (sd.targets.indexOf(wi) >= 0 || sd.decoys.indexOf(wi) >= 0) continue;
+        if (Math.abs(words[wi].x - sd.x) > W * 0.55) continue; // keep rays plausible
+        sd.decoys.push(wi);
+      }
+      sd._targets = sd.targets.slice();
+      sd._decoys = sd.decoys.slice();
     }
-    seed.probes = probes;
   }
 
-  // ---------------------------------------------------------------- sequence update
+  // -------------------------------------------------------------- lifetime
 
   function update() {
     if (state === 'idle') return;
     if (state === 'sequence') updateSequence();
-    else if (state === 'condensing') updateCondense();
-    else updateAnswered();
   }
 
   function updateSequence() {
-    var allDone = true, anyCatch = false;
+    var allDone = true;
 
     for (var i = 0; i < seeds.length; i++) {
       var s = seeds[i];
 
-      if (s.state === 'pending' && now >= s.spawned) {
-        s.state = 'falling';
-        s.vy = rand(0.5, 0.7);
-      }
+      if (s.state === 'pending' && now >= s.spawned) { s.state = 'falling'; s.vy = rand(0.5, 0.7); }
       if (s.state === 'falling') {
         s.vy += 0.004;
-        s.y += s.vy * 1.0;
+        s.y += s.vy;
         if (s.y >= s.ty) { s.y = s.ty; s.state = 'landed'; s.stateAt = now; }
       }
       if (s.state === 'landed' && now >= s.stateAt + s.testDelay) {
         s.state = 'testing';
         s.testStart = now;
-        makeProbes(s);
-        s.resolvedAt = now + 460;
+        // build probes: targets first (all catch), then decoys (all miss)
+        var probes = [];
+        for (var t = 0; t < s._targets.length; t++) {
+          probes.push({ wi: s._targets[t], catch: true, p: 0, resolved: false });
+        }
+        for (var d = 0; d < s._decoys.length; d++) {
+          probes.push({ wi: s._decoys[d], catch: false, p: 0, resolved: false });
+        }
+        s.probes = probes;
       }
       if (s.state === 'testing') {
-        var q = (now - s.testStart) / 460;
-        if (q >= 1) s.state = 'done';
-        else {
-          // resolve probes progressively within the sweep
-          var resolved = 0;
-          for (var j = 0; j < s.probes.length; j++) {
-            var pr = s.probes[j];
-            var rp = clamp((now - s.testStart - j * 60) / 320, 0, 1);
-            pr.p = rp;
-            if (rp >= 0.82) {
-              if (!pr.resolved) {
-                pr.resolved = true;
-                if (pr.catch) {
-                  pr.dot.lit = true;
-                  if (pr.dot.caughtBy.indexOf(s.idx) < 0) pr.dot.caughtBy.push(s.idx);
-                  pr.dot.bright = pr.dot.caughtBy.length >= 2;
-                  pr.bright = pr.dot.bright;
-                } else {
-                  pr.bright = false;
-                }
+        var done = 0;
+        for (var j = 0; j < s.probes.length; j++) {
+          var pr = s.probes[j];
+          var wp = words[pr.wi];
+          var rp = clamp((now - s.testStart - j * 80) / 300, 0, 1);
+          pr.p = rp;
+          if (rp >= 0.9) {
+            if (!pr.resolved) {
+              pr.resolved = true;
+              wp.flashT = 1;
+              if (pr.catch && wp.matchBy.indexOf(s.idx) < 0) {
+                wp.matchBy.push(s.idx);
               }
-              resolved++;
             }
+            done++;
+            pr.doneDist = dist(s.x, s.y, wp.x, wp.y);
+          } else {
+            pr.doneDist = null;
           }
-          s.resolvedP = resolved;
         }
+        if (done === s.probes.length) { s.state = 'done'; s.doneAt = now; }
       }
-
       if (s.state !== 'done') allDone = false;
-      if (s.probes.length && s.probes.some(function (x) { return x.resolved && x.catch; })) anyCatch = true;
     }
 
-    if (allDone && anyCatch && condensation === null) {
-      state = 'condensing';
-      beginCondense();
-    }
-  }
-
-  // ---------------------------------------------------------------- condense
-
-  function selectMembers() {
-    // union-find over seeds (with catches) and lit dots
-    var parent = {}, rank = {};
-    function make(k) { if (!parent[k]) { parent[k] = k; rank[k] = 0; } }
-    function find(k) { make(k); while (parent[k] !== k) { parent[k] = parent[parent[k]]; k = parent[k]; } return k; }
-    function uni(a, b) {
-      var ra = find(a), rb = find(b);
-      if (ra === rb) return;
-      if (rank[ra] < rank[rb]) parent[ra] = rb;
-      else if (rank[ra] > rank[rb]) parent[rb] = ra;
-      else { parent[rb] = ra; rank[ra]++; }
-    }
-
-    var seedIndex = {};
-    var litDots = [];
-    for (var i = 0; i < seeds.length; i++) seedIndex[seeds[i].idx] = i;
-    for (var k = 0; k < dots.length; k++) {
-      var d = dots[k];
-      if (d.lit && d.caughtBy.length) {
-        litDots.push(d);
-        for (var c = 0; c < d.caughtBy.length; c++) {
-          var si = seedIndex[d.caughtBy[c]];
-          uni('s' + si, 'd' + k);
-        }
+    if (allDone) {
+      var last = 0;
+      for (var m = 0; m < seeds.length; m++) last = Math.max(last, seeds[m].doneAt);
+      if (now - last > 900) {
+        state = 'answered';
+        showReply();
       }
-    }
-
-    // group components
-    var comps = {};
-    var keys = [];
-    for (var key in parent) {
-      var root = find(key);
-      if (!comps[root]) { comps[root] = { keys: [], score: 0 }; keys.push(root); }
-      comps[root].keys.push(key);
-    }
-    // score
-    for (var r in comps) {
-      var ck = comps[r].keys;
-      for (var i2 = 0; i2 < ck.length; i2++) {
-        var k2 = ck[i2];
-        if (k2[0] === 's') {
-          comps[r].score += 1;
-        } else {
-          var di = parseInt(k2.slice(1), 10);
-          var dot = dots[di];
-          comps[r].score += dot.bright ? 2.5 : 1;
-          comps[r].score += dot.caughtBy.length >= 2 ? 2 : 0;
-        }
-      }
-    }
-    var best = null;
-    for (var r2 in comps) {
-      if (!best || comps[r2].score > best.score) best = comps[r2];
-    }
-    if (!best) return null;
-
-    var members = [];
-    for (var m = 0; m < best.keys.length; m++) {
-      var kk = best.keys[m];
-      if (kk[0] === 's') {
-        var si2 = parseInt(kk.slice(1), 10);
-        var seed = seeds[si2];
-        if (seed.probes.some(function (x) { return x.catch && x.resolved; })) {
-          members.push({ x: seed.x, y: seed.y, kind: 'seed', seed: seed });
-        }
-      } else {
-        var dk = parseInt(kk.slice(1), 10);
-        var d2 = dots[dk];
-        members.push({ x: d2.x, y: d2.y, kind: 'dot', dot: d2 });
-      }
-    }
-    return members;
-  }
-
-  function beginCondense() {
-    var members = selectMembers();
-    if (!members) { state = 'answered'; return; }
-    // fade out lit dots that are NOT members
-    for (var i = 0; i < dots.length; i++) {
-      if (dots[i].lit && !members.some(function (m) { return m.dot === dots[i]; })) {
-        dots[i].dotFade = 1.3; // will decay
-      }
-    }
-    var cx = 0, cyy = 0;
-    for (var j = 0; j < members.length; j++) { cx += members[j].x; cyy += members[j].y; }
-    cx /= members.length; cyy /= members.length;
-    condensation = {
-      members: members,
-      from: { x: cx, y: cyy },
-      target: { x: W * 0.5, y: H * 0.48 },
-      start: now,
-      dur: 1200
-    };
-    state = 'condensing';
-  }
-
-  function updateCondense() {
-    var t = clamp((now - condensation.start) / condensation.dur, 0, 1);
-    var e = easeInOut(t);
-    for (var i = 0; i < condensation.members.length; i++) {
-      var m = condensation.members[i];
-      m.x += (condensation.target.x - m.x) * (0.035 + 0.05 * easeInOut(Math.min(1, t * 1.6)));
-      m.y += (condensation.target.y - m.y) * (0.035 + 0.05 * easeInOut(Math.min(1, t * 1.6)));
-    }
-    // decay non-member lit dots
-    for (var j = 0; j < dots.length; j++) {
-      var d = dots[j];
-      if (d.dotFade) d.dotFade -= 0.02;
-    }
-    if (t >= 1) {
-      node = { x: condensation.target.x, y: condensation.target.y, born: now };
-      state = 'answered';
-      showReply();
-    }
-  }
-
-  function updateAnswered() {
-    // keep decay running
-    for (var j = 0; j < dots.length; j++) {
-      var d = dots[j];
-      if (d.dotFade) d.dotFade -= 0.02;
     }
   }
 
   function showReply() {
     setTimeout(function () {
-      var p = replyEl.closest('.reply');
-      p.classList.add('show');
+      document.querySelector('.reply').classList.add('show');
       againEl.classList.add('show');
-    }, 250);
+    }, 200);
   }
 
-  // ---------------------------------------------------------------- drawing
+  // ---------------------------------------------------------------- draw
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    var lx, ly;
-    for (var i = 0; i < dots.length; i++) {
-      var d = dots[i];
-      var x = d.cx + Math.sin(frame * 0.006 + d.dp) * d.drift;
-      var y = d.cy + Math.cos(frame * 0.005 + d.dp * 1.3) * d.drift;
-      d.x = x; d.y = y;
+    // decay flashes
+    for (var w = 0; w < words.length; w++) {
+      if (words[w].flashT > 0) words[w].flashT -= 0.02;
     }
 
-    // condensation / answer state
-    if (condensation && state === 'condensing') {
-      var t = clamp((now - condensation.start) / condensation.dur, 0, 1);
-      var ring = easeOutCubic(t);
-      ctx.strokeStyle = 'rgba(255,166,201,' + (0.5 * ring) + ')';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(condensation.target.x, condensation.target.y, 6 + ring * 90, 0, Math.PI * 2);
-      ctx.stroke();
-
-      for (var m = 0; m < condensation.members.length; m++) {
-        var mem = condensation.members[m];
-        drawDot(mem.x, mem.y, 2.2, ACCENT, 0.55, 0.35);
+    // connecting lines
+    if (state !== 'idle') {
+      for (var s = 0; s < seeds.length; s++) {
+        var sd = seeds[s];
+        if (sd.state !== 'testing' && sd.state !== 'done') continue;
+        for (var j = 0; j < sd.probes.length; j++) {
+          var pr = sd.probes[j];
+          if (!pr.resolved || !pr.catch) continue;
+          var wp = words[pr.wi];
+          var bright = wp.matchBy.length >= 2;
+          var x1 = sd.x, y1 = sd.y, x2 = wp.x, y2 = wp.y;
+          ctx.strokeStyle = bright ? 'rgba(255,166,201,0.95)' : 'rgba(255,166,201,0.4)';
+          ctx.lineWidth = bright ? 2.2 : 1.1;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
       }
-    }
-    if (node) {
-      var pulse = 0.5 + 0.5 * Math.sin(now * 0.0055);
-      drawDot(node.x, node.y, 4 + pulse * 3, ACCENT, 0.95, 0.9);
-    }
-
-    // seed word particles
-    for (var s = 0; s < seeds.length; s++) {
-      var seed = seeds[s];
-      if (seed.state === 'pending') continue;
-      drawDot(seed.x, seed.y, 3.2, ACCENT, 0.9, 0.7);
-      // rays that haven't resolved yet
-      if (seed.state === 'testing') {
-        for (var j = 0; j < seed.probes.length; j++) {
-          var pr = seed.probes[j];
-          if (pr.resolved) continue;
-          var pl = pr.p * dist(seed.x, seed.y, pr.dot.x, pr.dot.y);
-          var ang = Math.atan2(pr.dot.y - seed.y, pr.dot.x - seed.x);
-          ctx.strokeStyle = 'rgba(255,166,201,' + (0.28 * Math.sin(pr.p * Math.PI) + 0.05) + ')';
+      // sweep rays not yet resolved
+      for (var s2 = 0; s2 < seeds.length; s2++) {
+        var sd2 = seeds[s2];
+        if (sd2.state !== 'testing') continue;
+        for (var j2 = 0; j2 < sd2.probes.length; j2++) {
+          var pr2 = sd2.probes[j2];
+          if (pr2.resolved) continue;
+          var wp2 = words[pr2.wi];
+          var ang = Math.atan2(wp2.y - sd2.y, wp2.x - sd2.x);
+          var len = pr2.p * dist(sd2.x, sd2.y, wp2.x, wp2.y);
+          ctx.strokeStyle = 'rgba(255,166,201,' + (0.3 * Math.sin(pr2.p * Math.PI) + 0.05) + ')';
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.moveTo(seed.x, seed.y);
-          ctx.lineTo(seed.x + Math.cos(ang) * pl, seed.y + Math.sin(ang) * pl);
+          ctx.moveTo(sd2.x, sd2.y);
+          ctx.lineTo(sd2.x + Math.cos(ang) * len, sd2.y + Math.sin(ang) * len);
           ctx.stroke();
         }
       }
     }
 
-    // persistent links before condensing (only while not yet resolved into node)
-    if (state === 'sequence') {
-      for (var s2 = 0; s2 < seeds.length; s2++) {
-        var se2 = seeds[s2];
-        for (var j2 = 0; j2 < se2.probes.length; j2++) {
-          var pp = se2.probes[j2];
-          if (!pp.resolved || !pp.catch) continue;
-          var strong = pp.bright;
-          ctx.strokeStyle = strong ? 'rgba(255,166,201,0.85)' : 'rgba(255,166,201,0.35)';
-          ctx.lineWidth = strong ? 2 : 1;
-          ctx.beginPath();
-          ctx.moveTo(se2.x, se2.y);
-          ctx.lineTo(pp.dot.x, pp.dot.y);
-          ctx.stroke();
-        }
-      }
-    }
+    // field words
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (var k = 0; k < words.length; k++) {
+      var wd = words[k];
+      var dx = wd.x + Math.sin(frame * 0.005 + wd.dp) * wd.drift;
+      var dy = wd.y + Math.cos(frame * 0.004 + wd.dp * 1.3) * wd.drift;
 
-    // constellation dots
-    for (var k = 0; k < dots.length; k++) {
-      var d2 = dots[k];
-      if (d2.lit && !condensation) {
-        // lit, still part of the search
-        var gl = d2.bright ? 1 : 0.55;
-        drawDot(d2.x, d2.y, d2.r + (d2.bright ? 1.2 : 0), ACCENT, gl, d2.bright ? 0.85 : 0.5);
-      } else if (d2.lit && condensation && state !== 'answered') {
-        // member dots are drawn with the condensation block
-        continue;
-      } else if (d2.dotFade) {
-        if (d2.dotFade > 0) drawDot(d2.x, d2.y, d2.r, ACCENT, 0.5 * d2.dotFade, 0.4);
+      var lit = wd.matchBy.length > 0;
+      var bright = wd.matchBy.length >= 2;
+
+      if (lit) {
+        var scale = bright ? 1.3 : 1.2;
+        var size = wd.size * scale;
+        var op = 0.55 + Math.min(1, wd.flashT) * 0.45;
+        ctx.font = size + 'px "Helvetica Neue", sans-serif';
+        ctx.fillStyle = ACCENT;
+        ctx.globalAlpha = op;
+        ctx.shadowColor = ACCENT;
+        ctx.shadowBlur = bright ? 18 : 10;
+      } else if (wd.flashT > 0) {
+        ctx.font = wd.size + 'px "Helvetica Neue", sans-serif';
+        ctx.fillStyle = ACCENT;
+        ctx.globalAlpha = wd.flashT * 0.6;
+        ctx.shadowColor = ACCENT;
+        ctx.shadowBlur = 8;
       } else {
-        var tw = 0.8 + 0.2 * Math.sin(now * 0.002 + d2.ph);
-        ctx.globalAlpha = 0.30 * tw;
-        ctx.fillStyle = '#e6e6ec';
-        ctx.beginPath();
-        ctx.arc(d2.x, d2.y, d2.r, 0, Math.PI * 2);
-        ctx.fill();
+        var tw = 0.8 + 0.2 * Math.sin(now * 0.002 + wd.ph);
+        ctx.font = wd.size + 'px "Helvetica Neue", sans-serif';
+        ctx.fillStyle = '#e4e4ea';
+        ctx.globalAlpha = wd.idleOp * tw;
+        ctx.shadowBlur = 0;
+      }
+      ctx.fillText(wd.text, dx, dy);
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+    }
+
+    // prompt words on top
+    if (state !== 'idle') {
+      for (var p = 0; p < seeds.length; p++) {
+        var sd3 = seeds[p];
+        if (sd3.state === 'pending') continue;
+        ctx.font = '700 24px "Helvetica Neue", sans-serif';
+        ctx.fillStyle = ACCENT;
+        ctx.globalAlpha = 1;
+        ctx.shadowColor = ACCENT;
+        ctx.shadowBlur = 16;
+        ctx.fillText(sd3.text, sd3.x, sd3.y);
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
       }
     }
-    ctx.globalAlpha = 1;
   }
 
-  function drawDot(x, y, r, col, glow, alpha) {
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = col;
-    ctx.shadowColor = col;
-    ctx.shadowBlur = 8 * glow + 2;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.globalAlpha = 1;
-  }
+  // ---------------------------------------------------------------- boot
 
-  // ---------------------------------------------------------------- run
-
-  function run(promptIdx) {
+  function run(idx) {
     if (state !== 'idle') return;
     setChips(true);
     replyEl.closest('.reply').classList.remove('show');
     againEl.classList.remove('show');
-    condensation = null;
-    node = null;
+    resetWordStates();
     started = performance.now();
-    spawnWords(PROMPTS[promptIdx], started);
-    replyEl.innerHTML = PROMPTS[promptIdx].reply;
+    spawnWords(PROMPTS[idx], started);
+    replyEl.textContent = PROMPTS[idx].reply;
     state = 'sequence';
+  }
+
+  function resetWordStates() {
+    for (var i = 0; i < words.length; i++) {
+      words[i].matchBy = [];
+      words[i].flashT = 0;
+    }
   }
 
   function reset() {
     state = 'idle';
-    condensation = null;
-    node = null;
     seeds = [];
-    replyEl.closest('.reply').classList.remove('show');
+    for (var i = 0; i < words.length; i++) { words[i].matchBy = []; words[i].flashT = 0; }
+    document.querySelector('.reply').classList.remove('show');
     againEl.classList.remove('show');
-    for (var i = 0; i < dots.length; i++) {
-      dots[i].lit = false; dots[i].caughtBy = []; dots[i].bright = false;
-      dots[i].dotFade = 0;
-    }
-    makeConstellation();
+    placeWords();                       // fresh scatter
     setChips(false);
   }
 
@@ -638,18 +528,12 @@
     }
   }
 
-  // ---------------------------------------------------------------- loop
-
   function tick(ts) {
-    var last = now;
-    now = ts;
-    frame = ts;
+    now = ts; frame = ts;
     update();
     draw();
     requestAnimationFrame(tick);
   }
-
-  // ---------------------------------------------------------------- boot
 
   function resize() {
     DPR = Math.max(1, window.devicePixelRatio || 1);
@@ -658,13 +542,11 @@
     canvas.width = W * DPR;
     canvas.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    makeConstellation();
-    condensation = null; node = null; seeds = [];
-    state = 'idle';
+    makeWordObjects();
+    state = 'idle'; seeds = [];
     setChips(false);
   }
 
-  // build chips
   for (var i = 0; i < PROMPTS.length; i++) {
     (function (idx) {
       var b = document.createElement('button');
@@ -680,14 +562,10 @@
   resize();
   requestAnimationFrame(tick);
 
-  // ---------------------------------------------------------------- helpers
-
+  // helpers
   function rand(a, b) { return a + Math.random() * (b - a); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-  function dist(x1, y1, x2, y2) { return Math.sqrt(dist2(x1, y1, x2, y2)); }
-  function dist2(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return dx * dx + dy * dy; }
-  function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
 })();
 </script>
 </body>

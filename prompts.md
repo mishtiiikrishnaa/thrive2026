@@ -98,3 +98,71 @@ the paste-ready brief (as given):
   demo.
 - if the tool chokes on the full six steps, cut step 3 (brightness
   overlap) first — steps 1, 2, 4, 5 are load-bearing.
+
+## 5 — words, not dots
+
+yeah — no, i get it, and it's a better version of what i gave you last
+time, ngl. you don't want dots pretending to be knowledge, you want the
+knowledge itself sitting there, legible, so someone watching can
+actually read "oh, it has 'rayleigh scattering' floating in there"
+before it even connects to anything. dots are a metaphor *about*
+knowledge. words are the knowledge. that's the upgrade, and it's the
+right one.
+
+revised background: replace the 50 dots with ~40 actual short text
+fragments, scattered across the viewport at wildly different opacities
+and sizes (10–22px, 20–50% opacity at idle) so it reads as "everything
+this thing has ever absorbed," not a curated hint list. loosely cluster
+a handful of them by theme — not because the viewer needs to parse the
+clustering consciously, but because dense pockets read as "this is
+where the deep stuff lives" even at a glance.
+
+give the ai tool actual words, don't let it invent them on the fly.
+the provided sets:
+- science-adjacent cluster: rayleigh, wavelength, photon, scatter,
+  atmosphere, entropy, gravity, velocity
+- craft/poetry cluster: meter, cadence, stanza, metaphor, imagery,
+  rhyme, silence, ink
+- appetite/ritual cluster: hunger, spice, comfort, craving, warmth,
+  ritual, coffee, salt
+- noise (unclustered): arjuna, dharma, indigo, static, thunder, lotus,
+  recursion, horizon, quartz, mirror, pulse, tide, fracture, orbit,
+  whisper, carnatic, velvet, echo
+
+the sequence, updated:
+1. field idles — all ~44 words drifting faintly, unreadable-at-a-glance
+   opacity, occasional slow twinkle.
+2. click a chip → its actual words appear large and bright pink near
+   the top, one at a time.
+3. from each prompt-word, a visible ray sweeps the field. as it passes
+   near a background word, that word flashes — dims back down if it's
+   not a real match, but brightens, scales up ~20%, and turns
+   pink-tinted if it is, with a solid line drawn from the prompt-word
+   to it. so "why is the sky blue" sweeps and specifically catches
+   rayleigh, scatter, wavelength, atmosphere — you *watch* it find the
+   right words, not just glow randomly.
+4. where lines from two different prompt-words land near the same
+   background word, brighten that connection more than the rest —
+   the pattern-recognition beat, with legible payloads.
+5. response fades in below — and the words that fed it stay lit and
+   connected the whole time, so the answer visibly has receipts.
+
+stretch goal (only if clean with time to spare): the lit words detach
+and drift into position to spell the answer. cut it without guilt.
+
+matched sets per chip:
+- "why is the sky blue" → rayleigh, scatter, wavelength, atmosphere,
+  photon → "blue light scatters more than any other wavelength when it
+  hits the atmosphere."
+- "write me a poem" → meter, cadence, stanza, metaphor, rhyme, silence
+  → "something with cadence, and one line that means more than it
+  says."
+- "what should i eat" → hunger, comfort, spice, warmth, craving →
+  "something warm. something that isn't just calories."
+
+text above the field, centered, max-width 500px, one line, serif:
+"not a lookup. a lighting-up." serif for headline + response line,
+sans-serif for chip buttons and all field words. generous spacing.
+if layout chokes (overlap, unreadable at idle), drop word count from
+44 to ~28 first — cut unclustered noise words, keep every
+clustered/matched one.
