@@ -251,3 +251,108 @@ fallback: ["still forming an answer to that one.", "that one hasn't
 
 text above the field: "not a lookup. a lighting-up." (serif); serif
 for response, sans-serif for input and field words. generous spacing.
+
+## 7 — nerve chain, spreading activation
+
+right, ditch the poetic lines — that was me still writing gallery-copy
+for something that's supposed to be explaining, not performing.
+
+the nerve system idea is genuinely better than everything before it,
+because it's not a metaphor anymore — spreading activation (one fact
+fires, its shared words fire the next fact, that one fires the next)
+is an actual real cognitive-science model of how association works,
+and it happens to be the literal mechanism of an actual nerve impulse
+too: signal arrives, cell fires, fires the next cell down the chain.
+not "brain-ish vibes," the correct thing.
+
+the mechanic, plainly:
+- facts, not single words, are the nodes now. each fact is one short
+  sentence sitting on screen.
+- prompt comes in → any fact sharing a keyword with the prompt fires
+  first (hop 1).
+- hop 1 facts have their own words → any *other* fact sharing a word
+  with a hop 1 fact fires next, slightly delayed (hop 2) — the actual
+  nerve part, the signal visibly jumping node to node instead of
+  everything lighting up at once.
+- hop 2's words trigger one more fact (hop 3).
+- the chain converges into one plain answer sentence at the bottom,
+  built from what just lit up.
+
+fact pools — all always visible on screen (dim at idle), grouped into
+three chains (7 facts each: hop1 = facts 1-3, hop2 = 4-6, hop3 = 7):
+
+science:
+1. the sky looks blue during the day.
+2. sunlight is made of many colors mixed together.
+3. each color of light travels at a different wavelength.
+4. blue light has a shorter wavelength than red light.
+5. short wavelengths scatter more off small particles.
+6. the atmosphere is full of tiny gas molecules.
+7. this scattering effect is called rayleigh scattering.
+
+craft:
+1. a poem is writing arranged in lines.
+2. many poems use rhythm or rhyme to shape their lines.
+3. a haiku is a short poem with a fixed structure.
+4. a haiku has three lines.
+5. the first line of a haiku usually has five syllables.
+6. free verse doesn't follow a fixed rhyme or rhythm.
+7. line breaks control how a reader pauses while reading.
+
+myth:
+1. arjuna is a warrior in the mahabharata.
+2. arjuna hesitates before the battle of kurukshetra.
+3. he sees his own relatives on the enemy side.
+4. krishna is arjuna's charioteer and guide.
+5. krishna tells arjuna that fighting is his duty as a warrior.
+6. this idea of duty is called dharma.
+7. avoiding a duty can cause more harm than doing it.
+
+final response lines (plain, no flourish, 2 per chain, random pick):
+science: ["blue light has the shortest wavelength, so it scatters the
+  most off gas molecules in the atmosphere — that's called rayleigh
+  scattering, and it's why the sky looks blue.", "the sky looks blue
+  because short wavelengths of light scatter more than the rest when
+  they hit the atmosphere — this is rayleigh scattering."]
+craft: ["a poem is shaped by its line breaks — a haiku fixes that into
+  three lines, free verse uses it more loosely to control pacing
+  instead of rhyme.", "poems are built from lines, not just words —
+  some forms like haiku fix the structure tightly, others let it stay
+  loose."]
+myth: ["arjuna hesitates to fight his own relatives, so krishna tells
+  him fighting is his dharma as a warrior, and avoiding it would cause
+  more harm than doing it.", "before the battle, arjuna doubts
+  fighting his own family — krishna's answer is that skipping his duty
+  would do more harm than fulfilling it."]
+
+interaction (paste-ready brief):
+- all 21 fact sentences as small text pills, non-overlapping, dim
+  (25-35% opacity, ~11-13px), same chain loosely nearer each other,
+  no labels or grouping lines at idle.
+- real prompt input, centered, placeholder "ask something...", enter
+  or submit button, rounded + pink focus glow.
+- keyword matching on submit (case-insensitive): science = sky, blue,
+  light, colour, color; craft = poem, verse, haiku, rhyme, line,
+  "write me"; myth = arjuna, dharma, krishna, duty, hesitate. no
+  match → fallback.
+- on matched chain: prompt text appears bright pink top-center; hop-1
+  three nodes brighten fully, scale ~15%, tint pink, staggered
+  ~150ms, with a small bright pulse dot animating from the prompt text
+  to each as it fires; after ~600ms connecting lines draw to hop-2
+  with pulse traveling along each line, and only 2 of 3 hop-2 nodes
+  fire randomly each submission; same pulse-then-brighten for hop 3,
+  connected from whichever hop-2 nodes fired; all fired nodes and
+  lines stay lit; after the chain, fade in one random response line at
+  the bottom, plain sans-serif, no italics, no flourish.
+- fallback: pulses sweep near a few random nodes, none brighten past
+  idle; after ~1s show one line at random: ["no chain fired for that
+  one yet.", "that prompt doesn't connect to anything here."]
+- after a response, clear the input; nodes fade back toward idle after
+  ~4s, ready for the next prompt.
+- text above the input, one line, plain sans-serif, no serif, no
+  italics: "type something and watch what connects."
+- typography: clean sans-serif throughout, no serif, no italic
+  flourishes anywhere including the response line. generous spacing.
+- user note: "even make the animation brain nerves like i want the
+  simulation" — pulses should read as nerve impulses: signal arrives,
+  cell fires, next cell down the chain.

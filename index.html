@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>not a lookup. a lighting-up.</title>
+<title>type something and watch what connects</title>
 <style>
   :root {
     --bg: #0a0a0f;
@@ -27,21 +27,20 @@
   #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   .title {
-    position: absolute; top: 5.5%; left: 0; right: 0;
+    position: absolute; top: 6%; left: 0; right: 0;
     text-align: center; pointer-events: none; user-select: none;
   }
   .title h1 {
-    font-family: Georgia, "Times New Roman", serif;
-    font-weight: 400; font-size: clamp(22px, 3.4vw, 40px);
-    letter-spacing: 0.02em; line-height: 1.3; color: var(--ink);
+    font-weight: 500; font-size: clamp(18px, 2.6vw, 30px);
+    letter-spacing: 0.04em; line-height: 1.4; color: var(--ink);
   }
   .hint {
-    margin-top: 14px; font-size: 12px; letter-spacing: 0.28em;
+    margin-top: 12px; font-size: 11px; letter-spacing: 0.28em;
     text-transform: uppercase; color: var(--dim);
   }
 
   .promptbox {
-    position: absolute; bottom: 7%; left: 0; right: 0;
+    position: absolute; bottom: 6%; left: 0; right: 0;
     display: flex; justify-content: center; gap: 10px; padding: 0 20px;
     user-select: none;
   }
@@ -67,20 +66,19 @@
     transition: background 0.3s ease, opacity 0.4s ease;
   }
   .promptbox button:hover:not([disabled]) { background: rgba(255,166,201,0.24); }
-  .promptbox button:disabled, .promptbox button[disabled] { opacity: 0.35; cursor: default; }
+  .promptbox button[disabled] { opacity: 0.35; cursor: default; }
 
   .reply {
-    position: absolute; left: 0; right: 0; top: 62%;
+    position: absolute; left: 0; right: 0; bottom: 19%;
     text-align: center; pointer-events: none; user-select: none;
     opacity: 0; transform: translateY(8px);
     transition: opacity 1.2s ease, transform 1.2s ease;
   }
   .reply.show { opacity: 1; transform: translateY(0); }
   .reply p {
-    display: inline-block; max-width: 640px; margin: 0 auto; padding: 16px 30px;
-    font-family: Georgia, "Times New Roman", serif; font-style: italic;
-    font-size: 18px; line-height: 1.7; color: var(--ink);
-    background: rgba(10,10,15,0.78);
+    display: inline-block; max-width: 660px; margin: 0 auto;
+    padding: 14px 26px; font-size: 15px; line-height: 1.75; color: var(--ink);
+    background: rgba(10,10,15,0.82);
     box-shadow: 0 0 0 1px rgba(255,166,201,0.08), 0 0 60px rgba(255,166,201,0.05);
     border-radius: 6px;
   }
@@ -92,8 +90,8 @@
     <canvas id="stage"></canvas>
 
     <div class="title">
-      <h1>not a lookup. a lighting-up.</h1>
-      <div class="hint">type a thought. watch what it finds.</div>
+      <h1>type something and watch what connects.</h1>
+      <div class="hint">a prompt fires a fact, the fact fires the next</div>
     </div>
 
     <div class="reply"><p id="replytext"></p></div>
@@ -113,139 +111,122 @@
   var replyEl = document.getElementById('replytext');
 
   var ACCENT = '#ffa6c9';
+  var PULSE_DUR = 430;
 
-  // ---------------------------------------------------------- bucket data
+  // ----------------------------------------------------------- chains
 
-  var BUCKETS = {
+  var CHAINS = {
     science: {
-      keywords: ['sky', 'blue', 'light', 'colour', 'color', 'why is'],
-      pool: ['rayleigh','wavelength','photon','scatter','atmosphere','spectrum','refraction','entropy','velocity'],
+      keywords: ['sky', 'blue', 'light', 'colour', 'color'],
+      facts: [
+        ['the sky looks blue during the day.', 1],
+        ['sunlight is made of many colors mixed together.', 1],
+        ['each color of light travels at a different wavelength.', 1],
+        ['blue light has a shorter wavelength than red light.', 2],
+        ['short wavelengths scatter more off small particles.', 2],
+        ['the atmosphere is full of tiny gas molecules.', 2],
+        ['this scattering effect is called rayleigh scattering.', 3]
+      ],
       responses: [
-        "blue scatters more than the rest \u2014 that's the whole trick of it.",
-        "shorter wavelengths bend easiest. blue just bends the most, is all.",
-        "the sky isn't blue. it's just scattering blue at you loudest."
+        "blue light has the shortest wavelength, so it scatters the most off gas molecules in the atmosphere — that's called rayleigh scattering, and it's why the sky looks blue.",
+        "the sky looks blue because short wavelengths of light scatter more than the rest when they hit the atmosphere — this is rayleigh scattering."
       ]
     },
     craft: {
-      keywords: ['poem', 'verse', 'longing', 'write me', 'love', 'line'],
-      pool: ['meter','cadence','stanza','metaphor','imagery','rhyme','silence','ink','verse'],
+      keywords: ['poem', 'verse', 'haiku', 'rhyme', 'line', 'write me'],
+      facts: [
+        ['a poem is writing arranged in lines.', 1],
+        ['many poems use rhythm or rhyme to shape their lines.', 1],
+        ['a haiku is a short poem with a fixed structure.', 1],
+        ['a haiku has three lines.', 2],
+        ['the first line of a haiku usually has five syllables.', 2],
+        ["free verse doesn't follow a fixed rhyme or rhythm.", 2],
+        ['line breaks control how a reader pauses while reading.', 3]
+      ],
       responses: [
-        "something with a line that means more than it says.",
-        "start with an image, not a feeling. the feeling follows.",
-        "one line about waiting long enough to forget what for."
+        'a poem is shaped by its line breaks — a haiku fixes that into three lines, free verse uses it more loosely to control pacing instead of rhyme.',
+        'poems are built from lines, not just words — some forms like haiku fix the structure tightly, others let it stay loose.'
       ]
     },
     myth: {
-      keywords: ['arjuna', 'dharma', 'hesitate', 'krishna', 'duty', 'why did'],
-      pool: ['arjuna','dharma','hesitate','duty','krishna','battlefield','conscience','karma','doubt'],
+      keywords: ['arjuna', 'dharma', 'krishna', 'duty', 'hesitate'],
+      facts: [
+        ['arjuna is a warrior in the mahabharata.', 1],
+        ['arjuna hesitates before the battle of kurukshetra.', 1],
+        ['he sees his own relatives on the enemy side.', 1],
+        ["krishna is arjuna's charioteer and guide.", 2],
+        ['krishna tells arjuna that fighting is his duty as a warrior.', 2],
+        ['this idea of duty is called dharma.', 2],
+        ['avoiding a duty can cause more harm than doing it.', 3]
+      ],
       responses: [
-        "not fear. just the weight of knowing both paths are real.",
-        "duty doesn't ask if you're ready. it just arrives.",
-        "even certainty pauses before it becomes action."
+        "arjuna hesitates to fight his own relatives, so krishna tells him fighting is his dharma as a warrior, and avoiding it would cause more harm than doing it.",
+        'before the battle, arjuna doubts fighting his own family — krishna\'s answer is that skipping his duty would do more harm than fulfilling it.'
       ]
     }
   };
 
   var FALLBACK = {
     responses: [
-      "still forming an answer to that one.",
-      "that one hasn't lit up anything yet.",
-      "not every prompt finds its shape immediately."
+      'no chain fired for that one yet.',
+      'that prompt doesn\u2019t connect to anything here.'
     ]
   };
 
-  // ---------------------------------------------------------- the field
+  // ----------------------------------------------------------- nodes
 
-  var FIELD = [
-    { t: 'rayleigh', cl: 0 },  { t: 'wavelength', cl: 0 }, { t: 'photon', cl: 0 },
-    { t: 'scatter', cl: 0 },   { t: 'atmosphere', cl: 0 }, { t: 'spectrum', cl: 0 },
-    { t: 'refraction', cl: 0 },{ t: 'entropy', cl: 0 },    { t: 'velocity', cl: 0 },
-    { t: 'meter', cl: 1 },     { t: 'cadence', cl: 1 },    { t: 'stanza', cl: 1 },
-    { t: 'metaphor', cl: 1 },  { t: 'imagery', cl: 1 },    { t: 'rhyme', cl: 1 },
-    { t: 'silence', cl: 1 },   { t: 'ink', cl: 1 },        { t: 'verse', cl: 1 },
-    { t: 'arjuna', cl: 2 },    { t: 'dharma', cl: 2 },     { t: 'hesitate', cl: 2 },
-    { t: 'duty', cl: 2 },      { t: 'krishna', cl: 2 },    { t: 'battlefield', cl: 2 },
-    { t: 'conscience', cl: 2 },{ t: 'karma', cl: 2 },      { t: 'doubt', cl: 2 },
-    { t: 'indigo', cl: -1 },   { t: 'static', cl: -1 },    { t: 'thunder', cl: -1 },
-    { t: 'lotus', cl: -1 },    { t: 'recursion', cl: -1 }, { t: 'horizon', cl: -1 },
-    { t: 'quartz', cl: -1 },   { t: 'mirror', cl: -1 },    { t: 'pulse', cl: -1 },
-    { t: 'tide', cl: -1 },     { t: 'fracture', cl: -1 },  { t: 'orbit', cl: -1 },
-    { t: 'whisper', cl: -1 },  { t: 'carnatic', cl: -1 },  { t: 'velvet', cl: -1 },
-    { t: 'echo', cl: -1 }
-  ];
-
-  var words = [];
-  var wordIndex = {};
+  var nodes = [];
   var W, H, DPR;
   var now = 0, frame = 0;
-  var state = 'idle';       // idle | sequence | answered | settling
-  var seeds = [];
-  var started = 0;
-  var fallback = false;
+  var state = 'idle';      // idle | running | answered | settling
+  var promptNode = null;
+  var edges = [];          // { a, b, start, dur, fired(false->persist), decoy }
+  var litEdges = [];
+  var t0 = 0;
+  var answeredAt = 0;
+  var settleStart = 0;
+  var failedSub = false;
 
-  // ------------------------------------------------------------ build
-
-  function makeWordObjects() {
-    words = [];
-    wordIndex = {};
-    for (var i = 0; i < FIELD.length; i++) {
-      var w = {
-        text: FIELD[i].t,
-        size: rand(10, 22),
-        idleOp: rand(0.2, 0.5),
-        cl: FIELD[i].cl,
-        x: 0, y: 0,
-        dp: rand(0, Math.PI * 2),
-        ph: rand(0, Math.PI * 2),
-        drift: rand(1.5, 6),
-        matchBy: [],
-        flashT: 0,
-        drain: 0,
-        dims: null
-      };
-      words.push(w);
-      wordIndex[w.text] = i;
-    }
-    placeWords();
-  }
-
-  function placeWords() {
-    var pockets = [
-      { x: W * 0.27, y: H * 0.42, r: 150 },  // science
-      { x: W * 0.72, y: H * 0.52, r: 150 },  // craft
-      { x: W * 0.5,  y: H * 0.76, r: 150 }   // myth
-    ];
+  function buildNodes() {
+    nodes = [];
+    var keys = Object.keys(CHAINS);
+    var pocket = { science: [W * 0.27, H * 0.44], craft: [W * 0.72, H * 0.52], myth: [W * 0.5, H * 0.78] };
     var rects = [];
     ctx.save();
-    for (var i = 0; i < words.length; i++) {
-      var w = words[i];
-      ctx.font = w.size + 'px "Helvetica Neue", sans-serif';
-      var twid = ctx.measureText(w.text).width + 14;
-      var thgt = w.size * 1.6;
-      var cx, cy, ok = false;
-      for (var att = 0; att < 600 && !ok; att++) {
-        if (w.cl >= 0) {
-          var pc = pockets[w.cl];
-          cx = pc.x + (gauss() * pc.r) * 0.55;
-          cy = pc.y + (gauss() * pc.r) * 0.55;
-        } else {
-          cx = rand(0.03, 0.97) * W;
-          cy = rand(0.13, 0.95) * H;
+    for (var c = 0; c < keys.length; c++) {
+      var chain = keys[c];
+      var facts = CHAINS[chain].facts;
+      for (var f = 0; f < facts.length; f++) {
+        var text = facts[f][0];
+        var hop = facts[f][1];
+        var node = { text: text, chain: chain, hop: hop, x: 0, y: 0, w: 0, h: 0, fired: false, flashT: 0, drain: 0 };
+        // measure
+        ctx.font = '12px "Helvetica Neue", sans-serif';
+        node.w = ctx.measureText(text).width + 24;
+        node.h = 24;
+        var px = pocket[chain][0] + (gauss() * 170) * 0.6;
+        var py = pocket[chain][1] + (gauss() * 150) * (hop === 3 ? 1.1 : 0.5);
+        var ok = false;
+        for (var att = 0; att < 700 && !ok; att++) {
+          if (att > 0) {
+            px = pocket[chain][0] + (gauss() * 170) * 0.6;
+            py = pocket[chain][1] + (gauss() * 150) * (hop === 3 ? 1.1 : 0.5);
+          }
+          px = clamp(px, node.w / 2 + 14, W - node.w / 2 - 14);
+          py = clamp(py, node.h / 2 + 52, H - node.h / 2 - 40);
+          ok = true;
+          for (var q = 0; q < rects.length; q++) {
+            var rr = rects[q];
+            if (px + node.w / 2 > rr.x - rr.w / 2 - 10 &&
+                px - node.w / 2 < rr.x + rr.w / 2 + 10 &&
+                py + node.h / 2 > rr.y - rr.h / 2 - 10 &&
+                py - node.h / 2 < rr.y + rr.h / 2 + 10) { ok = false; break; }
+          }
         }
-        cx = clamp(cx, 30, W - 30);
-        cy = clamp(cy, 40, H - 34);
-        ok = true;
-        for (var q = 0; q < rects.length; q++) {
-          var rr = rects[q];
-          if (cx + twid / 2 > rr.x - rr.w / 2 - 8 &&
-              cx - twid / 2 < rr.x + rr.w / 2 + 8 &&
-              cy + thgt / 2 > rr.y - rr.h / 2 - 8 &&
-              cy - thgt / 2 < rr.y + rr.h / 2 + 8) { ok = false; break; }
-        }
+        node.x = px; node.y = py;
+        rects.push({ x: px, y: py, w: node.w, h: node.h });
+        nodes.push(node);
       }
-      w.x = cx; w.y = cy;
-      w.dims = { x: cx, y: cy, w: twid, h: thgt };
-      rects.push(w.dims);
     }
     ctx.restore();
   }
@@ -257,320 +238,291 @@
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   }
 
-  // ------------------------------------------------------- matching
+  // ----------------------------------------------------------- submit
 
   function detect(text) {
     var t = text.toLowerCase();
     var keys = ['science', 'craft', 'myth'];
     for (var i = 0; i < keys.length; i++) {
-      var kws = BUCKETS[keys[i]].keywords;
-      for (var j = 0; j < kws.length; j++) {
-        if (t.indexOf(kws[j]) >= 0) return keys[i];
+      for (var j = 0; j < CHAINS[keys[i]].keywords.length; j++) {
+        if (t.indexOf(CHAINS[keys[i]].keywords[j]) >= 0) return keys[i];
       }
     }
     return null;
   }
 
-  function sample(arr, min, max) {
-    var n = min + Math.floor(Math.random() * (max - min + 1));
-    var pool = arr.slice();
-    var out = [];
-    while (out.length < n && pool.length) {
-      var i = Math.floor(Math.random() * pool.length);
-      out.push(pool.splice(i, 1)[0]);
+  function nodeByChain(chain, i) {
+    var res = [];
+    for (var j = 0; j < nodes.length; j++) {
+      var n = nodes[j];
+      if (n.chain === chain) res.push(n);
     }
-    return out;
+    // res[0..2] hop1, res[3..5] hop2, res[6] hop3
+    return res[i];
   }
 
-  // ----------------------------------------------------------- submit
+  function runChain(chain, text) {
+    var facts = CHAINS[chain].facts;
+    var chosen = [0, 1, 2].slice();
+    // randomly pick 2 of the 3 hop-2 indices
+    var hop2Pool = [3, 4, 5];
+    var pick = hop2Pool.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
+
+    var H1 = [0, 1, 2].map(function (i) { return nodeByChain(chain, i); });
+    var H2 = pick.map(function (i) { return nodeByChain(chain, i); });
+    var H3 = nodeByChain(chain, 6);
+
+    promptNode = { text: text, x: W / 2, y: H * 0.16, w: 0, h: 22, fired: true, flashT: 1, drain: 0 };
+    ctx.font = '700 13px "Helvetica Neue", sans-serif';
+    promptNode.w = ctx.measureText(text).width + 30;
+
+    edges = []; litEdges = [];
+
+    // hop 1: pulse from prompt to each H1 node, staggered
+    for (var i = 0; i < 3; i++) {
+      edges.push({ a: promptNode, b: H1[i], start: t0 + 260 + i * 150, dur: PULSE_DUR, fire: true, decoy: false });
+    }
+    // hop 2: from all H1 nodes to each chosen H2 node
+    var t1 = t0 + 260 + 2 * 150 + PULSE_DUR + 600;
+    for (var k = 0; k < H2.length; k++) {
+      for (var j = 0; j < 3; j++) {
+        edges.push({ a: H1[j], b: H2[k], start: t1 + k * 160, dur: PULSE_DUR, fire: true, decoy: false });
+      }
+    }
+    // hop 3: from each chosen H2 node to H3
+    var t2 = t1 + (H2.length - 1) * 160 + PULSE_DUR + 600;
+    for (var h = 0; h < H2.length; h++) {
+      edges.push({ a: H2[h], b: H3, start: t2 + h * 120, dur: PULSE_DUR, fire: true, decoy: false });
+    }
+    // show reply after hop 3 arrived
+    var t3 = t2 + (H2.length - 1) * 120 + PULSE_DUR;
+    replyEl.textContent = CHAINS[chain].responses[Math.floor(Math.random() * CHAINS[chain].responses.length)];
+    setTimeout(function () { answerAt = performance.now(); state = 'answered'; setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200); }, (t3 - t0));
+  }
+
+  function runFallback(text) {
+    promptNode = { text: text, x: W / 2, y: H * 0.16, w: 0, h: 22, fired: false, flashT: 1, drain: 0 };
+    ctx.font = '700 13px "Helvetica Neue", sans-serif';
+    promptNode.w = ctx.measureText(text).width + 30;
+
+    edges = []; litEdges = [];
+    // a few fizzle pulses at random nodes — nothing fires
+    var fizz = [];
+    for (var i = 0; i < 6; i++) {
+      var n = nodes[Math.floor(Math.random() * nodes.length)];
+      if (fizz.indexOf(n) < 0) fizz.push(n);
+    }
+    for (var j = 0; j < fizz.length; j++) {
+      edges.push({ a: promptNode, b: fizz[j], start: t0 + 300 + j * 260, dur: PULSE_DUR * 0.9, fire: false, decoy: true });
+    }
+    var lastEnd = t0 + 300 + (fizz.length - 1) * 260 + PULSE_DUR * 0.9;
+    replyEl.textContent = FALLBACK.responses[Math.floor(Math.random() * FALLBACK.responses.length)];
+    setTimeout(function () { answerAt = performance.now(); state = 'answered'; setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200); }, (lastEnd - t0));
+  }
 
   function run() {
     if (state !== 'idle') return;
     var text = inputEl.value.trim();
     if (!text) return;
-
     setBox(true);
-    replyEl.closest('.reply').classList.remove('show');
+    document.querySelector('.reply').classList.remove('show');
+    for (var i = 0; i < nodes.length; i++) { nodes[i].fired = false; nodes[i].flashT = 0; nodes[i].drain = 0; }
 
-    var bucket = detect(text);
-    fallback = bucket === null;
-    var replyLines = fallback ? FALLBACK.responses : BUCKETS[bucket].responses;
-    var reply = replyLines[Math.floor(Math.random() * replyLines.length)];
-
-    // matched words: random 5-6 from that bucket pool, or none
-    var matched = [];
-    if (!fallback) {
-      matched = sample(BUCKETS[bucket].pool, 5, 6).map(function (t) { return wordIndex[t]; });
-    }
-
-    // prompt words from the typed text (up to 6)
-    var promptWords = text.toLowerCase().split(/\s+/).filter(function (s) { return s.length; }).slice(0, 6);
-    if (!promptWords.length) promptWords = [bucket || 'hmm'];
-
-    var t0 = performance.now();
-    spawnWords(promptWords, matched, t0);
-    replyEl.textContent = reply;
+    var chain = detect(text);
+    t0 = performance.now();
+    if (chain) runChain(chain, text);
+    else runFallback(text);
     inputEl.value = '';
-
-    state = 'sequence';
+    state = 'running';
   }
 
-  function spawnWords(promptWords, matched, t0) {
-    seeds = [];
-    var n = promptWords.length;
-
-    // assign each matched word to a prompt word (mostly one, sometimes two)
-    var seedTargets = [];
-    for (var s = 0; s < n; s++) seedTargets.push([]);
-    for (var m = 0; m < matched.length; m++) {
-      var prim = Math.floor(Math.random() * n);
-      seedTargets[prim].push(matched[m]);
-      if (Math.random() < 0.5) {
-        var sec = Math.floor(Math.random() * n);
-        if (sec !== prim) seedTargets[sec].push(matched[m]);
-      }
-    }
-
-    for (var i = 0; i < n; i++) {
-      var targets = seedTargets[i];
-      // decoys: words near the seed's x that aren't targets — near-misses
-      var decoys = [];
-      var nt = 4 + Math.floor(Math.random() * 3);
-      var tries = 0;
-      while (decoys.length < nt && tries < 80) {
-        tries++;
-        var wi = Math.floor(Math.random() * words.length);
-        if (targets.indexOf(wi) >= 0 || decoys.indexOf(wi) >= 0) continue;
-        if (Math.abs(words[wi].x - W * (0.2 + i * (0.6 / (n > 1 ? n - 1 : 1)))) > W * 0.5) continue;
-        decoys.push(wi);
-      }
-      seeds.push({
-        idx: i,
-        text: promptWords[i],
-        x: W * (0.2 + i * (0.6 / (n > 1 ? n - 1 : 1))) + rand(-20, 20),
-        y: -30,
-        ty: H * (0.2 + (i % 2) * 0.06),
-        spawned: t0 + 150 * i,
-        state: 'pending',
-        stateAt: 0,
-        testDelay: 300 + 120 * (i % 3),
-        testStart: 0,
-        targets: targets,
-        decoys: decoys,
-        probes: [],
-        doneAt: 0
-      });
-    }
-  }
-
-  // ----------------------------------------------------------- updates
+  // ----------------------------------------------------------- update
 
   function update() {
-    if (state === 'sequence') updateSequence();
+    if (state === 'running') updateEdges();
     else if (state === 'answered') {
-      if (now - answeredAt > 4000) {
+      if (now - answerAt > 4000) {
         state = 'settling';
         settleStart = now;
         document.querySelector('.reply').classList.remove('show');
-        for (var i = 0; i < words.length; i++) words[i].drain = 1;
+        for (var i = 0; i < nodes.length; i++) nodes[i].drain = 1;
+        if (promptNode) promptNode.drain = 1;
       }
     } else if (state === 'settling') {
       var done = true;
-      for (var j = 0; j < words.length; j++) {
-        if (words[j].drain > 0) {
-          words[j].drain -= 0.016;
-          done = false;
-        }
+      var decay = (now - settleStart) / 900;
+      for (var j = 0; j < nodes.length; j++) {
+        if (nodes[j].drain > 0) { nodes[j].drain = Math.max(0, 1 - decay); done = done && nodes[j].drain === 0; }
       }
       if (done) {
         state = 'idle';
-        seeds = [];
-        for (var k = 0; k < words.length; k++) { words[k].matchBy = []; words[k].drain = 0; }
+        nodes.forEach(function (n) { n.fired = false; n.drain = 0; n.flashT = 0; });
+        promptNode = null; edges = []; litEdges = [];
         setBox(false);
       }
     }
   }
 
-  var answeredAt = 0;
-  var settleStart = 0;
-
-  function updateSequence() {
-    var allDone = true;
-    for (var i = 0; i < seeds.length; i++) {
-      var s = seeds[i];
-      if (s.state === 'pending' && now >= s.spawned) { s.state = 'falling'; s.vy = rand(0.5, 0.7); }
-      if (s.state === 'falling') {
-        s.vy += 0.004;
-        s.y += s.vy;
-        if (s.y >= s.ty) { s.y = s.ty; s.state = 'landed'; s.stateAt = now; }
-      }
-      if (s.state === 'landed' && now >= s.stateAt + s.testDelay) {
-        s.state = 'testing';
-        s.testStart = now;
-        var probes = [];
-        for (var t = 0; t < s.targets.length; t++) {
-          probes.push({ wi: s.targets[t], catch: true, p: 0, resolved: false });
+  function updateEdges() {
+    var k = edges.length - 1;
+    while (k >= 0) {
+      var e = edges[k];
+      if (now >= e.start + e.dur) {
+        // pulse arrived
+        if (e.fire && !e.decoy) {
+          if (!e.b.fired) { e.b.fired = true; e.b.flashT = 1; }
         }
-        for (var d = 0; d < s.decoys.length; d++) {
-          probes.push({ wi: s.decoys[d], catch: false, p: 0, resolved: false });
-        }
-        s.probes = probes;
+        litEdges.push(e);
+        edges.splice(k, 1);
       }
-      if (s.state === 'testing') {
-        var done = 0;
-        for (var j = 0; j < s.probes.length; j++) {
-          var pr = s.probes[j];
-          var wp = words[pr.wi];
-          pr.p = clamp((now - s.testStart - j * 70) / 280, 0, 1);
-          if (pr.p >= 0.9 && !pr.resolved) {
-            pr.resolved = true;
-            wp.flashT = 1;
-            if (pr.catch && wp.matchBy.indexOf(s.idx) < 0) wp.matchBy.push(s.idx);
-          }
-          if (pr.resolved) done++;
-        }
-        if (done === s.probes.length) { s.state = 'done'; s.doneAt = now; }
-      }
-      if (s.state !== 'done') allDone = false;
-    }
-
-    if (allDone) {
-      var last = 0;
-      for (var m = 0; m < seeds.length; m++) last = Math.max(last, seeds[m].doneAt);
-      if (now - last > 900) {
-        state = 'answered';
-        answeredAt = now;
-        setTimeout(function () {
-          document.querySelector('.reply').classList.add('show');
-        }, 150);
-      }
+      k--;
     }
   }
 
-  // ------------------------------------------------------------- draw
+  // ----------------------------------------------------------- draw
+
+  function roundRect(x, y, w, h, r) {
+    r = r || h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    for (var w = 0; w < words.length; w++) {
-      if (words[w].flashT > 0) words[w].flashT -= 0.02;
+    // decay flashes
+    for (var i = 0; i < nodes.length; i++) if (nodes[i].flashT > 0) nodes[i].flashT -= 0.02;
+    if (promptNode && promptNode.flashT > 0) promptNode.flashT -= 0.02;
+
+    var drainAll = 1;
+    var dmax = 0;
+    for (var d = 0; d < nodes.length; d++) if (nodes[d].drain > dmax) dmax = nodes[d].drain;
+    drainAll = 1 - dmax * 0.92;
+
+    // persistent lit edges
+    ctx.lineCap = 'round';
+    for (var l = 0; l < litEdges.length; l++) {
+      var le = litEdges[l];
+      var strong = le.fire && !le.decoy;
+      ctx.strokeStyle = strong ? 'rgba(255,166,201,' + (0.5 * drainAll) + ')' : 'rgba(255,166,201,' + (0.08 * drainAll) + ')';
+      ctx.lineWidth = strong ? 1.6 : 1;
+      ctx.beginPath();
+      ctx.moveTo(le.a.x, le.a.y);
+      ctx.lineTo(le.b.x, le.b.y);
+      ctx.stroke();
     }
 
-    var updateDim = function () {
-      var m = 0;
-      for (var di = 0; di < words.length; di++) {
-        if (words[di].drain > m) m = words[di].drain;
-      }
-      return 1 - m * 0.85;
-    };
-    for (var s = 0; s < seeds.length; s++) {
-      var sd = seeds[s];
-      if (sd.state !== 'testing' && sd.state !== 'done') continue;
-      for (var j = 0; j < sd.probes.length; j++) {
-        var pr = sd.probes[j];
-        if (!pr.resolved || !pr.catch) continue;
-        var wp = words[pr.wi];
-        var bright = wp.matchBy.length >= 2;
-        ctx.strokeStyle = bright ? 'rgba(255,166,201,' + (0.95 * updateDim()) + ')' : 'rgba(255,166,201,' + (0.4 * updateDim()) + ')';
-        ctx.lineWidth = bright ? 2.2 : 1.1;
-        ctx.beginPath();
-        ctx.moveTo(sd.x, sd.y);
-        ctx.lineTo(wp.x, wp.y);
-        ctx.stroke();
-      }
-    }
-
-    // un-resolved sweep rays
-    for (var s2 = 0; s2 < seeds.length; s2++) {
-      var sd2 = seeds[s2];
-      if (sd2.state !== 'testing') continue;
-      for (var j2 = 0; j2 < sd2.probes.length; j2++) {
-        var pr2 = sd2.probes[j2];
-        if (pr2.resolved) continue;
-        var wp2 = words[pr2.wi];
-        var ang = Math.atan2(wp2.y - sd2.y, wp2.x - sd2.x);
-        var len = pr2.p * dist(sd2.x, sd2.y, wp2.x, wp2.y);
-        ctx.strokeStyle = 'rgba(255,166,201,' + (0.3 * Math.sin(pr2.p * Math.PI) + 0.05) + ')';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(sd2.x, sd2.y);
-        ctx.lineTo(sd2.x + Math.cos(ang) * len, sd2.y + Math.sin(ang) * len);
-        ctx.stroke();
-      }
-    }
-
-    // field words
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (var k = 0; k < words.length; k++) {
-      var wd = words[k];
-      var dx = wd.x + Math.sin(frame * 0.005 + wd.dp) * wd.drift;
-      var dy = wd.y + Math.cos(frame * 0.004 + wd.dp * 1.3) * wd.drift;
-
-      var lit = wd.matchBy.length > 0;
-      var bright = wd.matchBy.length >= 2;
-      var drainDim = wd.drain > 0 ? (1 - wd.drain) : 1;
-
-      if (lit || wd.drain > 0) {
-        var scale = bright ? 1.3 : 1.2;
-        var op = (0.55 + Math.min(1, wd.flashT) * 0.45) * drainDim;
-        ctx.font = (wd.size * scale) + 'px "Helvetica Neue", sans-serif';
-        ctx.fillStyle = ACCENT;
-        ctx.globalAlpha = clamp(op, 0.05, 1);
-        ctx.shadowColor = ACCENT;
-        ctx.shadowBlur = bright ? 18 : 10;
-      } else if (wd.flashT > 0) {
-        ctx.font = wd.size + 'px "Helvetica Neue", sans-serif';
-        ctx.fillStyle = ACCENT;
-        ctx.globalAlpha = wd.flashT * 0.6;
-        ctx.shadowColor = ACCENT;
-        ctx.shadowBlur = 8;
-      } else {
-        var tw = 0.8 + 0.2 * Math.sin(now * 0.002 + wd.ph);
-        ctx.font = wd.size + 'px "Helvetica Neue", sans-serif';
-        ctx.fillStyle = '#e4e4ea';
-        ctx.globalAlpha = wd.idleOp * tw;
-        ctx.shadowBlur = 0;
-      }
-      ctx.fillText(wd.text, dx, dy);
+    // travelling pulses
+    for (var p = 0; p < edges.length; p++) {
+      var e = edges[p];
+      if (now < e.start) continue;
+      var pr = (now - e.start) / e.dur;
+      if (pr < 0) continue;
+      var bx = e.a.x + (e.b.x - e.a.x) * Math.min(1.08, pr);
+      var by = e.a.y + (e.b.y - e.a.y) * Math.min(1.08, pr);
+      var isDead = !e.fire || e.decoy;
+      var amp = isDead ? 0.25 : 0.9;
+      // line glow behind pulse
+      ctx.strokeStyle = 'rgba(255,166,201,' + (0.25 * amp * drainAll) + ')';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(e.a.x, e.a.y);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+      // comet head
+      ctx.shadowColor = ACCENT;
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = isDead ? 'rgba(255,166,201,0.35)' : ACCENT;
+      ctx.globalAlpha = amp * drainAll;
+      ctx.beginPath();
+      ctx.arc(bx, by, isDead ? 1.6 : 3.2, 0, Math.PI * 2);
+      ctx.fill();
       ctx.globalAlpha = 1;
       ctx.shadowBlur = 0;
     }
 
-    // prompt words
-    if (state !== 'idle') {
-      for (var p = 0; p < seeds.length; p++) {
-        var pd = seeds[p];
-        if (pd.state === 'pending') continue;
-        ctx.font = '700 24px "Helvetica Neue", sans-serif';
-        ctx.fillStyle = ACCENT;
-        ctx.globalAlpha = 1;
+    // nodes
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (var n = 0; n < nodes.length; n++) {
+      var nd = nodes[n];
+      var x = nd.x, y = nd.y, w = nd.w, h = nd.h;
+      var ndrain = nd.drain > 0 ? (1 - nd.drain) : 1;
+
+      if (nd.fired) {
+        var flash = Math.min(1, nd.flashT);
+        var scale = 1 + 0.16 * Math.min(1, flash + (1 - ndrain));
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
         ctx.shadowColor = ACCENT;
-        ctx.shadowBlur = 16;
-        ctx.fillText(pd.text, pd.x, pd.y);
+        ctx.shadowBlur = 18 * ndrain;
+        ctx.strokeStyle = 'rgba(255,166,201,' + (0.75 * ndrain) + ')';
+        ctx.lineWidth = 1.4;
+        ctx.fillStyle = 'rgba(255,166,201,0.08)';
+        roundRect(-w / 2, -h / 2, w, h, h / 2);
+        ctx.fill();
+        ctx.stroke();
         ctx.shadowBlur = 0;
+        ctx.font = '12px "Helvetica Neue", sans-serif';
+        ctx.fillStyle = ACCENT;
+        ctx.globalAlpha = ndrain * (0.9 + flash * 0.1);
+        ctx.fillText(nd.text, 0, 0);
+        ctx.restore();
         ctx.globalAlpha = 1;
+      } else {
+        var faint = 0;
+        if (nd.flashT > 0) faint = nd.flashT;
+        ctx.strokeStyle = 'rgba(230,230,236,' + (0.07 + faint * 0.2) + ')';
+        ctx.lineWidth = 1;
+        roundRect(x - w / 2, y - h / 2, w, h, h / 2);
+        ctx.stroke();
+        ctx.font = '12px "Helvetica Neue", sans-serif';
+        ctx.fillStyle = 'rgba(230,230,236,' + (0.3 + faint * 0.35) + ')';
+        ctx.globalAlpha = 1;
+        ctx.fillText(nd.text, x, y);
       }
+    }
+
+    // prompt node
+    if (promptNode) {
+      var pn = promptNode;
+      var pd = pn.drain > 0 ? (1 - pn.drain) : 1;
+      ctx.save();
+      ctx.translate(pn.x, pn.y);
+      ctx.shadowColor = ACCENT;
+      ctx.shadowBlur = 22;
+      ctx.strokeStyle = 'rgba(255,166,201,0.85)';
+      ctx.lineWidth = 1.6;
+      ctx.fillStyle = 'rgba(255,166,201,0.1)';
+      roundRect(-pn.w / 2, -pn.h / 2, pn.w, pn.h, pn.h / 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.font = '700 13px "Helvetica Neue", sans-serif';
+      ctx.fillStyle = ACCENT;
+      ctx.globalAlpha = pd;
+      ctx.fillText(pn.text, 0, 0);
+      ctx.restore();
+      ctx.globalAlpha = 1;
     }
   }
 
-  // ------------------------------------------------------------- boot
+  // ----------------------------------------------------------- boot
 
   function setBox(off) {
-    inputEl.disabled = off ? true : false;
-    submitEl.disabled = off ? true : false;
+    inputEl.disabled = off;
+    submitEl.disabled = off;
     if (off) inputEl.blur();
   }
 
-  function submit() {
-    run();
-    inputEl.focus();
-  }
-
-  submitEl.addEventListener('click', submit);
-  inputEl.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') submit();
-  });
+  submitEl.addEventListener('click', function () { run(); inputEl.focus(); });
+  inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { run(); inputEl.focus(); } });
 
   function tick(ts) {
     now = ts; frame = ts;
@@ -586,8 +538,8 @@
     canvas.width = W * DPR;
     canvas.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    makeWordObjects();
-    state = 'idle'; seeds = [];
+    buildNodes();
+    state = 'idle'; edges = []; litEdges = []; promptNode = null;
     document.querySelector('.reply').classList.remove('show');
     setBox(false);
   }
@@ -599,7 +551,6 @@
   // helpers
   function rand(a, b) { return a + Math.random() * (b - a); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-  function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
 })();
 </script>
 </body>
