@@ -1119,66 +1119,25 @@
     hctx.globalAlpha=1;
     requestAnimationFrame(drawHero);
   }
-  window.addEventListener('scroll',()=>{scrollY=window.scrollY;},{passive:true});
+  window.addEventListener('scroll',()=>{scrollY=window.scrollY;applyParallax();},{passive:true});
   window.addEventListener('mousemove',e=>{
     mpx=(e.clientX/window.innerWidth-0.5)*2;
     mpy=(e.clientY/window.innerHeight-0.5)*2;
   },{passive:true});
-  // ---------- obsidian-style graph background ----------
-  // connected node network behind all info: nodes = info sections
-  const graphBg=document.createElement('canvas');
-  graphBg.id='graph-bg';
-  graphBg.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.55;';
-  document.body.insertBefore(graphBg,document.body.firstChild);
-  const bgCtx=graphBg.getContext('2d');
-  let bgW=0,bgH=0,bgNodes=[],bgEdges=[];
-  function resizeBg(){
-    bgW=graphBg.width=window.innerWidth*window.devicePixelRatio;
-    bgH=graphBg.height=window.innerHeight*window.devicePixelRatio;
-    bgCtx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+  // ---------- DOM parallax on cards ----------
+  function applyParallax(){
+    const cards=document.querySelectorAll('.card, .deepcard');
+    const vh=window.innerHeight;
+    cards.forEach(c=>{
+      const r=c.getBoundingClientRect();
+      const mid=r.top+r.height/2-vh/2;
+      const depth=parseFloat(c.dataset.deep||c.dataset.deepDepth||0);
+      const shift=-mid*0.08*(depth+0.8);
+      c.style.transform='translateY('+shift.toFixed(1)+'px) rotate('+(-mid*0.003*(depth+0.2)).toFixed(2)+'deg)';
+      const scale=1+0.015*Math.min(0.5,Math.abs(mid)/(vh*0.5))*(depth+0.4);
+      c.style.scale=scale.toFixed(3);
+    });
   }
-  function initBgGraph(){
-    bgNodes=[];bgEdges=[];
-    const sections=document.querySelectorAll('section');
-    const count=Math.max(12,sections.length+4);
-    for(let i=0;i<count;i++){
-      bgNodes.push({
-        x:(0.2+i*0.7/count)*window.innerWidth+Math.random()*120-60,
-        y:Math.random()*window.innerHeight,
-        vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.2,
-        r:2+Math.random()*4,
-        c:['#ffa6c9','#cbb0e8','#a9e8d4','#ffd3b3','#a8d8f0'][Math.floor(Math.random()*5)]
-      });
-    }
-    for(let i=0;i<bgNodes.length;i++){
-      for(let j=i+1;j<Math.min(i+4,bgNodes.length);j++){
-        bgEdges.push({a:i,b:j});
-      }
-    }
-  }
-  function drawBg(){
-    bgCtx.clearRect(0,0,window.innerWidth,window.innerHeight);
-    for(let e of bgEdges){
-      const a=bgNodes[e.a],b=bgNodes[e.b];
-      bgCtx.beginPath();
-      bgCtx.moveTo(a.x,a.y);bgCtx.lineTo(b.x,b.y);
-      bgCtx.strokeStyle='rgba(255,166,201,0.08)';
-      bgCtx.lineWidth=0.8;
-      bgCtx.stroke();
-    }
-    for(let n of bgNodes){
-      n.x+=n.vx;n.y+=n.vy;
-      if(n.x<0||n.x>window.innerWidth)n.vx*=-1;
-      if(n.y<0||n.y>window.innerHeight)n.vy*=-1;
-      bgCtx.beginPath();
-      bgCtx.arc(n.x,n.y,n.r,0,Math.PI*2);
-      bgCtx.fillStyle=n.c;
-      bgCtx.fill();
-    }
-    requestAnimationFrame(drawBg);
-  }
-  window.addEventListener('resize',()=>{resizeBg();initBgGraph();});
-  resizeBg();initBgGraph();drawBg();
   // ---------- extraction ----------
   // canonicalKeyword resolves a raw word to a FACTS key, trying the word itself
   // first and then its stem — so "networks"/"transformers" still match
