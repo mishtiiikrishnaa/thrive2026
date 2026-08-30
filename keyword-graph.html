@@ -152,19 +152,6 @@
   </div>
 </div>
 <script>
-// randomise positions on every load
-function randomiseNodes(){
-  document.querySelectorAll('.node').forEach(node=>{
-    const x=Math.round(8+Math.random()*80); // 8% to 88%
-    const y=Math.round(8+Math.random()*80); // 8% to 88%
-    node.style.left=x+'%'; node.style.top=y+'%';
-  });
-}
-window.addEventListener('load',()=>{
-  randomiseNodes();
-  // redraw edges after randomising
-  setTimeout(drawEdges,100);
-});
 const nodes=[...document.querySelectorAll('.node')];
 const edges=[]; // store line references
 nodes.forEach(n=>{
