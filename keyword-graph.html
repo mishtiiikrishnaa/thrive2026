@@ -12,7 +12,7 @@
   body::before{content:"";position:fixed;inset:0;background-image:radial-gradient(circle,rgba(255,166,201,0.07) 1px,transparent 1px);background-size:24px 24px;pointer-events:none;z-index:0;opacity:0.6;}
   body::after{content:"";position:fixed;inset:0;background:linear-gradient(rgba(255,166,201,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,166,201,0.025) 1px,transparent 1px);background-size:80px 80px;pointer-events:none;z-index:0;opacity:0.4;}
   #graph{position:fixed;inset:0;z-index:1;transform:scale(0.85);transform-origin:center center;}
-  .node{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--pink),rgba(255,166,201,0.5));border:1px solid rgba(255,166,201,0.5);box-shadow:0 0 8px rgba(255,166,201,0.4);cursor:pointer;transition:all 0.3s ease;z-index:5;}
+  .node{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--pink),rgba(255,166,201,0.5));border:1px solid rgba(255,166,201,0.5);box-shadow:0 0 8px rgba(255,166,201,0.4);cursor:pointer;transition:all 0.35s cubic-bezier(0.22,1,0.36,1),left 0.08s linear,top 0.08s linear;z-index:5;overflow:visible;}
   .node:hover{transform:scale(1.2);box-shadow:0 0 30px rgba(255,166,201,0.5);z-index:20;}
   .node.active{width:220px;height:260px;border-radius:20px;background:linear-gradient(160deg,var(--card),#181220);border:2px solid rgba(255,166,201,0.5);box-shadow:0 0 60px rgba(255,166,201,0.35),inset 0 0 50px rgba(255,166,201,0.08);z-index:30;transition:all 0.4s cubic-bezier(0.22,1,0.36,1);overflow:hidden;padding:1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
   .node.active:hover{transform:scale(1.02) translateY(-6px);box-shadow:0 0 80px rgba(255,166,201,0.5),inset 0 0 50px rgba(255,166,201,0.15);transition:all 0.35s cubic-bezier(0.22,1,0.36,1);}
@@ -153,33 +153,73 @@
 </div>
 <script>
 const nodes=[...document.querySelectorAll('.node')];
-const edges=[]; // store line references
-nodes.forEach(n=>{
-  n.addEventListener('click',(e)=>{e.stopPropagation();const was=n.classList.contains('active');nodes.forEach(x=>x.classList.remove('active'));edges.forEach(line=>line.classList.remove('highlight'));if(!was){n.classList.add('active');highlightPath(n);}});
-});
-document.addEventListener('click',()=>{nodes.forEach(x=>x.classList.remove('active'));edges.forEach(line=>line.classList.remove('highlight'));});
-function highlightPath(activeNode){
-  // light up ALL edges — relative reading means every connection is visible
-  edges.forEach(line=>line.classList.add('highlight'));
+// force-directed physics: nodes repel, edges pull
+const nodeData=nodes.map(n=>({
+  el:n, x:parseFloat(n.style.left), y:parseFloat(n.style.top),
+  vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5,
+  r:9
+}));
+const edgesData=[];
+function getEdges(){
+  edgesData.length=0;
+  for(let i=0;i<nodeData.length;i++){
+    for(let j=i+1;j<nodeData.length;j++){
+      const dx=nodeData[i].x-nodeData[j].x, dy=nodeData[i].y-nodeData[j].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<40) edgesData.push({a:i,b:j,distance:d});
+    }
+  }
 }
-function drawEdges(){
-  nodes.forEach((a,i)=>{
-    nodes.slice(i+1).forEach(b=>{
-      const rA=a.getBoundingClientRect(),rB=b.getBoundingClientRect();
-      const cxA=rA.left+rA.width/2,cyA=rA.top+rA.height/2;
-      const cxB=rB.left+rB.width/2,cyB=rB.top+rB.height/2;
-      const dx=cxB-cxA,dy=cyB-cyA,len=Math.sqrt(dx*dx+dy*dy);
-      if(len>400)return;
-      const line=document.createElement('div');
-      line.style.cssText='position:absolute;height:1px;background:rgba(255,166,201,0.2);z-index:0;pointer-events:none;transform-origin:left center;transition:background 0.3s ease,box-shadow 0.3s ease;';
-      line.style.width=len+'px';line.style.left=cxA+'px';line.style.top=cyA+'px';
-      line.style.transform='rotate('+Math.atan2(dy,dx)*180/Math.PI+'deg)';
-      document.body.appendChild(line);
-      edges.push(line);
-    });
+getEdges();
+
+function physicsStep(){
+  // repulsion
+  for(let i=0;i<nodeData.length;i++){
+    for(let j=i+1;j<nodeData.length;j++){
+      const a=nodeData[i],b=nodeData[j];
+      const dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+      if(d<300){
+        const force=50/d;
+        const fx=(dx/d)*force, fy=(dy/d)*force;
+        a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
+      }
+    }
+  }
+  // spring attraction
+  edgesData.forEach(e=>{
+    const a=nodeData[e.a],b=nodeData[e.b];
+    const dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+    const target=d*0.08; // 8% of screen
+    const force=(d-target)*0.02;
+    const fx=(dx/d)*force, fy=(dy/d)*force;
+    a.vx-=fx; a.vy-=fy; b.vx+=fx; b.vy+=fy;
   });
+  // update
+  nodeData.forEach(n=>{
+    n.vx*=0.92; n.vy*=0.92;
+    n.x+=n.vx; n.y+=n.vy;
+    // bounce off walls
+    if(n.x<5||n.x>95){n.vx*=-1;n.x=Math.max(5,Math.min(95,n.x));}
+    if(n.y<8||n.y>85){n.vy*=-1;n.y=Math.max(8,Math.min(85,n.y));}
+    n.el.style.left=n.x+'%'; n.el.style.top=n.y+'%';
+  });
+  // redraw edges
+  document.querySelectorAll('.edge').forEach(e=>e.remove());
+  edgesData.forEach(e=>{
+    const a=nodeData[e.a].el,b=nodeData[e.b].el;
+    const rA=a.getBoundingClientRect(),rB=b.getBoundingClientRect();
+    const cxA=rA.left+rA.width/2,cyA=rA.top+rA.height/2;
+    const cxB=rB.left+rB.width/2,cyB=rB.top+rB.height/2;
+    const dx=cxB-cxA,dy=cyB-cyA,len=Math.sqrt(dx*dx+dy*dy);
+    const line=document.createElement('div');
+    line.className='edge';
+    line.style.cssText='position:absolute;height:1px;background:rgba(255,166,201,0.2);z-index:0;pointer-events:none;transform-origin:left center;';
+    line.style.width=len+'px';line.style.left=cxA+'px';line.style.top=cyA+'px';
+    line.style.transform='rotate('+Math.atan2(dy,dx)*180/Math.PI+'deg)';
+    document.body.appendChild(line);
+  });
+  requestAnimationFrame(physicsStep);
 }
-window.addEventListener('load',drawEdges);
+requestAnimationFrame(physicsStep);
 </script>
 </body>
 </html>
