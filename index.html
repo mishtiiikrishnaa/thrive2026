@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>the room where it decides</title>
+<title>not a lookup. a lighting-up.</title>
 <style>
   :root {
     --bg: #0a0a0f;
-    --ink: #e8e8ec;
-    --grey: #8a8a94;
-    --dim: #4a4a52;
+    --ink: #e9e9ee;
+    --grey: #8e8e98;
+    --dim: #45454d;
     --accent: #ffa6c9;
   }
 
@@ -19,17 +19,15 @@
     height: 100%;
     background: var(--bg);
     color: var(--ink);
+    overflow: hidden;
   }
 
   body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
-    overflow: hidden;
   }
 
-  /* hero occupies the viewport height, then copy + footer sit below,
-     one scroll of reach — total about one and a half screens */
-  .hero {
+  .scene {
     position: relative;
     height: 100vh;
     overflow: hidden;
@@ -40,396 +38,618 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    cursor: pointer;
     display: block;
-    touch-action: manipulation;
   }
 
-  .band-label {
+  .title {
     position: absolute;
-    left: 14px;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--dim);
-    transform: translateY(-50%);
-    user-select: none;
-    pointer-events: none;
-    transition: color 0.6s ease;
-  }
-  .band-label.lit { color: var(--accent); }
-
-  .band-line {
-    position: absolute;
-    left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, var(--dim) 12%, var(--dim) 88%, transparent);
-    pointer-events: none;
-  }
-
-  .caption {
-    position: absolute;
-    bottom: 14px;
+    top: 7%;
     left: 0;
     right: 0;
     text-align: center;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    color: var(--grey);
-    user-select: none;
     pointer-events: none;
+    user-select: none;
   }
-
-  .copy {
-    position: relative;
-    z-index: 2;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 72px 24px 44px;
-    text-align: center;
-    /* blend out of the dark so it feels continuous, not a new screen */
-    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 100%);
-  }
-
-  .copy h1 {
+  .title h1 {
     font-family: Georgia, "Times New Roman", serif;
     font-weight: 400;
-    font-size: clamp(30px, 5vw, 44px);
-    line-height: 1.15;
-    letter-spacing: 0.01em;
+    font-size: clamp(22px, 3.4vw, 40px);
+    letter-spacing: 0.02em;
+    line-height: 1.3;
     color: var(--ink);
   }
 
-  .copy .sub {
-    margin-top: 16px;
-    font-size: 16px;
-    line-height: 1.6;
-    color: var(--grey);
-  }
-
-  .copy p.body {
-    margin-top: 40px;
-    font-size: 15px;
-    line-height: 1.9;
-    color: var(--grey);
-  }
-  .copy p.body strong { color: var(--accent); font-weight: 500; }
-  .copy p.body em { color: var(--ink); font-style: normal; }
-
-  .footer {
-    position: relative;
-    z-index: 2;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 16px 24px 56px;
-    text-align: center;
-  }
-
-  .footer span {
-    font-family: Georgia, "Times New Roman", serif;
-    font-style: italic;
-    font-size: 13px;
-    letter-spacing: 0.02em;
+  .hint {
+    margin-top: 14px;
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
     color: var(--dim);
   }
+
+  .ui {
+    position: absolute;
+    bottom: 7%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    user-select: none;
+  }
+
+  .chips {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13.5px;
+    letter-spacing: 0.03em;
+    color: var(--grey);
+    background: transparent;
+    border: 1px solid var(--dim);
+    border-radius: 999px;
+    padding: 10px 22px;
+    cursor: pointer;
+    outline: none;
+    transition: color 0.35s ease, border-color 0.35s ease, opacity 0.35s ease;
+  }
+  .chip:hover:not(.off) { color: var(--accent); border-color: rgba(255,166,201,0.5); }
+  .chip.off { opacity: 0.35; cursor: default; pointer-events: none; }
+
+  .again {
+    display: inline-block;
+    margin-top: 22px;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--grey);
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.8s ease, color 0.3s ease;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--dim);
+  }
+  .again:hover { color: var(--accent); }
+  .again.show { opacity: 1; }
+
+  .reply {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 61%;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 1.2s ease, transform 1.2s ease;
+    user-select: none;
+  }
+  .reply.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reply p {
+    max-width: 560px;
+    margin: 0 auto;
+    font-size: 16px;
+    line-height: 1.7;
+    letter-spacing: 0.02em;
+    color: var(--grey);
+  }
+  .reply p .soft { color: var(--ink); font-style: italic; font-family: Georgia, serif; }
 </style>
 </head>
 <body>
 
-  <section class="hero">
+  <div class="scene">
     <canvas id="stage"></canvas>
-    <div class="band-line" style="top: 33.333%; background: linear-gradient(to right, transparent, #2a2a32 15%, #2a2a32 85%, transparent);"></div>
-    <div class="band-line" style="top: 55.555%; background: linear-gradient(to right, transparent, #2a2a32 15%, #2a2a32 85%, transparent);"></div>
-    <div class="band-line" style="top: 77.777%; background: linear-gradient(to right, transparent, #2a2a32 15%, #2a2a32 85%, transparent);"></div>
-    <div class="band-label" id="l-pattern" style="top: 33.333%;">pattern</div>
-    <div class="band-label" id="l-weight"   style="top: 55.555%;">weight</div>
-    <div class="band-label" id="l-connection" style="top: 77.777%;">connection</div>
-    <div class="caption">click to feed it a thought</div>
-  </section>
 
-  <section class="copy">
-    <h1>the room where it decides</h1>
-    <p class="sub">every choice a model makes happens in a space you can't see. here, you can.</p>
-    <p class="body">
-      a thought enters the room hungry for form. it passes first through
-      <strong>pattern</strong>, where shape is pulled from noise and what doesn't fit is
-      already thinning out. it passes through <strong>weight</strong>, where some
-      paths are honoured and most are quietly dismissed. it passes through
-      <strong>connection</strong>, where what survives is bound to everything else,
-      until only one decision is left standing — and that, in the dark,
-      small and lit, is the choice. it looks obvious from the outside.
-      that's the trick of it.
-    </p>
-  </section>
+    <div class="title">
+      <h1>not a lookup. a lighting-up.</h1>
+      <div class="hint">choose a thought to feed it</div>
+    </div>
 
-  <footer class="footer">
-    <span>every answer you read was once a cloud of almosts.</span>
-  </footer>
+    <div class="reply"><p id="replytext"></p></div>
+
+    <div class="ui">
+      <div class="chips" id="chips"></div>
+      <div class="again" id="again">run again</div>
+    </div>
+  </div>
 
 <script>
 (function () {
-  var hero = document.querySelector('.hero');
   var canvas = document.getElementById('stage');
   var ctx = canvas.getContext('2d');
-
-  var labels = {
-    pattern:    document.getElementById('l-pattern'),
-    weight:     document.getElementById('l-weight'),
-    connection: document.getElementById('l-connection')
-  };
+  var chipsEl = document.getElementById('chips');
+  var replyEl = document.getElementById('replytext');
+  var againEl = document.getElementById('again');
 
   var ACCENT = '#ffa6c9';
-  var GREY = '#9a9aa4';
-  var DIMMED = '#45454d';
+  var DIMGREY = 'rgba(230,230,236,0.30)';
+
+  var PROMPTS = [
+    {
+      text: 'why is the sky blue',
+      words: ['why','is','the','sky','blue'],
+      reply: 'light comes in <span class="soft">white</span> and leaves as blue.'
+    },
+    {
+      text: 'write me a poem',
+      words: ['write','me','a','poem'],
+      reply: 'the stars are small holes where the dark keeps its light.'
+    },
+    {
+      text: 'what should i eat',
+      words: ['what','should','i','eat'],
+      reply: 'eat what the day has already warmed.'
+    }
+  ];
 
   var W, H, DPR;
-  var bands = [0.333, 0.555, 0.777];   // fraction of height each band sits at
-  var running = false;
-  var raf = null;
-  var pulse = 0;
+  var dots = [];          // the standing constellation
+  var seeds = [];         // words entering from the top
+  var now = 0;            // ms clock (updated per frame)
+  var started = 0;        // when the current sequence began
+  var state = 'idle';     // idle | sequence | condensing | answered
+  var frame = 0;
 
-  // ---------------------------------------------------------------- particles
+  var condensation = null;   // { members, target, start, dur }
+  var node = null;           // { x, y, born } the single lit answer
 
-  // each particle: x, y, vy, vx, size, hueLerp (0 = grey, 1 = pink),
-  // lit (will stay bright), alive, band spirit (which band it's "from")
-  var parts = [];
-  var MAX_LIVE = 46;
-  var SPAWN = 220; // particles spawned per feed
+  // ---------------------------------------------------------------- dots
 
-  function rand(a, b) { return a + Math.random() * (b - a); }
-
-  function spawnWave() {
-    var pruned = parts.filter(function (p) { return p.state === 'falling'; });
-    parts = pruned;
-    for (var i = 0; i < SPAWN; i++) {
-      // lit particles: a shrinking pool, a few pink, rest grey-and-doomed
-      var survival = 1 - Math.random() * 0.97;
-      parts.push({
-        x: rand(W * 0.08, W * 0.92),
-        y: -rand(0, H * 0.18),
-        vx: rand(-0.15, 0.15),
-        vy: rand(0.55, 1.3),
-        size: rand(0.8, 2.2),
-        hue: survival > 0.35 ? 1 : 0,     // 1 = stays pink
-        lit: survival > 0.45,
-        state: 'falling',                 // falling | converging | joined
-        band: null,
-        vibr: rand(0, Math.PI * 2),
-        bandFall: [undefined, undefined, undefined]
+  function makeConstellation() {
+    dots = [];
+    var n = 50;
+    // 4 loose clusters imply structure
+    var clusters = [];
+    for (var c = 0; c < 4; c++) {
+      clusters.push({
+        x: W * rand(0.15, 0.85),
+        y: H * rand(0.2, 0.82),
+        count: 9 + Math.floor(Math.random() * 4)
       });
     }
-    // hard floor so the ending node always has something lit
-    var litCount = parts.filter(function (p) { return p.lit; }).length;
-    if (litCount < 7) {
-      for (var j = 0; j < 7 - litCount; j++) {
-        parts.push({
-          x: rand(W * 0.3, W * 0.7),
-          y: -rand(0, H * 0.12),
-          vx: rand(-0.1, 0.1),
-          vy: rand(0.6, 1.1),
-          size: rand(1.2, 2.0),
-          hue: 1,
-          lit: true,
-          state: 'falling',
-          band: null,
-          vibr: rand(0, Math.PI * 2),
-          bandFall: [undefined, undefined, undefined]
-        });
+    var per = [];
+    for (var i = 0; i < clusters.length; i++) {
+      for (var j = 0; j < clusters[i].count; j++) per.push(i);
+    }
+    while (per.length < n - 8) per.push(-1);         // stragglers
+    while (per.length < n) per.push(-1);
+
+    for (var k = 0; k < per.length; k++) {
+      var cl = per[k] >= 0 ? clusters[per[k]] : null;
+      var x, y;
+      if (cl) {
+        x = cl.x + rand(-1, 1) * 160;
+        y = cl.y + rand(-1, 1) * 130;
+      } else {
+        x = rand(0.04, 0.96) * W;
+        y = rand(0.14, 0.9) * H;
       }
+      dots.push({
+        cx: clamp(x, 8, W - 8),
+        cy: clamp(y, 8, H - 8),
+        r: rand(1.4, 2.6),
+        ph: rand(0, Math.PI * 2),       // twinkle phase
+        dp: rand(0, Math.PI * 2),       // drift phase
+        drift: rand(1.5, 5),
+        lit: false,
+        caughtBy: [],
+        bright: false,
+        fade: 1                         // used when condensing away non-members
+      });
     }
   }
 
-  function bandAt(y) { return (y - 30) / (H - 90); }
+  // ---------------------------------------------------------------- seeds
 
-  function updatePart(p) {
-    p.vibr += 0.05;
-    p.x += p.vx + Math.sin(p.vibr) * 0.12;
-    p.y += p.vy;
+  function spawnWords(prompt, t0) {
+    seeds = [];
+    var n = prompt.words.length;
+    for (var i = 0; i < n; i++) {
+      seeds.push({
+        idx: i,
+        x: W * (0.18 + i * (0.64 / (n > 1 ? n - 1 : 1))) + rand(-14, 14),
+        y: -24,
+        ty: H * (0.3 + (i % 2) * 0.05),
+        vy: 0,
+        spawned: t0 + 150 * i,
+        state: 'pending',
+        stateAt: 0,
+        testDelay: 320 + 130 * (i % 3),
+        testStart: 0,
+        probes: [],
+        resolvedAt: 0
+      });
+    }
+  }
 
-    if (p.state === 'falling') {
-      var f = bandAt(p.y);
-      for (var i = 0; i < 3; i++) {
-        var b = bands[i];
-        if (p.bandFall[i] === undefined && f >= b) {
-          p.bandFall[i] = true;
-          p.band = i;
-          crossBand(p, i);
-          break;
+  function makeProbes(seed) {
+    var ordered = dots.slice().sort(function (a, b) {
+      return dist2(seed.x, seed.y, a.cx, a.cy) - dist2(seed.x, seed.y, b.cx, b.cy);
+    }).slice(0, 13);
+
+    var probes = [], caught = 0;
+    for (var i = 0; i < ordered.length; i++) {
+      var d = ordered[i];
+      if (probes.some(function (p) { return p.dot === d; })) continue;
+      if (i >= 4 && caught >= 6) break;
+      var closeness = 1 - Math.sqrt(dist2(seed.x, seed.y, d.cx, d.cy)) / (W * 0.5);
+      var pCatch = clamp(0.28 + closeness * 0.55, 0.25, 0.9);
+      var hit = (i < 2) || Math.random() < pCatch;
+      if (hit && caught < 6) caught++;
+      probes.push({ dot: d, catch: hit, p: 0, resolved: false, start: 0 });
+    }
+    seed.probes = probes;
+  }
+
+  // ---------------------------------------------------------------- sequence update
+
+  function update() {
+    if (state === 'idle') return;
+    if (state === 'sequence') updateSequence();
+    else if (state === 'condensing') updateCondense();
+    else updateAnswered();
+  }
+
+  function updateSequence() {
+    var allDone = true, anyCatch = false;
+
+    for (var i = 0; i < seeds.length; i++) {
+      var s = seeds[i];
+
+      if (s.state === 'pending' && now >= s.spawned) {
+        s.state = 'falling';
+        s.vy = rand(0.5, 0.7);
+      }
+      if (s.state === 'falling') {
+        s.vy += 0.004;
+        s.y += s.vy * 1.0;
+        if (s.y >= s.ty) { s.y = s.ty; s.state = 'landed'; s.stateAt = now; }
+      }
+      if (s.state === 'landed' && now >= s.stateAt + s.testDelay) {
+        s.state = 'testing';
+        s.testStart = now;
+        makeProbes(s);
+        s.resolvedAt = now + 460;
+      }
+      if (s.state === 'testing') {
+        var q = (now - s.testStart) / 460;
+        if (q >= 1) s.state = 'done';
+        else {
+          // resolve probes progressively within the sweep
+          var resolved = 0;
+          for (var j = 0; j < s.probes.length; j++) {
+            var pr = s.probes[j];
+            var rp = clamp((now - s.testStart - j * 60) / 320, 0, 1);
+            pr.p = rp;
+            if (rp >= 0.82) {
+              if (!pr.resolved) {
+                pr.resolved = true;
+                if (pr.catch) {
+                  pr.dot.lit = true;
+                  if (pr.dot.caughtBy.indexOf(s.idx) < 0) pr.dot.caughtBy.push(s.idx);
+                  pr.dot.bright = pr.dot.caughtBy.length >= 2;
+                  pr.bright = pr.dot.bright;
+                } else {
+                  pr.bright = false;
+                }
+              }
+              resolved++;
+            }
+          }
+          s.resolvedP = resolved;
         }
       }
-      if (f > 1) p.state = 'converging';
-      return;
+
+      if (s.state !== 'done') allDone = false;
+      if (s.probes.length && s.probes.some(function (x) { return x.resolved && x.catch; })) anyCatch = true;
     }
 
-    if (p.state === 'converging') {
-      // pull toward the node point (bottom centre)
-      var nx = W / 2, ny = H - 26;
-      var dx = nx - p.x, dy = ny - p.y;
-      p.x += dx * 0.035 + p.vx * 0.4;
-      p.y += dy * 0.045 + p.vy * 0.25;
-      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) p.state = 'joined';
+    if (allDone && anyCatch && condensation === null) {
+      state = 'condensing';
+      beginCondense();
     }
   }
 
-  function crossBand(p, i) {
-    var r = Math.random();
-    if (i === 0) {
-      // pattern: most shed and dim
-      if (r < 0.55) { dim(p); return; }
-      // split into a daughter particle
-      if (r < 0.75) {
-        parts.push({
-          x: p.x + rand(-10, 10), y: p.y + rand(2, 12),
-          vx: rand(-0.6, 0.6), vy: rand(0.6, 1.1),
-          size: p.size * rand(0.6, 0.85),
-          hue: p.hue, lit: p.lit && Math.random() < 0.8,
-          state: 'falling',
-          bandFall: p.bandFall ? p.bandFall.slice() : [true, undefined, undefined],
-          band: null,
-          vibr: rand(0, Math.PI * 2)
-        });
+  // ---------------------------------------------------------------- condense
+
+  function selectMembers() {
+    // union-find over seeds (with catches) and lit dots
+    var parent = {}, rank = {};
+    function make(k) { if (!parent[k]) { parent[k] = k; rank[k] = 0; } }
+    function find(k) { make(k); while (parent[k] !== k) { parent[k] = parent[parent[k]]; k = parent[k]; } return k; }
+    function uni(a, b) {
+      var ra = find(a), rb = find(b);
+      if (ra === rb) return;
+      if (rank[ra] < rank[rb]) parent[ra] = rb;
+      else if (rank[ra] > rank[rb]) parent[rb] = ra;
+      else { parent[rb] = ra; rank[ra]++; }
+    }
+
+    var seedIndex = {};
+    var litDots = [];
+    for (var i = 0; i < seeds.length; i++) seedIndex[seeds[i].idx] = i;
+    for (var k = 0; k < dots.length; k++) {
+      var d = dots[k];
+      if (d.lit && d.caughtBy.length) {
+        litDots.push(d);
+        for (var c = 0; c < d.caughtBy.length; c++) {
+          var si = seedIndex[d.caughtBy[c]];
+          uni('s' + si, 'd' + k);
+        }
       }
-      return;
     }
-    if (i === 2) {
-      // connection: survivors bind — dim almost everything here
-      if (r < 0.7 && !p.lit) { dim(p); return; }
-      return;
+
+    // group components
+    var comps = {};
+    var keys = [];
+    for (var key in parent) {
+      var root = find(key);
+      if (!comps[root]) { comps[root] = { keys: [], score: 0 }; keys.push(root); }
+      comps[root].keys.push(key);
     }
-    // weight (middle): reroute
-    if (r < 0.5) {
-      p.vx += rand(-0.8, 0.8);
-      p.vy *= rand(0.85, 1.1);
-    } else if (r < 0.72 && p.lit) {
-      // a pair may merge on a line — attract souls
-      var siblings = parts.filter(function (q) { return q !== p && q.state !== 'joined' && q.hue === 1; });
-      if (siblings.length) {
-        var s = siblings[Math.floor(Math.random() * siblings.length)];
-        s.vx += 0.25 * (p.x - s.x) / 100;
-        s.vy = p.vy;
+    // score
+    for (var r in comps) {
+      var ck = comps[r].keys;
+      for (var i2 = 0; i2 < ck.length; i2++) {
+        var k2 = ck[i2];
+        if (k2[0] === 's') {
+          comps[r].score += 1;
+        } else {
+          var di = parseInt(k2.slice(1), 10);
+          var dot = dots[di];
+          comps[r].score += dot.bright ? 2.5 : 1;
+          comps[r].score += dot.caughtBy.length >= 2 ? 2 : 0;
+        }
       }
-    } else if (r > 0.82) {
-      p.lit = false; p.hue = Math.min(p.hue, 0.3);
-      p.vx = 0; p.vy *= 0.3;
+    }
+    var best = null;
+    for (var r2 in comps) {
+      if (!best || comps[r2].score > best.score) best = comps[r2];
+    }
+    if (!best) return null;
+
+    var members = [];
+    for (var m = 0; m < best.keys.length; m++) {
+      var kk = best.keys[m];
+      if (kk[0] === 's') {
+        var si2 = parseInt(kk.slice(1), 10);
+        var seed = seeds[si2];
+        if (seed.probes.some(function (x) { return x.catch && x.resolved; })) {
+          members.push({ x: seed.x, y: seed.y, kind: 'seed', seed: seed });
+        }
+      } else {
+        var dk = parseInt(kk.slice(1), 10);
+        var d2 = dots[dk];
+        members.push({ x: d2.x, y: d2.y, kind: 'dot', dot: d2 });
+      }
+    }
+    return members;
+  }
+
+  function beginCondense() {
+    var members = selectMembers();
+    if (!members) { state = 'answered'; return; }
+    // fade out lit dots that are NOT members
+    for (var i = 0; i < dots.length; i++) {
+      if (dots[i].lit && !members.some(function (m) { return m.dot === dots[i]; })) {
+        dots[i].dotFade = 1.3; // will decay
+      }
+    }
+    var cx = 0, cyy = 0;
+    for (var j = 0; j < members.length; j++) { cx += members[j].x; cyy += members[j].y; }
+    cx /= members.length; cyy /= members.length;
+    condensation = {
+      members: members,
+      from: { x: cx, y: cyy },
+      target: { x: W * 0.5, y: H * 0.48 },
+      start: now,
+      dur: 1200
+    };
+    state = 'condensing';
+  }
+
+  function updateCondense() {
+    var t = clamp((now - condensation.start) / condensation.dur, 0, 1);
+    var e = easeInOut(t);
+    for (var i = 0; i < condensation.members.length; i++) {
+      var m = condensation.members[i];
+      m.x += (condensation.target.x - m.x) * (0.035 + 0.05 * easeInOut(Math.min(1, t * 1.6)));
+      m.y += (condensation.target.y - m.y) * (0.035 + 0.05 * easeInOut(Math.min(1, t * 1.6)));
+    }
+    // decay non-member lit dots
+    for (var j = 0; j < dots.length; j++) {
+      var d = dots[j];
+      if (d.dotFade) d.dotFade -= 0.02;
+    }
+    if (t >= 1) {
+      node = { x: condensation.target.x, y: condensation.target.y, born: now };
+      state = 'answered';
+      showReply();
     }
   }
 
-  function dim(p) {
-    p.lit = false;
-    if (Math.random() < 0.3) p.hue = 0.35;
-    else p.hue = 0;
-    p.vy *= 0.85;
+  function updateAnswered() {
+    // keep decay running
+    for (var j = 0; j < dots.length; j++) {
+      var d = dots[j];
+      if (d.dotFade) d.dotFade -= 0.02;
+    }
   }
 
-  // ---------------------------------------------------------------- draw
+  function showReply() {
+    setTimeout(function () {
+      var p = replyEl.closest('.reply');
+      p.classList.add('show');
+      againEl.classList.add('show');
+    }, 250);
+  }
+
+  // ---------------------------------------------------------------- drawing
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    // faint translucent bands
-    for (var i = 0; i < 3; i++) {
-      var y = bands[i] * H;
-      var g = ctx.createLinearGradient(0, y - 24, 0, y + 24);
-      g.addColorStop(0, 'rgba(255,166,201,0)');
-      g.addColorStop(0.5, 'rgba(255,166,201,' + (0.035 + pulse * 0.02) + ')');
-      g.addColorStop(1, 'rgba(255,166,201,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, y - 24, W, 48);
+    var lx, ly;
+    for (var i = 0; i < dots.length; i++) {
+      var d = dots[i];
+      var x = d.cx + Math.sin(frame * 0.006 + d.dp) * d.drift;
+      var y = d.cy + Math.cos(frame * 0.005 + d.dp * 1.3) * d.drift;
+      d.x = x; d.y = y;
     }
 
-    var litN = 0, cx = 0, cy = 0;
-
-    for (var j = 0; j < parts.length; j++) {
-      var p = parts[j];
-      var alpha = 1;
-      if (p.state === 'converging') alpha = Math.min(1, 1.2 - bandAt(p.y) + 0.15);
-      var glow = p.lit ? 1 : 0;
-      var col = mix(GREY, ACCENT, p.hue);
-      ctx.globalAlpha = p.lit ? (0.55 + glow * 0.45) : (0.18 + alpha * 0.3);
-      ctx.fillStyle = col;
+    // condensation / answer state
+    if (condensation && state === 'condensing') {
+      var t = clamp((now - condensation.start) / condensation.dur, 0, 1);
+      var ring = easeOutCubic(t);
+      ctx.strokeStyle = 'rgba(255,166,201,' + (0.5 * ring) + ')';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.arc(condensation.target.x, condensation.target.y, 6 + ring * 90, 0, Math.PI * 2);
+      ctx.stroke();
 
-      if (p.lit && p.state !== 'joined') { litN++; cx += p.x; cy += p.y; }
+      for (var m = 0; m < condensation.members.length; m++) {
+        var mem = condensation.members[m];
+        drawDot(mem.x, mem.y, 2.2, ACCENT, 0.55, 0.35);
+      }
+    }
+    if (node) {
+      var pulse = 0.5 + 0.5 * Math.sin(now * 0.0055);
+      drawDot(node.x, node.y, 4 + pulse * 3, ACCENT, 0.95, 0.9);
     }
 
+    // seed word particles
+    for (var s = 0; s < seeds.length; s++) {
+      var seed = seeds[s];
+      if (seed.state === 'pending') continue;
+      drawDot(seed.x, seed.y, 3.2, ACCENT, 0.9, 0.7);
+      // rays that haven't resolved yet
+      if (seed.state === 'testing') {
+        for (var j = 0; j < seed.probes.length; j++) {
+          var pr = seed.probes[j];
+          if (pr.resolved) continue;
+          var pl = pr.p * dist(seed.x, seed.y, pr.dot.x, pr.dot.y);
+          var ang = Math.atan2(pr.dot.y - seed.y, pr.dot.x - seed.x);
+          ctx.strokeStyle = 'rgba(255,166,201,' + (0.28 * Math.sin(pr.p * Math.PI) + 0.05) + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(seed.x, seed.y);
+          ctx.lineTo(seed.x + Math.cos(ang) * pl, seed.y + Math.sin(ang) * pl);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // persistent links before condensing (only while not yet resolved into node)
+    if (state === 'sequence') {
+      for (var s2 = 0; s2 < seeds.length; s2++) {
+        var se2 = seeds[s2];
+        for (var j2 = 0; j2 < se2.probes.length; j2++) {
+          var pp = se2.probes[j2];
+          if (!pp.resolved || !pp.catch) continue;
+          var strong = pp.bright;
+          ctx.strokeStyle = strong ? 'rgba(255,166,201,0.85)' : 'rgba(255,166,201,0.35)';
+          ctx.lineWidth = strong ? 2 : 1;
+          ctx.beginPath();
+          ctx.moveTo(se2.x, se2.y);
+          ctx.lineTo(pp.dot.x, pp.dot.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // constellation dots
+    for (var k = 0; k < dots.length; k++) {
+      var d2 = dots[k];
+      if (d2.lit && !condensation) {
+        // lit, still part of the search
+        var gl = d2.bright ? 1 : 0.55;
+        drawDot(d2.x, d2.y, d2.r + (d2.bright ? 1.2 : 0), ACCENT, gl, d2.bright ? 0.85 : 0.5);
+      } else if (d2.lit && condensation && state !== 'answered') {
+        // member dots are drawn with the condensation block
+        continue;
+      } else if (d2.dotFade) {
+        if (d2.dotFade > 0) drawDot(d2.x, d2.y, d2.r, ACCENT, 0.5 * d2.dotFade, 0.4);
+      } else {
+        var tw = 0.8 + 0.2 * Math.sin(now * 0.002 + d2.ph);
+        ctx.globalAlpha = 0.30 * tw;
+        ctx.fillStyle = '#e6e6ec';
+        ctx.beginPath();
+        ctx.arc(d2.x, d2.y, d2.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
     ctx.globalAlpha = 1;
+  }
 
-    // the convergent node: pulsing pink
-    var shutter = 0.5 + 0.5 * Math.sin(pulse * 2.4);
-    if (litN > 0) {
-      var t = Math.min(1, (parts.length ? litN / 14 : 0) * 1.6);
-      nodeX = nodeX + (W / 2 - nodeX) * 0.12;
-      nodeY = nodeY + ((H - 26) - nodeY) * 0.12;
-    }
-    var rNode = 5 + shutter * 3.5 + Math.sin(pulse * 5) * 0.8;
-    var ng = ctx.createRadialGradient(nodeX, nodeY, 0, nodeX, nodeY, rNode * 4);
-    ng.addColorStop(0, 'rgba(255,166,201,0.95)');
-    ng.addColorStop(0.35, 'rgba(255,166,201,0.35)');
-    ng.addColorStop(1, 'rgba(255,166,201,0)');
-    ctx.fillStyle = ng;
+  function drawDot(x, y, r, col, glow, alpha) {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = col;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 8 * glow + 2;
     ctx.beginPath();
-    ctx.arc(nodeX, nodeY, rNode * 4, 0, Math.PI * 2);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
-
-    ctx.fillStyle = ACCENT;
-    ctx.globalAlpha = 0.9;
-    ctx.beginPath();
-    ctx.arc(nodeX, nodeY, rNode, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
+  }
 
-    // prune joined particles after a beat so DOM/GC stays light
-    for (var k = parts.length - 1; k >= 0; k--) {
-      var q = parts[k];
-      if (q.state === 'joined' && Math.random() < 0.02) parts.splice(k, 1);
-      else if (q.y > H + 40 && q.state === 'falling') parts.splice(k, 1);
+  // ---------------------------------------------------------------- run
+
+  function run(promptIdx) {
+    if (state !== 'idle') return;
+    setChips(true);
+    replyEl.closest('.reply').classList.remove('show');
+    againEl.classList.remove('show');
+    condensation = null;
+    node = null;
+    started = performance.now();
+    spawnWords(PROMPTS[promptIdx], started);
+    replyEl.innerHTML = PROMPTS[promptIdx].reply;
+    state = 'sequence';
+  }
+
+  function reset() {
+    state = 'idle';
+    condensation = null;
+    node = null;
+    seeds = [];
+    replyEl.closest('.reply').classList.remove('show');
+    againEl.classList.remove('show');
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].lit = false; dots[i].caughtBy = []; dots[i].bright = false;
+      dots[i].dotFade = 0;
+    }
+    makeConstellation();
+    setChips(false);
+  }
+
+  function setChips(off) {
+    var cs = document.querySelectorAll('.chip');
+    for (var i = 0; i < cs.length; i++) {
+      if (off) cs[i].classList.add('off'); else cs[i].classList.remove('off');
     }
   }
-
-  var nodeX = 0, nodeY = 0;
-
-  function mix(a, b, t) {
-    var ca = hex(a), cb = hex(b);
-    var r = Math.round(ca[0] + (cb[0] - ca[0]) * t);
-    var g = Math.round(ca[1] + (cb[1] - ca[1]) * t);
-    var bl = Math.round(ca[2] + (cb[2] - ca[2]) * t);
-    return rgb(r, g, bl);
-  }
-  function hex(c) {
-    var n = parseInt(c.slice(1), 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  }
-  function rgb(r, g, b) { return 'rgb(' + r + ',' + g + ',' + b + ')'; }
 
   // ---------------------------------------------------------------- loop
 
-  function tick() {
-    pulse += 0.016;
-    if (pulse > 100) pulse = 0;
-    var t = pulse / 6.2; // ~1 breath per second
-    for (var i = 0; i < 3; i++) {
-      var on = Math.sin(t + i * 0.9) > 0.75;
-      labels[['pattern','weight','connection'][i]].classList.toggle('lit', on);
-    }
-    for (var j = parts.length - 1; j >= 0; j--) updatePart(parts[j]);
+  function tick(ts) {
+    var last = now;
+    now = ts;
+    frame = ts;
+    update();
     draw();
-    raf = requestAnimationFrame(tick);
+    requestAnimationFrame(tick);
   }
 
-  function feed() {
-    if (running) spawnWave();
-  }
-
-  function start() {
-    if (running) return;
-    running = true;
-    // init node position centre
-    nodeX = W / 2; nodeY = H - 26;
-    spawnWave();
-    raf = requestAnimationFrame(tick);
-  }
+  // ---------------------------------------------------------------- boot
 
   function resize() {
     DPR = Math.max(1, window.devicePixelRatio || 1);
@@ -438,17 +658,36 @@
     canvas.width = W * DPR;
     canvas.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    nodeX = W / 2; nodeY = H - 26;
+    makeConstellation();
+    condensation = null; node = null; seeds = [];
+    state = 'idle';
+    setChips(false);
   }
 
-  // ---------------------------------------------------------------- events
-
-  canvas.addEventListener('click', feed);
-  canvas.addEventListener('touchstart', function (e) { e.preventDefault(); feed(); }, { passive: false });
+  // build chips
+  for (var i = 0; i < PROMPTS.length; i++) {
+    (function (idx) {
+      var b = document.createElement('button');
+      b.className = 'chip';
+      b.textContent = PROMPTS[idx].text;
+      b.addEventListener('click', function () { run(idx); });
+      chipsEl.appendChild(b);
+    })(i);
+  }
+  againEl.addEventListener('click', reset);
 
   window.addEventListener('resize', resize);
   resize();
-  start();
+  requestAnimationFrame(tick);
+
+  // ---------------------------------------------------------------- helpers
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function dist(x1, y1, x2, y2) { return Math.sqrt(dist2(x1, y1, x2, y2)); }
+  function dist2(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return dx * dx + dy * dy; }
+  function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 })();
 </script>
 </body>
