@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>graphic.ai — keyword graph</title>
+<style>
+@import url('https://fonts.cdnfonts.com/css/cmu-typewriter-text');
+  :root{
+    --pink:#ffa6c9;--lilac:#cbb0e8;--mint:#a9e8d4;--bg:#140b12;
+    --txt:#f6e7ee;--txt-dim:#b895a8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--txt);font-family:'Computer Modern Typewriter','CMU Typewriter Text',monospace;overflow:hidden;width:100vw;height:100vh;}
+  /* graph container */
+  #graph{
+    position:fixed;inset:0;width:100vw;height:100vh;z-index:1;
+    background:radial-gradient(ellipse at center,rgba(255,166,201,0.06),transparent 60%);
+  }
+  /* nodes */
+  .node{
+    position:absolute;width:56px;height:56px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,rgba(255,166,201,0.25),rgba(203,176,232,0.15));
+    border:1.5px solid rgba(255,166,201,0.35);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:0 0 18px rgba(255,166,201,0.15);
+    transition:all 0.3s ease;z-index:10;
+  }
+  .node:hover{transform:scale(1.15);box-shadow:0 0 35px rgba(255,166,201,0.4);border-color:#fff;z-index:20;}
+  .node .label{font-size:0.7rem;color:var(--pink-soft);text-align:center;margin-top:3.5rem;position:absolute;top:50%;line-height:1.2;max-width:90px;pointer-events:none;opacity:0.7;}
+  /* tooltip on hover */
+  .node:hover .tooltip{display:block;}
+  .tooltip{
+    display:none;position:absolute;top:70px;left:50%;transform:translateX(-50%);
+    width:220px;padding:0.7rem 0.9rem;background:rgba(20,11,18,0.95);
+    border:1px solid rgba(255,166,201,0.25);border-radius:12px;
+    font-size:0.85rem;line-height:1.45;color:var(--txt-dim);
+    pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  }
+  .tooltip b{color:var(--pink-soft);font-size:0.75rem;letter-spacing:0.05em;display:block;margin-bottom:0.3rem;text-transform:lowercase;}
+  /* edges */
+  .edge{
+    position:absolute;height:1px;background:rgba(255,166,201,0.15);
+    transform-origin:left center;pointer-events:none;z-index:0;
+  }
+  /* header */
+  header{position:fixed;top:0;left:0;right:0;z-index:50;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;background:rgba(20,11,18,0.7);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,166,201,0.08);}
+  header h1{font-family:'Computer Modern Serif',serif;font-size:1.1rem;color:var(--pink-soft);}
+  header span{color:var(--txt-faint);font-size:0.75rem;text-transform:lowercase;letter-spacing:0.1em;}
+</style>
+</head>
+<body>
+<header><h1>graphic<b style="color:#fff">.</b>ai</h1><span>keyword graph</span></header>
+<div id="graph"></div>
+<script>
+const keywords = [
+  {label:"training",content:"an ai is not programmed with rules. it is fed staggering amounts of text — books, code, conversations — and learns the statistical shape of language within them.",x:12,y:25},
+  {label:"weights",content:"inside, millions of small numbers called weights are nudged during training. adjusting them is how the model stores what it has learned.",x:25,y:15},
+  {label:"attention",content:"transformers don't read one word at a time. an attention mechanism weighs every word against every other, deciding which parts of the context most matter for what comes next.",x:42,y:10},
+  {label:"inference",content:"when you prompt, the model runs the maths forward and predicts the next token — over and over — until an answer emerges.",x:58,y:18},
+  {label:"backprop",content:"the model compares its guess to the truth, measures the error, and walks the weights back a little. repeated over billions of steps, the errors shrink and the model sharpens.",x:78,y:28},
+  {label:"generation",content:"nothing is truly 'created'. the model joins the most probable pieces of what it has seen.",x:82,y:50},
+  {label:"token",content:"text never enters the model as letters you see. it is chopped into tokens — word pieces — then mapped to numbers.",x:68,y:58},
+  {label:"creativity",content:"the model outputs probabilities for the next token, not a single word. turn the temperature up and it samples more freely.",x:42,y:72},
+  {label:"hallucination",content:"a model that only predicts the next likely word will sometimes invent one with total confidence. it has no way to check against reality.",x:20,y:62},
+  {label:"embedding",content:"each token becomes a vector — a list of numbers. words with similar meanings end up with similar vectors.",x:30,y:10},
+  {label:"gradient",content:"backprop sends a tiny correction backwards through every layer. in deep networks the signal can die out or explode.",x:50,y:12},
+  {label:"temperature",content:"a dial on how randomly the model picks the next token. low temperature: safe, repetitive, predictable. high temperature: wild, creative, occasionally wrong.",x:40,y:82},
+  {label:"attention",content:"attention lets the model focus on the relevant words, not just the nearest ones.",x:65,y:42},
+];
+const graph=document.getElementById('graph');
+function render(){
+  // nodes
+  keywords.forEach((k,i)=>{
+    const n=document.createElement('div');
+    n.className='node';
+    n.style.left=k.x+'%';n.style.top=k.y+'%';
+    n.innerHTML='<div class="label">'+k.label+'</div><div class="tooltip"><b>'+k.label+'</b>'+k.content+'</div>';
+    graph.appendChild(n);
+  });
+  // edges between close nodes
+  for(let i=0;i<keywords.length;i++){
+    for(let j=i+1;j<keywords.length;j++){
+      const a=keywords[i],b=keywords[j];
+      const dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<35){
+        const e=document.createElement('div');e.className='edge';
+        const len=Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y))*5;
+        const angle=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+        e.style.width=len+'px';e.style.left=a.x+'%';e.style.top=a.y+'%';
+        e.style.transform='rotate('+angle+'deg)';
+        graph.appendChild(e);
+      }
+    }
+  }
+}
+render();
+</script>
+</body>
+</html>
