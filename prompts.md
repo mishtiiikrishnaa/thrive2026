@@ -426,3 +426,43 @@ fonts locally isn't gonna be enough.
 - document.fonts.ready re-triggers resize() so canvas layout is
   re-measured with real glyph metrics after remote fonts load —
   avoids pill overlap from wrong fallback metrics on first paint.
+
+## 11 — kill the lanes, grow a nerve plexus
+
+still the thing doesnt quite match the vision i had. nerve endings
+simulation i want not this i want nerve ending simulation this is just
+looking like placeholder take inspo from sims file like messy intricate
+webs like search the net for inspo also
+
+- the five clean lane columns are gone. every fact is now a neuron
+  with its own dendritic arborization (3-5 branches, each forking into
+  twigs, sealed with a shimmering terminal bouton) and arbor tips that
+  flare when the cell fires or an impulse brushes past.
+- the whole field is one tangled plexus, grown like the mish-sims:
+  fibres are straying polylines drawn every frame into a half-res
+  tissue buffer with a decaying fill so they reach a stable, messy
+  equilibrium — glow concentrates where fibres overlap, nothing is
+  ever crisp or "placed". bloom 2.5px + 9px on top as before.
+- three fibre families: per-neuron arbors (brighten with charge),
+  directed axon cables between the hop cells (prompt→hop1→hop2→hop3
+  impulses physically travel the actual cable paths, forking at
+  branch points), and 16 wandering neuropil threads stitched across
+  empty field with bouton beads en passant for texture. long chords
+  also tie unrelated chains together so the web reads one organism.
+- nerve impulses: bright heads + fading 18-step wakes drawn into the
+  tissue, hopping a cable only after its source cell has physically
+  fired. terminal endings near a passing signal flare on their own.
+- rest state is alive: boutons shimmer, idle sparks crawl the neuropil
+  threads every few seconds, motes drift and lean toward firing cells.
+- web search inspiration: tangled surrealist nerve-ending line work,
+  dendritic arborization microscopy, skeins of curling lines ending in
+  glowing bouton dots on void — combined with the clifford/lissajous/
+  DLA density-field idiom from mish-sims. (sources: easy-peasy
+  "surrealism of tangled nerve endings", dreamstime dendritic
+  arborization, stockcakes "luminous neural pathways".)
+- chain identities survive as faint uppercase watermark labels
+  floating above each cluster's centroid, lighting when their chain
+  fires. same 35 facts, same keyword matching, same responses.
+- cells scatter per-chain around jittered anchors (science/craft/myth/
+  mind/machine) with relaxation so nothing stacks, clamped out of the
+  reply-card window.

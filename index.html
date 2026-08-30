@@ -112,6 +112,7 @@
 
 <script>
 (function () {
+  'use strict';
   var canvas = document.getElementById('stage');
   var ctx = canvas.getContext('2d');
   var inputEl = document.getElementById('input');
@@ -119,8 +120,7 @@
   var replyEl = document.getElementById('replytext');
 
   var ACCENT = '#ffa6c9';
-  var GREY = '#e4e4ea';
-  var PULSE_DUR = 420;
+  var GREY = '#e9e9ee';
 
   // ----------------------------------------------------------- chains
 
@@ -130,6 +130,7 @@
     science: {
       label: 'science',
       keywords: ['sky', 'blue', 'light', 'colour', 'color', 'sunlight', 'wavelength', 'scatter', 'atmosphere'],
+      anchor: [0.50, 0.55],
       facts: [
         ['the sky looks blue during the day.', 1],
         ['sunlight is many colors mixed.', 1],
@@ -147,6 +148,7 @@
     craft: {
       label: 'craft',
       keywords: ['poem', 'verse', 'haiku', 'rhyme', 'line', 'write me', 'poetry', 'sonnet', 'stanza'],
+      anchor: [0.17, 0.60],
       facts: [
         ['a poem is writing arranged in lines.', 1],
         ['lines use rhythm and sometimes rhyme.', 1],
@@ -164,6 +166,7 @@
     myth: {
       label: 'myth',
       keywords: ['arjuna', 'dharma', 'krishna', 'duty', 'hesitate', 'karma', 'mahabharata', 'battlefield', 'warrior'],
+      anchor: [0.28, 0.24],
       facts: [
         ['arjuna is a warrior of the mahabharata.', 1],
         ['arjuna hesitates before kurukshetra.', 1],
@@ -181,6 +184,7 @@
     mind: {
       label: 'mind',
       keywords: ['nerve', 'neuron', 'brain', 'signal', 'synapse', 'memory', 'think', 'thought', 'mind', 'threshold', 'how does memory'],
+      anchor: [0.78, 0.26],
       facts: [
         ['signals travel along nerves as pulses.', 1],
         ['a cell fires when inputs cross a threshold.', 1],
@@ -198,6 +202,7 @@
     machine: {
       label: 'machine',
       keywords: ['program', 'code', 'loop', 'function', 'recursion', 'algorithm', 'computer', 'software', 'bug', 'compile'],
+      anchor: [0.79, 0.60],
       facts: [
         ['a program runs steps one after another.', 1],
         ['some steps only run if a condition holds.', 1],
@@ -221,7 +226,6 @@
     ]
   };
 
-  // domain drizzle — faint words that make the field feel vast
   var DRIZZLE = [
     'refraction','prism','ozone','violet','resonance','entropy','gravity','velocity','photon','orbit',
     'couplet','sestina','iamb','trochee','anaphora','imagery','meter','cadence','ink','stanza',
@@ -229,217 +233,446 @@
     'dendrite','axon','soma','myelin','glutamate','dopamine','cortex','hippocampus','resting','threshold',
     'stack','heap','cache','compiler','pointer','byte','kernel','thread','parser','interpreter',
     'indigo','static','thunder','tide','echo','quartz','velvet','mist','fracture','whisper',
-    'kuruk','ganga','samudra','vayu','agni','prana','dharma','karma','marga','seva',
+    'kuruk','ganga','samudra','vayu','agni','prana','marga','seva',
     'cadence','tempo','attack','decay','sustain','release','pulse','breath','pause','stillness'
   ];
 
-  // ----------------------------------------------------------- nodes
+  // ----------------------------------------------------------- state
 
-  var nodes = [];
+  var W = 0, H = 0, DPR = 1;
+  var neurons = [];      // cells: somas with arbors
+  var cables = [];       // directed cables {a, b, path, cum}
+  var threads = [];      // wandering neuropil fibres {path, cum, bout, timer}
+  var boutons = [];      // all nerve endings {x, y, owner, ph, flare}
+  var promptCell = null;
+  var impulses = [];     // travelling pulses {path, cum, d, speed, fire, wake, started, done, onEnd}
   var drizzle = [];
-  var lanes = {};            // chain -> { x, fired }
-  var W, H, DPR;
-  var W2, H2, glowCanvas, gctx;
-  var now = 0, frame = 0;
-  var state = 'idle';
-  var promptNode = null;
-  var edges = [];
-  var litEdges = [];
-  var t0 = 0;
-  var answerAt = 0;
-  var settleStart = 0;
-
   var motes = [];
-  var filaments = [];
-  var firedList = [];
+  var chainMeta = {};    // chain -> {x, y, r} centroid + radius for watermark
 
-  function linkCP(a, b) {
-    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-    var dx = b.x - a.x, dy = b.y - a.y;
-    var len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var amt = Math.min(len * 0.16, 34);
-    var side = (a.x + b.y > W / 2) ? 1 : -1;
-    return { x: mx + (-dy / len) * amt * side, y: my + (dx / len) * amt * side };
-  }
+  var tissue = null, tctx = null, TW = 0, TH = 0;
 
-  function bezierAt(a, cp, b, t) {
-    var it = 1 - t;
-    return {
-      x: it * it * a.x + 2 * it * t * cp.x + t * t * b.x,
-      y: it * it * a.y + 2 * it * t * cp.y + t * t * b.y
-    };
-  }
+  var now = 0, frame = 0, lastT = 0;
+  var t0 = 0;
+  var state = 'idle';
+  var answerAt = 0, settleStart = 0;
 
-  function strokeLink(a, cp, b, color, width, c) {
-    c = c || ctx;
+  // ----------------------------------------------------------- helpers
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
+  function lerpColor(alpha) { return 'rgba(255,166,201,' + alpha.toFixed(3) + ')'; }
+
+  function roundRect(c, x, y, w, h, r) {
     c.beginPath();
-    c.moveTo(a.x, a.y);
-    c.quadraticCurveTo(cp.x, cp.y, b.x, b.y);
-    c.lineWidth = width;
-    c.strokeStyle = color;
-    c.stroke();
-    c.strokeStyle = null;
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
   }
 
-  function lerpColor(alpha) {
-    return 'rgba(255,166,201,' + alpha.toFixed(3) + ')';
+  function pathCum(path) {
+    var cum = [0];
+    for (var i = 1; i < path.length; i++) {
+      cum.push(cum[i - 1] + dist(path[i][0], path[i][1], path[i - 1][0], path[i - 1][1]));
+    }
+    return cum;
   }
 
-  // ----------------------------------------------------------- layout
+  function pointAt(path, cum, d) {
+    var lo = 0, hi = cum.length - 1;
+    while (hi - lo > 1) {
+      var mid = (lo + hi) >> 1;
+      if (cum[mid] <= d) lo = mid; else hi = mid;
+    }
+    var a = path[lo], b = path[Math.min(hi, path.length - 1)];
+    var seg = cum[hi] - cum[lo] || 0.0001;
+    var t = clamp((d - cum[lo]) / seg, 0, 1);
+    return { x: a[0] + (b[0] - a[0]) * t, y: a[1] + (b[1] - a[1]) * t };
+  }
 
-  function laneCenters() {
-    var margin = 34;
-    var laneW = (W - margin * 2) / CHAIN_KEYS.length;
-    var out = {};
-    for (var i = 0; i < CHAIN_KEYS.length; i++) {
-      out[CHAIN_KEYS[i]] = { x: margin + laneW * (i + 0.5), w: laneW };
+  // ----------------------------------------------------------- growth
+
+  // one wandering filament from (sx,sy), inching through the field
+  function growPath(sx, sy, pts, step, curl, target) {
+    var path = [[sx, sy]];
+    var x = sx, y = sy;
+    var ang = target
+      ? Math.atan2(target.y - sy, target.x - sx) + rand(-0.9, 0.9)
+      : rand(0, Math.PI * 2);
+    for (var i = 0; i < pts; i++) {
+      if (target) {
+        var ideal = Math.atan2(target.y - y, target.x - x);
+        ang += (ideal - ang) * 0.12 + rand(-curl, curl);
+      } else {
+        ang += rand(-curl, curl);
+      }
+      x += Math.cos(ang) * step;
+      y += Math.sin(ang) * step;
+      path.push([x, y]);
+    }
+    return path;
+  }
+
+  // dendritic arbor for one soma: several branches, each forking
+  function growArbor(sx, sy) {
+    var out = [];
+    var branches = 3 + Math.floor(Math.random() * 3);   // 3-5
+    for (var b = 0; b < branches; b++) {
+      var ang = rand(0, Math.PI * 2);
+      var x = sx, y = sy;
+      var segs = 5 + Math.floor(Math.random() * 4);
+      var step = rand(6, 10);
+      var path = [[x, y]];
+      for (var i = 0; i < segs; i++) {
+        ang += rand(-0.5, 0.5);
+        x += Math.cos(ang) * step;
+        y += Math.sin(ang) * step;
+        path.push([x, y]);
+        // occasionally fork a twig off the main branch
+        if (i >= 2 && Math.random() < 0.42) {
+          var ca = ang + rand(-0.8, 0.8);
+          var cx = x, cy = y;
+          var twig = [[cx, cy]];
+          var tl = 2 + Math.floor(Math.random() * 3);
+          for (var j = 0; j < tl; j++) {
+            ca += rand(-0.5, 0.5);
+            cx += Math.cos(ca) * step * 0.85;
+            cy += Math.sin(ca) * step * 0.85;
+            twig.push([cx, cy]);
+          }
+          out.push(twig);
+        }
+      }
+      out.push(path);
     }
     return out;
   }
 
-  function buildNodes() {
-    nodes = [];
-    lanes = laneCenters();
+  function addBouton(x, y, owner) {
+    boutons.push({ x: x, y: y, owner: owner || null, ph: rand(0, Math.PI * 2), flare: 0 });
+  }
+
+  // termination trickle: a few short twigs near the end of a cable/thread
+  function terminalSpray(path, k) {
+    var n = Math.min(k, 3);
+    var end = path[path.length - 1];
+    for (var i = 1; i <= n; i++) {
+      var p = path[Math.max(0, path.length - 1 - i * 2)];
+      addBouton(p[0], p[1], null);
+    }
+    addBouton(end[0], end[1], null);
+  }
+
+  // ----------------------------------------------------------- layout
+
+  function measureW(text) {
+    ctx.font = '12px "CMU Sans Serif", sans-serif';
+    return Math.min(320, ctx.measureText(text).width + 26);
+  }
+
+  function buildNeurons() {
+    neurons = [];
+    boutons = [];
     var rects = [];
+    var zx0 = W * 0.10, zx1 = W * 0.90, zy0 = H * 0.17, zy1 = H * 0.80;
 
     for (var c = 0; c < CHAIN_KEYS.length; c++) {
-      var chain = CHAIN_KEYS[c];
-      var facts = CHAINS[chain].facts;
-      var lx = lanes[chain].x;
-      var lw = lanes[chain].w;
+      var key = CHAIN_KEYS[c];
+      var chain = CHAINS[key];
+      var ax = (chain.anchor[0] + rand(-0.02, 0.02)) * W;
+      var ay = (chain.anchor[1] + rand(-0.02, 0.02)) * H;
+      var pts = [];
+      var facts = chain.facts;
 
       for (var f = 0; f < facts.length; f++) {
-        var text = facts[f][0];
         var hop = facts[f][1];
-        var node = {
-          text: text, chain: chain, hop: hop,
-          x: 0, y: 0, w: 0, h: 0,
-          fired: false, flashT: 0, drain: 0,
-          charge: 0,
-          trem: rand(0, Math.PI * 2),
-          glowph: rand(0, Math.PI * 2),
-          sparkT: rand(800, 6000),
-          sparkF: 0
+        var ring = hop === 1 ? rand(55, 98) : hop === 2 ? rand(98, 148) : rand(140, 190);
+        var a2 = rand(0, Math.PI * 2);
+        var spread = rand(0.75, 1.25);
+        var n = {
+          text: facts[f][0], chain: key, hop: hop, fired: false,
+          flashT: 0, drain: 0, charge: 0,
+          trem: rand(0, Math.PI * 2), glowph: rand(0, Math.PI * 2),
+          sparkT: rand(800, 7000), sparkF: 0,
+          x: clamp(ax + Math.cos(a2) * ring * spread, W*0.10 + 40, W*0.90 - 40),
+          y: clamp(ay + Math.sin(a2) * ring * spread, zy0 + 20, zy1 - 20)
         };
-        ctx.font = '12px "CMU Sans Serif", sans-serif';
-        node.w = Math.min(340, ctx.measureText(text).width + 26);
-        node.h = 26;
+        n.w = measureW(n.text);
+        n.h = 26;
+        n.qx = n.x; n.qy = n.y;
+        pts.push(n);
+        rects.push(n);
+      }
 
-        // three rows per hop, staggered across the lane
-        var rowY, rowX;
-        if (hop === 1) {
-          rowY = 0.30 + 0.085 * f;
-          rowX = [-0.30, 0, 0.30][f] * lw * 0.85;
-        } else if (hop === 2) {
-          rowY = 0.545 + 0.08 * (f - 3);
-          rowX = [-0.30, 0, 0.30][f - 3] * lw * 0.85;
-        } else {
-          rowY = 0.78;
-          rowX = 0;
-        }
-        var px = clamp(lx + rowX, node.w / 2 + 10, W - node.w / 2 - 10);
-        var py = clamp(rowY * H, node.h / 2 + 60, H - node.h / 2 - 56);
-
-        // safety: nudge away from anything too close
-        var tries = 0;
-        var collides = true;
-        while (collides && tries < 400) {
-          collides = false;
-          for (var q = 0; q < rects.length; q++) {
-            var rr = rects[q];
-            if (Math.abs(px - rr.x) < (node.w + rr.w) / 2 + 14 &&
-                Math.abs(py - rr.y) < (node.h + rr.h) / 2 + 8) {
-              collides = true;
-              py += 8;
-              tries++;
-              if (tries % 40 === 0) { px += (Math.random() - 0.5) * 20; py = rowY * H; }
-              break;
+      // relaxation so cells don't stack
+      for (var it = 0; it < 90; it++) {
+        for (var i = 0; i < pts.length; i++) {
+          for (var j = i + 1; j < pts.length; j++) {
+            var a = pts[i], b = pts[j];
+            var dx = b.x - a.x, dy = b.y - a.y;
+            var d = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+            var minD = (a.w + b.w) / 2 * 0.62 + 16;
+            if (d < minD) {
+              var push = (minD - d) / 2;
+              var ux = dx / d, uy = dy / d;
+              a.x -= ux * push * 0.5; a.y -= uy * push * 0.5;
+              b.x += ux * push * 0.5; b.y += uy * push * 0.5;
+              a.x = clamp(a.x, W*0.10 + 20, W*0.90 - 20);
+              a.y = clamp(a.y, zy0, zy1);
+              b.x = clamp(b.x, W*0.10 + 20, W*0.90 - 20);
+              b.y = clamp(b.y, zy0, zy1);
             }
           }
         }
-        node.x = px; node.y = py;
-        rects.push({ x: px, y: py, w: node.w, h: node.h });
-        nodes.push(node);
+      }
+
+      // arbors + tips
+      for (var k = 0; k < pts.length; k++) {
+        pts[k].arbors = growArbor(pts[k].x, pts[k].y);
+        for (var p = 0; p < pts[k].arbors.length; p++) {
+          var tip = pts[k].arbors[p][pts[k].arbors[p].length - 1];
+          addBouton(tip[0], tip[1], pts[k]);
+        }
+      }
+
+      var cx = 0, cy = 0;
+      for (var m = 0; m < pts.length; m++) { cx += pts[m].x; cy += pts[m].y; }
+      chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: ring };
+      neurons = neurons.concat(pts);
+    }
+  }
+
+  function buildCables() {
+    cables = [];
+    // directed hop cables inside each chain: every hop1 → every hop2, every hop2 → hop3
+    for (var c = 0; c < CHAIN_KEYS.length; c++) {
+      var key = CHAIN_KEYS[c];
+      var chain = CHAINS[key];
+      var h1 = neurons.filter(function (n) { return n.chain === key && n.hop === 1; });
+      var h2 = neurons.filter(function (n) { return n.chain === key && n.hop === 2; });
+      var h3 = neurons.filter(function (n) { return n.chain === key && n.hop === 3; });
+      for (var i = 0; i < h1.length; i++) {
+        for (var j = 0; j < h2.length; j++) {
+          cables.push(mkCable(h1[i], h2[j]));
+        }
+      }
+      for (var k = 0; k < h2.length; k++) {
+        cables.push(mkCable(h2[k], h3[0]));
       }
     }
+    // neuropil chords: a few long fibres stitching unrelated chains together
+    for (var m = 0; m < 10; m++) {
+      var a = neurons[Math.floor(Math.random() * neurons.length)];
+      var b = neurons[Math.floor(Math.random() * neurons.length)];
+      if (a === b || a.chain === b.chain) { m--; continue; }
+      var path = growPath(a.x, a.y, 110, 3.2, 0.32, { x: b.x, y: b.y });
+      cables.push({ a: a, b: b, path: path, cum: pathCum(path), chord: true });
+      terminalSpray(path, 2);
+    }
+  }
 
-    buildFilaments();
-    buildDrizzle();
+  function buildThreads() {
+    threads = [];
+    for (var i = 0; i < 16; i++) {
+      var path = growPath(
+        rand(W * 0.06, W * 0.94), rand(H * 0.14, H * 0.86),
+        190 + Math.floor(Math.random() * 90), 3.0, rand(0.10, 0.24), null
+      );
+      // nudge into frame
+      for (var j = 0; j < path.length; j++) {
+        path[j][0] = clamp(path[j][0], 6, W - 6);
+        path[j][1] = clamp(path[j][1], 8, H - 8);
+      }
+      var bout = [Math.floor(rand(30, 70)), Math.floor(rand(90, 140))];
+      for (var bIdx = 0; bIdx < bout.length; bIdx++) {
+        var p = path[bout[bIdx]];
+        addBouton(p[0], p[1], null);
+      }
+      terminalSpray(path, 3);
+      threads.push({ path: path, cum: pathCum(path), timer: rand(2500, 9000) });
+    }
+  }
+
+  function mkCable(src, dst) {
+    var path = growPath(src.x, src.y, 96, 2.9, 0.24, { x: dst.x, y: dst.y });
+    path[path.length - 1][0] = dst.x;
+    path[path.length - 1][1] = dst.y;
+    terminalSpray(path, 3);
+    return { a: src, b: dst, path: path, cum: pathCum(path), chord: false };
   }
 
   function buildDrizzle() {
     drizzle = [];
-    var col = 0;
-    for (var y = 0.20; y <= 0.88; y += 0.045) {
-      for (var x = 40; x <= W - 40; x += 72) {
-        if (col % 3 === 0) {
-          var w = DRIZZLE[Math.floor(Math.random() * DRIZZLE.length)];
-          drizzle.push({
-            t: w,
-            x: x + rand(-9, 9),
-            y: y * H + rand(-5, 5),
-            size: rand(9, 11.5),
-            op: rand(0.09, 0.16),
-            ph: rand(0, Math.PI * 2),
-            dp: rand(0, Math.PI * 2)
-          });
-        }
-        col++;
+    var tries = 0;
+    while (drizzle.length < 46 && tries < 900) {
+      tries++;
+      var x = rand(W * 0.08, W * 0.92), y = rand(H * 0.16, H * 0.82);
+      var clear = true;
+      for (var i = 0; i < neurons.length; i++) {
+        if (dist(x, y, neurons[i].x, neurons[i].y) < neurons[i].w / 2 + 46) { clear = false; break; }
       }
-    }
-  }
-
-  function buildFilaments() {
-    filaments = [];
-    var seen = {};
-    for (var i = 0; i < nodes.length; i++) {
-      var a = nodes[i];
-      var near = nodes.map(function (n, idx) {
-        return { n: n, d: dist(a.x, a.y, n.x, n.y), idx: idx };
-      }).filter(function (o) { return o.idx !== i; })
-        .sort(function (p, q) { return p.d - q.d; }).slice(0, 2);
-      for (var j = 0; j < near.length; j++) {
-        var keyi = Math.min(i, near[j].idx), keyj = Math.max(i, near[j].idx);
-        var key = keyi + '_' + keyj;
-        if (seen[key]) continue;
-        seen[key] = true;
-        filaments.push({ a: a, b: near[j].n, cp: linkCP(a, near[j].n) });
-      }
+      if (!clear) continue;
+      drizzle.push({
+        t: DRIZZLE[Math.floor(Math.random() * DRIZZLE.length)],
+        x: x, y: y,
+        size: rand(8.5, 11), op: rand(0.05, 0.11),
+        ph: rand(0, Math.PI * 2), dp: rand(0, Math.PI * 2)
+      });
     }
   }
 
   function buildMotes() {
     motes = [];
-    for (var i = 0; i < 44; i++) {
+    for (var i = 0; i < 40; i++) {
       motes.push({
-        x: rand(0, W), y: rand(0, H),
-        r: rand(0.6, 1.9),
-        ph: rand(0, Math.PI * 2),
-        vx: rand(-0.09, 0.09),
-        vy: rand(-0.07, 0.07),
-        pink: Math.random() < 0.3,
-        swirl: rand(-0.006, 0.006)
+        x: rand(0, W), y: rand(0, H), r: rand(0.6, 1.9),
+        ph: rand(0, Math.PI * 2), vx: rand(-0.1, 0.1), vy: rand(-0.08, 0.08),
+        pink: Math.random() < 0.3, swirl: rand(-0.006, 0.006)
       });
     }
   }
 
-  function buildGlow() {
-    W2 = Math.max(2, Math.round(W / 2));
-    H2 = Math.max(2, Math.round(H / 2));
-    if (!glowCanvas) glowCanvas = document.createElement('canvas');
-    glowCanvas.width = W2;
-    glowCanvas.height = H2;
-    gctx = glowCanvas.getContext('2d');
+  function buildTissue() {
+    TW = Math.max(2, Math.round(W / 2));
+    TH = Math.max(2, Math.round(H / 2));
+    if (!tissue) tissue = document.createElement('canvas');
+    tissue.width = TW;
+    tissue.height = TH;
+    tctx = tissue.getContext('2d');
+    tctx.fillStyle = '#0a040c';
+    tctx.fillRect(0, 0, TW, TH);
   }
 
-  function gauss() {
-    var u = 0, v = 0;
-    while (u === 0) u = Math.random();
-    while (v === 0) v = Math.random();
-    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  // ----------------------------------------------------------- firing
+
+  function mkPromptCell(text) {
+    var n = {
+      text: text, fired: true, flashT: 1, drain: 0, charge: 1.4,
+      x: W / 2, y: H * 0.19, w: 0, h: 22, trem: 0, glowph: 0,
+      qx: W / 2, qy: H * 0.19, arbors: []
+    };
+    ctx.font = '700 13px "CMU Sans Serif", sans-serif';
+    n.w = Math.min(520, ctx.measureText(text).width + 32);
+    return n;
   }
 
-  // ----------------------------------------------------------- submit
+  function cableBetween(src, dst) {
+    for (var i = 0; i < cables.length; i++) {
+      if (cables[i].a === src && cables[i].b === dst) return cables[i];
+    }
+    // live-wire a fresh cable (used for prompt → hop1)
+    return mkCable(src, dst);
+  }
+
+  function mkImpulse(cable, delay, fire, onEnd) {
+    var path = cable.path, cum = cable.cum;
+    var len = cum[cum.length - 1];
+    var dur = clamp(len * 1.05, 340, 720);
+    return {
+      cable: cable, path: path, cum: cum, len: len,
+      d: 0, speed: len / dur, fire: fire,
+      wake: new Array(18).fill(null), wi: 0,
+      started: t0 + delay, done: false, onEnd: onEnd
+    };
+  }
+
+  function runChain(chain, text) {
+    var picked = [0, 1, 2].slice().sort(function () { return Math.random() - 0.5; });
+    var H1 = [0, 1, 2].map(function (i) { return chainNeurons(chain, 1)[i]; });
+    var H2pool = [0, 1, 2].slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
+    var H2 = H2pool.map(function (i) { return chainNeurons(chain, 2)[i]; });
+    var H3 = chainNeurons(chain, 3)[0];
+
+    promptCell = mkPromptCell(text);
+    impulses = [];
+
+    var arr1 = [];
+    for (var i = 0; i < 3; i++) {
+      var c1 = cableBetween(promptCell, H1[i]);
+      var imp = mkImpulse(c1, 260 + i * 150, true, function (dst) {
+        fireNode(dst);
+      });
+      (function (dst) { imp.onEnd = fireNode.bind(null, dst); })(H1[i]);
+      impulses.push(imp);
+      arr1.push(260 + i * 150 + imbDur(c1));
+    }
+
+    var arr2 = [];
+    for (var k = 0; k < H2.length; k++) {
+      var dst = H2[k];
+      var srcIdx = picked[k] % 3;
+      var src = H1[srcIdx % 3];
+      var c2 = cableBetween(src, dst);
+      var start = arr1[srcIdx % 3] + 200;
+      var imp2 = mkImpulse(c2, start, true, fireNode.bind(null, dst));
+      impulses.push(imp2);
+      arr2.push(start + imbDur(c2));
+    }
+
+    var t3 = 0;
+    for (var h = 0; h < H2.length; h++) {
+      var c3 = cableBetween(H2[h], H3);
+      var s3 = arr2[h] + 220 + h * 150;
+      impulses.push(mkImpulse(c3, s3, true, fireNode.bind(null, H3)));
+      t3 = s3 + imbDur(c3);
+    }
+
+    replyEl.textContent = CHAINS[chain].responses[Math.floor(Math.random() * CHAINS[chain].responses.length)];
+    scheduleAnswer(t3 + 500);
+  }
+
+  function chainNeurons(chain, hop) {
+    var out = [];
+    for (var i = 0; i < neurons.length; i++) {
+      if (neurons[i].chain === chain && neurons[i].hop === hop) out.push(neurons[i]);
+    }
+    return out;
+  }
+
+  function imbDur(cable) {
+    var cum = cable.cum;
+    return clamp(cum[cum.length - 1] * 1.05, 340, 720);
+  }
+
+  function fireNode(node) {
+    if (!node.fired) { node.fired = true; node.flashT = 1; node.sparkF = 0; }
+    node.charge = Math.min(2.4, node.charge + 1.5);
+    // the cell's own endings flare as the impulse lands
+    for (var i = 0; i < boutons.length; i++) {
+      if (boutons[i].owner === node) boutons[i].flare = 1;
+    }
+  }
+
+  function runFallback(text) {
+    promptCell = mkPromptCell(text);
+    promptCell.fired = false;
+    promptCell.charge = 0.6;
+    impulses = [];
+
+    var targets = neurons.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 5);
+    for (var i = 0; i < targets.length; i++) {
+      impulses.push(mkImpulse(cableBetween(promptCell, targets[i]), 260 + i * 210, false, null));
+    }
+    var thr = threads.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
+    for (var j = 0; j < thr.length; j++) {
+      impulses.push(mkImpulse(thr[j], 300 + j * 260, false, null));
+    }
+    var lastEnd = 300 + (targets.length - 1) * 210;
+    replyEl.textContent = FALLBACK.responses[Math.floor(Math.random() * FALLBACK.responses.length)];
+    scheduleAnswer(lastEnd + 700);
+  }
+
+  function scheduleAnswer(delay) {
+    setTimeout(function () {
+      answerAt = performance.now();
+      state = 'answered';
+      setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200);
+    }, delay);
+  }
 
   function detect(text) {
     var t = ' ' + text.toLowerCase() + ' ';
@@ -452,211 +685,172 @@
     return null;
   }
 
-  function nodeByChain(chain, i) {
-    var res = [];
-    for (var j = 0; j < nodes.length; j++) {
-      if (nodes[j].chain === chain) res.push(nodes[j]);
-    }
-    return res[i];
-  }
-
-  function mkPromptNode(text) {
-    var n = { text: text, x: W / 2, y: H * 0.185, w: 0, h: 22, fired: true, flashT: 1, drain: 0, charge: 1.4, trem: 0, glowph: 0, sparkT: 0, sparkF: 0 };
-    ctx.font = '700 13px "CMU Sans Serif", sans-serif';
-    n.w = Math.min(520, ctx.measureText(text).width + 32);
-    return n;
-  }
-
-  function runChain(chain, text) {
-    var H1 = [0, 1, 2].map(function (i) { return nodeByChain(chain, i); });
-    var hop2Pool = [3, 4, 5].slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
-    var H2 = hop2Pool.map(function (i) { return nodeByChain(chain, i); });
-    var H3 = nodeByChain(chain, 6);
-    var h1Order = [0, 1, 2].slice().sort(function () { return Math.random() - 0.5; });
-    var srcFor = {};                        // hop2 node -> its hop1 source
-    for (var k = 0; k < H2.length; k++) srcFor[H2[k].chain + ':' + H2[k].hop + ':' + H2[k].text] = H1[h1Order[k]];
-
-    promptNode = mkPromptNode(text);
-    edges = []; litEdges = [];
-
-    for (var i = 0; i < 3; i++) {
-      edges.push({ a: promptNode, b: H1[i], cp: linkCP(promptNode, H1[i]), start: t0 + 240 + i * 150, dur: PULSE_DUR, fire: true });
-    }
-    var t1 = t0 + 240 + 2 * 150 + PULSE_DUR + 500;
-    var h2done = t1;
-    for (var k2 = 0; k2 < H2.length; k2++) {
-      var src = srcFor[H2[k2].chain + ':' + H2[k2].hop + ':' + H2[k2].text];
-      edges.push({ a: src, b: H2[k2], cp: linkCP(src, H2[k2]), start: t1 + k2 * 150, dur: PULSE_DUR, fire: true });
-      h2done = t1 + k2 * 150 + PULSE_DUR;
-    }
-    var t2 = h2done + 500;
-    for (var h = 0; h < H2.length; h++) {
-      edges.push({ a: H2[h], b: H3, cp: linkCP(H2[h], H3), start: t2 + h * 120, dur: PULSE_DUR, fire: true });
-    }
-    var t3 = t2 + (H2.length - 1) * 120 + PULSE_DUR;
-
-    replyEl.textContent = CHAINS[chain].responses[Math.floor(Math.random() * CHAINS[chain].responses.length)];
-    setTimeout(function () {
-      answerAt = performance.now();
-      state = 'answered';
-      setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200);
-    }, (t3 - t0));
-  }
-
-  function runFallback(text) {
-    promptNode = mkPromptNode(text);
-    promptNode.fired = false;
-    promptNode.charge = 0.6;
-
-    edges = []; litEdges = [];
-    var fizz = [];
-    for (var i = 0; i < 6; i++) {
-      var n = nodes[Math.floor(Math.random() * nodes.length)];
-      if (fizz.indexOf(n) < 0) fizz.push(n);
-    }
-    for (var j = 0; j < fizz.length; j++) {
-      edges.push({ a: promptNode, b: fizz[j], cp: linkCP(promptNode, fizz[j]), start: t0 + 300 + j * 220, dur: PULSE_DUR * 0.9, fire: false });
-    }
-    var lastEnd = t0 + 300 + (fizz.length - 1) * 220 + PULSE_DUR * 0.9;
-    replyEl.textContent = FALLBACK.responses[Math.floor(Math.random() * FALLBACK.responses.length)];
-    setTimeout(function () {
-      answerAt = performance.now();
-      state = 'answered';
-      setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200);
-    }, (lastEnd - t0));
-  }
-
   function run() {
     if (state !== 'idle') return;
     var text = inputEl.value.trim();
     if (!text) return;
     setBox(true);
     document.querySelector('.reply').classList.remove('show');
-    for (var i = 0; i < nodes.length; i++) { nodes[i].fired = false; nodes[i].flashT = 0; nodes[i].drain = 0; nodes[i].charge = 0; }
-    for (var lc in lanes) lanes[lc].fired = false;
+    for (var i = 0; i < neurons.length; i++) {
+      neurons[i].fired = false; neurons[i].flashT = 0; neurons[i].drain = 0; neurons[i].charge = 0;
+    }
+    for (var j = 0; j < boutons.length; j++) boutons[j].flare = 0;
     var chain = detect(text);
     t0 = performance.now();
-    if (chain) {
-      runChain(chain, text);
-      if (lanes[chain]) lanes[chain].fired = true;
-    } else {
-      runFallback(text);
-    }
+    if (chain) runChain(chain, text);
+    else runFallback(text);
     inputEl.value = '';
     state = 'running';
   }
 
   // ----------------------------------------------------------- update
 
-  function update() {
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
+  function update(dt) {
+    // cells
+    for (var i = 0; i < neurons.length; i++) {
+      var n = neurons[i];
       n.charge *= 0.972;
       if (n.sparkF > 0) n.sparkF -= 0.025;
       if (n.sparkT > 0) {
         n.sparkT -= 16.7;
         if (n.sparkT <= 0) {
-          n.sparkT = rand(2600, 7200);
+          n.sparkT = rand(2400, 7600);
           if (n.sparkF <= 0) n.sparkF = 1;
         }
       }
     }
-    if (promptNode) promptNode.charge *= 0.992;
-    for (var e = 0; e < litEdges.length; e++) {
-      litEdges[e].energy = Math.max((litEdges[e].energy || 1) - 0.0022, litEdges[e].fire ? 0.4 : 0.1);
+    if (promptCell) promptCell.charge *= 0.992;
+    for (var b = 0; b < boutons.length; b++) boutons[b].flare *= 0.955;
+
+    // idle sparks crawling the neuropil
+    for (var t = 0; t < threads.length; t++) {
+      var th = threads[t];
+      if (th.timer > 0) th.timer -= dt;
+      else {
+        th.timer = rand(4200, 11000);
+        impulses.push(mkImpulse(th, 0, false, null));
+      }
     }
 
-    if (state === 'running') updateEdges();
-    else if (state === 'answered') {
+    // pulses
+    for (var k = 0; k < impulses.length; k++) {
+      var imp = impulses[k];
+      if (imp.done) continue;
+      if (now < imp.started) continue;
+      imp.d += imp.speed * dt;
+      if (imp.d >= imp.len) {
+        if (imp.fire && imp.onEnd) imp.onEnd();
+        imp.done = true;
+        continue;
+      }
+      var pos = pointAt(imp.path, imp.cum, imp.d);
+      imp.wake[imp.wi] = { x: pos.x, y: pos.y, a: 1 };
+      imp.wi = (imp.wi + 1) % imp.wake.length;
+      // endings near the passing signal light up
+      for (var bb = 0; bb < boutons.length; bb++) {
+        var bo = boutons[bb];
+        var dd = (pos.x - bo.x) * (pos.x - bo.x) + (pos.y - bo.y) * (pos.y - bo.y);
+        if (dd < 36) bo.flare = Math.min(1, bo.flare + 0.5);
+      }
+    }
+    // age wakes
+    for (var w = 0; w < impulses.length; w++) {
+      var ww = impulses[w].wake;
+      for (var q = 0; q < ww.length; q++) {
+        if (ww[q] && ww[q].a < 0.99) ww[q].a *= 0.88;
+      }
+    }
+
+    if (state === 'running') {
+      var any = false;
+      for (var s = 0; s < impulses.length; s++) if (!impulses[s].done) { any = true; break; }
+      if (!any && !impulses.length) { /* waiting for scheduled answer */ }
+    } else if (state === 'answered') {
       if (now - answerAt > 4000) {
         state = 'settling';
         settleStart = now;
         document.querySelector('.reply').classList.remove('show');
-        for (var j = 0; j < nodes.length; j++) nodes[j].drain = 1;
-        if (promptNode) promptNode.drain = 1;
-        for (var l2 in lanes) lanes[l2].fired = false;
+        for (var z = 0; z < neurons.length; z++) neurons[z].drain = 1;
+        if (promptCell) promptCell.drain = 1;
       }
     } else if (state === 'settling') {
-      var done = true;
       var decay = (now - settleStart) / 900;
-      for (var k = 0; k < nodes.length; k++) {
-        if (nodes[k].drain > 0) {
-          nodes[k].drain = Math.max(0, 1 - decay);
-          if (nodes[k].drain !== 0) done = false;
+      var done = true;
+      for (var u = 0; u < neurons.length; u++) {
+        if (neurons[u].drain > 0) {
+          neurons[u].drain = Math.max(0, 1 - decay);
+          if (neurons[u].drain !== 0) done = false;
         }
       }
       if (done) {
         state = 'idle';
-        nodes.forEach(function (nd) { nd.fired = false; nd.drain = 0; nd.flashT = 0; nd.charge = 0; });
-        promptNode = null; edges = []; litEdges = [];
-        setBox(false);
-      }
-    }
-  }
-
-  function updateEdges() {
-    for (var k = edges.length - 1; k >= 0; k--) {
-      var e = edges[k];
-      if (now >= e.start + e.dur) {
-        if (e.fire) {
-          if (!e.b.fired) { e.b.fired = true; e.b.flashT = 1; e.b.sparkF = 0; }
-          e.b.charge = Math.min(2.4, e.b.charge + 1.5);
+        for (var v = 0; v < neurons.length; v++) {
+          neurons[v].fired = false; neurons[v].drain = 0; neurons[v].flashT = 0; neurons[v].charge = 0;
         }
-        litEdges.push({ a: e.a, b: e.b, cp: e.cp, fire: e.fire, energy: 1 });
-        edges.splice(k, 1);
+        promptCell = null; impulses = [];
+        setBox(false);
       }
     }
   }
 
   // ----------------------------------------------------------- draw
 
-  function roundRect(x, y, w, h, r) {
-    r = r || h / 2;
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
+  function drawFibre(c, path, alpha, width, color) {
+    c.strokeStyle = color;
+    c.lineWidth = width;
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    c.globalAlpha = alpha;
+    c.beginPath();
+    var p0 = path[0];
+    c.moveTo(p0[0], p0[1]);
+    for (var i = 1; i < path.length; i++) {
+      var p = path[i];
+      c.lineTo(p[0], p[1]);
+    }
+    c.stroke();
+    c.globalAlpha = 1;
   }
 
   function draw() {
-    ctx.clearRect(0, 0, W, H);
     var breath = now * 0.0012;
 
-    for (var di = 0; di < nodes.length; di++) if (nodes[di].flashT > 0) nodes[di].flashT -= 0.035;
-    if (promptNode && promptNode.flashT > 0) promptNode.flashT -= 0.035;
+    // flash decay
+    for (var di = 0; di < neurons.length; di++) if (neurons[di].flashT > 0) neurons[di].flashT -= 0.035;
+    if (promptCell && promptCell.flashT > 0) promptCell.flashT -= 0.035;
 
     // live positions
-    firedList.length = 0;
-    for (var qi = 0; qi < nodes.length; qi++) {
-      var qn = nodes[qi];
-      var ampv = qn.fired ? 1.5 : 0.6;
+    var firedList = [];
+    for (var qi = 0; qi < neurons.length; qi++) {
+      var qn = neurons[qi];
+      var ampv = qn.fired ? 1.6 : 0.6;
       qn.qx = qn.x + Math.sin(frame * 0.005 + qn.trem) * ampv;
       qn.qy = qn.y + Math.cos(frame * 0.006 + qn.trem * 1.7) * ampv;
       if (qn.fired) firedList.push(qn);
     }
-    if (promptNode) { promptNode.qx = promptNode.x + Math.sin(breath * 1.3) * 3; promptNode.qy = promptNode.y + Math.cos(breath * 0.9) * 3; }
+    if (promptCell) {
+      promptCell.qx = promptCell.x + Math.sin(breath * 1.3) * 3;
+      promptCell.qy = promptCell.y + Math.cos(breath * 0.9) * 3;
+    }
 
     var dmax = 0;
-    for (var d = 0; d < nodes.length; d++) if (nodes[d].drain > dmax) dmax = nodes[d].drain;
+    for (var dd = 0; dd < neurons.length; dd++) if (neurons[dd].drain > dmax) dmax = neurons[dd].drain;
     var drainAll = 1 - dmax * 0.92;
 
     // ---- background wash + breathing core
     var throb = 0.5 + 0.5 * Math.sin(breath);
-    var bg = ctx.createRadialGradient(W / 2, H * 0.62, 0, W / 2, H * 0.62, H * 0.95);
-    bg.addColorStop(0, lerpColor(0.011 + 0.016 * throb));
+    var bg = ctx.createRadialGradient(W / 2, H * 0.60, 0, W / 2, H * 0.60, H * 0.95);
+    bg.addColorStop(0, lerpColor(0.012 + 0.014 * throb));
     bg.addColorStop(0.6, lerpColor(0.004 + 0.003 * throb));
     bg.addColorStop(1, 'rgba(255,166,201,0)');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // ---- drizzle: the vast faint field of everything it has absorbed
+    // ---- drizzle: everything it has absorbed, faint behind the web
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    for (var z = 0; z < drizzle.length; z++) {
-      var dzz = drizzle[z];
+    for (var dz = 0; dz < drizzle.length; dz++) {
+      var dzz = drizzle[dz];
       var dzx = dzz.x + Math.sin(frame * 0.003 + dzz.dp) * 2;
       var dzy = dzz.y + Math.cos(frame * 0.0025 + dzz.dp * 1.4) * 2;
       ctx.font = dzz.size + 'px "CMU Typewriter Text", monospace';
@@ -664,142 +858,170 @@
       ctx.fillText(dzz.t, dzx, dzy);
     }
 
-    // ---- energy layer
-    gctx.setTransform(W2 / W, 0, 0, H2 / H, 0, 0);
-    gctx.clearRect(0, 0, W, H);
-    gctx.lineCap = 'round';
+    // ---- tissue pass: the mess grows here
+    tctx.globalAlpha = 1;
+    tctx.fillStyle = 'rgba(9,3,11,0.055)';
+    tctx.fillRect(0, 0, TW, TH);
+    tctx.setTransform(0.5, 0, 0, 0.5, 0, 0);
 
-    for (var le = 0; le < litEdges.length; le++) {
-      var le2 = litEdges[le];
-      var en = le2.energy * drainAll * (le2.b.fired ? 1 : 0.25);
-      strokeLink(le2.a, le2.cp, le2.b, lerpColor(0.45 * en), 3 + 7 * en, gctx);
-    }
-    for (var pe = 0; pe < edges.length; pe++) {
-      var e2 = edges[pe];
-      if (now < e2.start) continue;
-      var pr2 = Math.min(1.06, (now - e2.start) / e2.dur);
-      var pos2 = bezierAt(e2.a, e2.cp, e2.b, pr2);
-      var amp2 = e2.fire ? 1 : 0.3;
-      var gg = gctx.createRadialGradient(pos2.x, pos2.y, 0, pos2.x, pos2.y, 13);
-      gg.addColorStop(0, lerpColor(0.85 * amp2 * drainAll));
-      gg.addColorStop(1, 'rgba(255,166,201,0)');
-      gctx.fillStyle = gg;
-      gctx.beginPath();
-      gctx.arc(pos2.x, pos2.y, 13, 0, Math.PI * 2);
-      gctx.fill();
-    }
-    for (var ne = 0; ne < nodes.length; ne++) {
-      var nd = nodes[ne];
-      if (!nd.fired) continue;
-      var ch = Math.min(1, nd.charge) * ndrain(nd);
-      if (ch > 0.03) {
-        var rg = gctx.createRadialGradient(nd.qx, nd.qy, 0, nd.qx, nd.qy, 12 + 20 * ch);
-        rg.addColorStop(0, lerpColor(0.4 * ch + Math.min(1, nd.flashT) * 0.3));
-        rg.addColorStop(1, 'rgba(255,166,201,0)');
-        gctx.fillStyle = rg;
-        gctx.beginPath();
-        gctx.arc(nd.qx, nd.qy, 12 + 20 * ch, 0, Math.PI * 2);
-        gctx.fill();
+    // resting web: arbors, cables, threads — constant faint strokes (decay cancels them = stable tangle)
+    for (var cn = 0; cn < neurons.length; cn++) {
+      var cell = neurons[cn];
+      var arbA = 0.012 + cell.charge * 0.05 * drainAll;
+      for (var ap = 0; ap < cell.arbors.length; ap++) {
+        drawFibre(tctx, cell.arbors[ap], Math.min(0.09, arbA), 1.1, ACCENT);
       }
     }
-    if (promptNode) {
-      var pnp = promptNode;
-      var ppd = pnp.drain > 0 ? (1 - pnp.drain) : 1;
-      var pg = gctx.createRadialGradient(pnp.qx, pnp.qy, 0, pnp.qx, pnp.qy, 34);
-      pg.addColorStop(0, lerpColor(0.4 * ppd));
-      pg.addColorStop(1, 'rgba(255,166,201,0)');
-      gctx.fillStyle = pg;
-      gctx.beginPath();
-      gctx.arc(pnp.qx, pnp.qy, 34, 0, Math.PI * 2);
-      gctx.fill();
+    for (var cb = 0; cb < cables.length; cb++) {
+      drawFibre(tctx, cables[cb].path, 0.008, 1.0, ACCENT);
+    }
+    for (var th2 = 0; th2 < threads.length; th2++) {
+      drawFibre(tctx, threads[th2].path, 0.006, 0.9, ACCENT);
     }
 
-    // bloom
+    // impulse wakes — the actual travelling signal, bright and short-lived
+    for (var im = 0; im < impulses.length; im++) {
+      var imp = impulses[im];
+      if (imp.done || now < imp.started) continue;
+      var wAmp = imp.fire ? 1 : 0.34;
+      var wak = imp.wake;
+      var prev = null;
+      for (var wq = 0; wq < wak.length; wq++) {
+        var e = wak[(imp.wi + wak.length - 1 - wq) % wak.length];
+        if (!e) continue;
+        var fade = wAmp * 0.85 * Math.pow(1 - wq / wak.length, 1.6);
+        if (fade <= 0.01) continue;
+        if (prev) {
+          tctx.globalAlpha = 1;
+          tctx.strokeStyle = ACCENT;
+          tctx.lineWidth = 2.6;
+          tctx.lineCap = 'round';
+          tctx.beginPath();
+          tctx.moveTo(prev.x, prev.y);
+          tctx.lineTo(e.x, e.y);
+          tctx.stroke();
+        }
+        prev = e;
+      }
+    }
+
+    // nerve endings: boutons shimmer, flare when their owner (or a passing pulse) lights them
+    var flareGain = 0;
+    for (var bt = 0; bt < boutons.length; bt++) {
+      var bo = boutons[bt];
+      var ownerA = bo.owner && bo.owner.charge > 0.05
+        ? Math.min(0.6, bo.owner.charge * 0.28) * drainAll
+        : 0;
+      var a = 0.055 + bo.flare * 0.8 + ownerA;
+      if (a < 0.02) continue;
+      tctx.globalAlpha = 1;
+      tctx.fillStyle = ACCENT;
+      tctx.beginPath();
+      tctx.arc(bo.x, bo.y, 1.5, 0, Math.PI * 2);
+      tctx.fill();
+    }
+    tctx.globalAlpha = 1;
+
+    // bloom the tissue onto the main canvas
     ctx.filter = 'blur(2.5px)';
     ctx.globalAlpha = 0.5;
-    ctx.drawImage(glowCanvas, 0, 0, W, H);
+    ctx.drawImage(tissue, 0, 0, W, H);
     ctx.filter = 'blur(9px)';
     ctx.globalAlpha = 0.4;
-    ctx.drawImage(glowCanvas, 0, 0, W, H);
+    ctx.drawImage(tissue, 0, 0, W, H);
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
 
     // ---- motes
-    for (var m = 0; m < motes.length; m++) {
-      var mo = motes[m];
-      var sc = Math.cos(mo.swirl), ss = Math.sin(mo.swirl);
-      var nvx = mo.vx * sc - mo.vy * ss;
-      mo.vy = mo.vx * ss + mo.vy * sc;
-      mo.vx = nvx;
+    for (var mo = 0; mo < motes.length; mo++) {
+      var mm = motes[mo];
+      var sc = Math.cos(mm.swirl), ss = Math.sin(mm.swirl);
+      var nvx = mm.vx * sc - mm.vy * ss;
+      mm.vy = mm.vx * ss + mm.vy * sc;
+      mm.vx = nvx;
       if (firedList.length) {
-        var nrst = nearestOf(firedList, mo.x, mo.y);
-        var pdx = nrst.qx - mo.x, pdy = nrst.qy - mo.y;
+        var nrst = nearestOf(firedList, mm.x, mm.y);
+        var pdx = nrst.qx - mm.x, pdy = nrst.qy - mm.y;
         var dl = Math.sqrt(pdx * pdx + pdy * pdy) || 1;
         var pull = 2600 / (dl * dl + 5000);
-        mo.vx += (pdx / dl) * pull * 0.5;
-        mo.vy += (pdy / dl) * pull * 0.5;
+        mm.vx += (pdx / dl) * pull * 0.5;
+        mm.vy += (pdy / dl) * pull * 0.5;
       }
-      mo.x += mo.vx; mo.y += mo.vy;
-      if (mo.x < -4) mo.x = W + 4; else if (mo.x > W + 4) mo.x = -4;
-      if (mo.y < -4) mo.y = H + 4; else if (mo.y > H + 4) mo.y = -4;
-      var tw = 0.5 + 0.5 * Math.sin(now * 0.001 + mo.ph);
-      ctx.globalAlpha = 0.035 + 0.05 * tw;
-      ctx.fillStyle = mo.pink ? ACCENT : GREY;
+      mm.x += mm.vx; mm.y += mm.vy;
+      if (mm.x < -4) mm.x = W + 4; else if (mm.x > W + 4) mm.x = -4;
+      if (mm.y < -4) mm.y = H + 4; else if (mm.y > H + 4) mm.y = -4;
+      var tw = 0.5 + 0.5 * Math.sin(now * 0.001 + mm.ph);
+      ctx.globalAlpha = 0.03 + 0.05 * tw;
+      ctx.fillStyle = mm.pink ? ACCENT : GREY;
       ctx.beginPath();
-      ctx.arc(mo.x, mo.y, mo.r, 0, Math.PI * 2);
+      ctx.arc(mm.x, mm.y, mm.r, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // ---- filaments (fine, faint)
-    for (var f = 0; f < filaments.length; f++) {
-      var fi = filaments[f];
-      var endFired = fi.a.fired || fi.b.fired;
-      var base = endFired
-        ? (0.09 + 0.05 * (0.5 + 0.5 * Math.sin(now * 0.004 + f))) * drainAll
-        : (0.016 + 0.010 * (0.5 + 0.5 * Math.sin(breath * 2 + f * 0.8)));
-      strokeLink(fi.a, fi.cp, fi.b, lerpColor(base), 0.7);
+    // ---- crisp web definition: thin sharp lines on top of the bloom
+    for (var c2 = 0; c2 < cables.length; c2++) {
+      drawFibre(ctx, cables[c2].path, 0.022 * drainAll, 0.6, ACCENT);
     }
-
-    // ---- crisp core lines
-    for (var l2 = 0; l2 < litEdges.length; l2++) {
-      var le3 = litEdges[l2];
-      var lp = le3.energy * 0.9 * drainAll * (le3.b.fired ? 1 : 0.25);
-      strokeLink(le3.a, le3.cp, le3.b, lerpColor(lp), 1.0);
+    for (var c3 = 0; c3 < threads.length; c3++) {
+      drawFibre(ctx, threads[c3].path, 0.014 * drainAll, 0.5, ACCENT);
     }
 
     // crisp pulse heads
-    for (var ph = 0; ph < edges.length; ph++) {
-      var e3 = edges[ph];
-      if (now < e3.start) continue;
-      var pr3 = Math.min(1.06, (now - e3.start) / e3.dur);
-      var pos3 = bezierAt(e3.a, e3.cp, e3.b, pr3);
+    for (var ph = 0; ph < impulses.length; ph++) {
+      var imp2 = impulses[ph];
+      if (imp2.done || now < imp2.started) continue;
+      var pos = pointAt2(imp2);
       ctx.fillStyle = ACCENT;
-      ctx.globalAlpha = (e3.fire ? 1 : 0.4) * drainAll;
+      ctx.globalAlpha = (imp2.fire ? 1 : 0.4) * drainAll;
       ctx.beginPath();
-      ctx.arc(pos3.x, pos3.y, e3.fire ? 2.4 : 1.3, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, imp2.fire ? 2.4 : 1.4, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
+      // soft head halo
+      var hg = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 9);
+      hg.addColorStop(0, lerpColor(0.5 * (imp2.fire ? 1 : 0.3) * drainAll));
+      hg.addColorStop(1, 'rgba(255,166,201,0)');
+      ctx.fillStyle = hg;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 9, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // ---- lane labels
+    // crisp boutons
+    ctx.fillStyle = ACCENT;
+    for (var bt2 = 0; bt2 < boutons.length; bt2++) {
+      var bo2 = boutons[bt2];
+      var ownerA2 = bo2.owner && bo2.owner.charge > 0.05
+        ? Math.min(0.9, bo2.owner.charge * 0.4) : 0;
+      var a2 = 0.06 + bo2.flare * 0.5 + ownerA2;
+      if (a2 < 0.03) continue;
+      ctx.globalAlpha = a2 * drainAll;
+      ctx.beginPath();
+      ctx.arc(bo2.x, bo2.y, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ---- chain watermarks (faint territory names; light when their chain fires)
     ctx.font = '500 8px "CMU Sans Serif", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    for (var c2 = 0; c2 < CHAIN_KEYS.length; c2++) {
-      var lk = CHAIN_KEYS[c2];
-      var lc = lanes[lk];
-      var la = lanes[lk].fired ? (0.5 + 0.2 * Math.sin(now * 0.005)) : 0.16;
-      ctx.fillStyle = lerpColor(la);
-      ctx.fillText(CHAINS[lk].label.toUpperCase(), lc.x, H * 0.255);
+    for (var lk = 0; lk < CHAIN_KEYS.length; lk++) {
+      var ck = CHAIN_KEYS[lk];
+      var meta = chainMeta[ck];
+      if (!meta) continue;
+      var firedChain = chainFired(ck);
+      var la = firedChain ? 0.5 + 0.2 * Math.sin(now * 0.005) : 0.1;
+      ctx.fillStyle = lerpColor(la * drainAll);
+      ctx.fillText(CHAINS[ck].label.toUpperCase(), meta.x, clamp(meta.y - meta.r - 24, 30, H - 12));
     }
 
-    // ---- nodes
-    ctx.font = '12px "CMU Sans Serif", sans-serif';
+    // ---- neurons (somas)
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    for (var n2 = 0; n2 < nodes.length; n2++) {
-      var nd2 = nodes[n2];
+    for (var n2 = 0; n2 < neurons.length; n2++) {
+      var nd2 = neurons[n2];
       var ndr = ndrain(nd2);
       var ch2 = Math.min(1, nd2.charge);
 
@@ -809,7 +1031,7 @@
           ctx.strokeStyle = lerpColor(ripple * 0.55 * ndr);
           ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(nd2.qx, nd2.qy, (1 - ripple) * 30, 0, Math.PI * 2);
+          ctx.arc(nd2.qx, nd2.qy, (1 - ripple) * 32, 0, Math.PI * 2);
           ctx.stroke();
         }
         var breathScale = 1 + 0.06 * ch2 * (0.5 + 0.5 * Math.sin(now * 0.005 + nd2.glowph));
@@ -817,7 +1039,7 @@
         ctx.translate(nd2.qx, nd2.qy);
         ctx.scale(breathScale, breathScale);
         ctx.fillStyle = 'rgba(10,10,15,0.92)';
-        roundRect(-nd2.w / 2, -nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
+        roundRect(ctx, -nd2.w / 2, -nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
         ctx.fill();
         ctx.strokeStyle = lerpColor((0.5 + 0.35 * ch2) * ndr);
         ctx.lineWidth = 1.2;
@@ -832,25 +1054,25 @@
         var rest = 0.5 + 0.5 * Math.sin(now * 0.002 + nd2.glowph);
         var spark = nd2.sparkF > 0 ? nd2.sparkF : 0;
         ctx.fillStyle = 'rgba(10,10,15,0.9)';
-        roundRect(nd2.qx - nd2.w / 2, nd2.qy - nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
+        roundRect(ctx, nd2.qx - nd2.w / 2, nd2.qy - nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
         ctx.fill();
         ctx.strokeStyle = 'rgba(228,228,234,' + (0.07 + rest * 0.02 + spark * 0.12).toFixed(3) + ')';
         ctx.lineWidth = 1;
         ctx.stroke();
         ctx.font = '12px "CMU Sans Serif", sans-serif';
-        ctx.fillStyle = 'rgba(228,228,234,' + (0.30 + rest * 0.06 + spark * 0.4).toFixed(3) + ')';
+        ctx.fillStyle = 'rgba(228,228,234,' + (0.3 + rest * 0.06 + spark * 0.4).toFixed(3) + ')';
         ctx.fillText(nd2.text, nd2.qx, nd2.qy);
       }
     }
 
     // prompt pill
-    if (promptNode) {
-      var pn = promptNode;
+    if (promptCell) {
+      var pn = promptCell;
       var pdd = pn.drain > 0 ? (1 - pn.drain) : 1;
       ctx.save();
       ctx.translate(pn.qx, pn.qy);
       ctx.fillStyle = 'rgba(10,10,15,0.94)';
-      roundRect(-pn.w / 2, -pn.h / 2, pn.w, pn.h, pn.h / 2);
+      roundRect(ctx, -pn.w / 2, -pn.h / 2, pn.w, pn.h, pn.h / 2);
       ctx.fill();
       ctx.strokeStyle = lerpColor(0.8 * pdd);
       ctx.lineWidth = 1.5;
@@ -862,6 +1084,17 @@
       ctx.restore();
       ctx.globalAlpha = 1;
     }
+  }
+
+  function pointAt2(imp) {
+    return pointAt(imp.path, imp.cum, imp.d);
+  }
+
+  function chainFired(chain) {
+    for (var i = 0; i < neurons.length; i++) {
+      if (neurons[i].chain === chain && neurons[i].fired) return true;
+    }
+    return false;
   }
 
   function ndrain(n) {
@@ -889,8 +1122,10 @@
   inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { run(); inputEl.focus(); } });
 
   function tick(ts) {
+    var dt = lastT ? Math.min(ts - lastT, 50) : 16;
+    lastT = ts;
     now = ts; frame = ts;
-    update();
+    update(dt);
     draw();
     requestAnimationFrame(tick);
   }
@@ -902,10 +1137,14 @@
     canvas.width = W * DPR;
     canvas.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    buildGlow();
-    buildNodes();
+    buildTissue();
+    buildNeurons();
+    buildCables();
+    buildThreads();
+    buildDrizzle();
     buildMotes();
-    state = 'idle'; edges = []; litEdges = []; promptNode = null; firedList = [];
+    for (var c = 0; c < CHAIN_KEYS.length; c++) chainMeta[CHAIN_KEYS[c]].r = 150;
+    state = 'idle'; impulses = []; promptCell = null;
     document.querySelector('.reply').classList.remove('show');
     setBox(false);
   }
@@ -914,16 +1153,10 @@
   resize();
   requestAnimationFrame(tick);
 
-  // web fonts arrive async — rebuild layout once they're ready so
-  // canvas measurements use the real metrics (important when deployed)
+  // web fonts arrive async — re-measure so cell pills use real glyph metrics
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { resize(); });
   }
-
-  // helpers
-  function rand(a, b) { return a + Math.random() * (b - a); }
-  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-  function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
 })();
 </script>
 </body>
