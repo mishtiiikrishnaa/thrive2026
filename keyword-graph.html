@@ -159,25 +159,8 @@ nodes.forEach(n=>{
 });
 document.addEventListener('click',()=>{nodes.forEach(x=>x.classList.remove('active'));edges.forEach(line=>line.classList.remove('highlight'));});
 function highlightPath(activeNode){
-  const rectA=activeNode.getBoundingClientRect();
-  const cxA=rectA.left+rectA.width/2,cyA=rectA.top+rectA.height/2;
-  nodes.forEach(b=>{
-    if(b===activeNode)return;
-    const rectB=b.getBoundingClientRect();
-    const cxB=rectB.left+rectB.width/2,cyB=rectB.top+rectB.height/2;
-    const dx=cxB-cxA,dy=cyB-cyA,len=Math.sqrt(dx*dx+dy*dy);
-    if(len>400)return;
-    // find corresponding edge and highlight
-    const angle=Math.atan2(dy,dx)*180/Math.PI;
-    edges.forEach(line=>{
-      const lineLeft=parseFloat(line.style.left),lineTop=parseFloat(line.style.top);
-      // approximate match by checking proximity of line start to node center
-      const lineX=lineLeft+parseFloat(line.style.width)*Math.cos(angle*Math.PI/180);
-      const lineY=lineTop+parseFloat(line.style.width)*Math.sin(angle*Math.PI/180);
-      const dLine=Math.hypot(lineX-cxA,lineY-cyA);
-      if(dLine<30)line.classList.add('highlight');
-    });
-  });
+  // light up ALL edges — relative reading means every connection is visible
+  edges.forEach(line=>line.classList.add('highlight'));
 }
 function drawEdges(){
   nodes.forEach((a,i)=>{
