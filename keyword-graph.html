@@ -38,65 +38,65 @@
 <div class="hint">hover — title · click — expand card · click background — close</div>
 <div id="graph">
   <!-- 9 main cards -->
-  <div class="node" data-title="training" style="left:18%;top:28%;">
+  <div class="node" data-title="training" style="left:42%;top:18%;">
     <span class="node-label">training</span>
     <div class="card-body"><h3>01 · training</h3><p>an ai is not programmed with rules. it is fed staggering amounts of text — books, code, conversations — and learns the statistical shape of language within them. no one writes the rules; the data writes them.</p></div>
   </div>
-  <div class="node" data-title="weights" style="left:42%;top:22%;">
+  <div class="node" data-title="weights" style="left:58%;top:20%;">
     <span class="node-label">weights</span>
     <div class="card-body"><h3>02 · weights</h3><p>inside, millions of small numbers called weights are nudged during training. adjusting them is how the model stores what it has learned. the graph you grow works the same way — nodes, connected, remembering.</p></div>
   </div>
-  <div class="node" data-title="attention" style="left:50%;top:32%;">
+  <div class="node" data-title="attention" style="left:50%;top:35%;">
     <span class="node-label">attention</span>
     <div class="card-body"><h3>03 · attention</h3><p>transformers don't read one word at a time. an attention mechanism weighs every word against every other, deciding which parts of the context most matter for what comes next. that is the real engine of modern ai.</p></div>
   </div>
-  <div class="node" data-title="inference" style="left:58%;top:28%;">
+  <div class="node" data-title="inference" style="left:42%;top:42%;">
     <span class="node-label">inference</span>
     <div class="card-body"><h3>04 · inference</h3><p>when you prompt, the model runs the maths forward and predicts the next token — over and over — until an answer emerges. the same forward thinking lives here: facts feed edges, edges feed the answer.</p></div>
   </div>
-  <div class="node" data-title="backprop" style="left:72%;top:38%;">
+  <div class="node" data-title="backprop" style="left:58%;top:55%;">
     <span class="node-label">backprop</span>
     <div class="card-body"><h3>05 · loss & backprop</h3><p>the model compares its guess to the truth, measures the error, and walks the weights back a little. repeated over billions of steps, the errors shrink and the model sharpens. learning is just error, iterated.</p></div>
   </div>
-  <div class="node" data-title="generation" style="left:68%;top:52%;">
+  <div class="node" data-title="generation" style="left:22%;top:35%;">
     <span class="node-label">generation</span>
     <div class="card-body"><h3>06 · generation</h3><p>nothing is truly "created". the model joins the most probable pieces of what it has seen. this page mimics that — it connects your keywords to stored facts and draws the shortest path between them.</p></div>
   </div>
-  <div class="node" data-title="tokenization" style="left:55%;top:58%;">
+  <div class="node" data-title="tokenization" style="left:22%;top:55%;">
     <span class="node-label">tokenization</span>
     <div class="card-body"><h3>07 · tokenization</h3><p>text never enters the model as letters you see. it is chopped into tokens — word pieces — then mapped to numbers. "unbelievable" might become three tokens. the model thinks in token ids, not sentences; everything downstream is arithmetic on those ids.</p></div>
   </div>
-  <div class="node" data-title="creativity" style="left:42%;top:65%;">
+  <div class="node" data-title="creativity" style="left:22%;top:35%;">
     <span class="node-label">creativity</span>
     <div class="card-body"><h3>08 · creativity & temperature</h3><p>the model outputs probabilities for the next token, not a single word. turn the temperature up and it samples more freely — vivid, risky, sometimes wrong. turn it down and it plays safe and dull. an ai's "imagination" is literally a randomness dial.</p></div>
   </div>
-  <div class="node" data-title="hallucination" style="left:25%;top:62%;">
+  <div class="node" data-title="hallucination" style="left:28%;top:15%;">
     <span class="node-label">hallucination</span>
     <div class="card-body"><h3>09 · hallucination</h3><p>a model that only predicts the next likely word will sometimes invent one with total confidence. it has no way to check against reality. that is why your source graph here insists on real, shared facts — the fix for hallucination is grounding, not more tokens.</p></div>
   </div>
 
   <!-- deep cards -->
-  <div class="node" data-title="scaling" style="left:22%;top:18%;">
+  <div class="node" data-title="scaling" style="left:50%;top:12%;">
     <span class="node-label">scaling laws</span>
     <div class="card-body"><h3>deep · scaling laws</h3><h4>📏</h4><p>performance grows predictably with three dials: more parameters, more data, and more compute. there is a surprisingly clean mathematical relationship — double the size, fix the data, and quality climbs on a smooth curve. that is why models keep getting bigger: it is not hype, it is a measurable trend.</p></div>
   </div>
-  <div class="node" data-title="embedding" style="left:38%;top:20%;">
+  <div class="node" data-title="embedding" style="left:50%;top:15%;">
     <span class="node-label">embedding</span>
     <div class="card-body"><h3>deep · embedding space</h3><h4>🧮</h4><p>a word's embedding is its address in a high-dimensional map of meaning. nearby words are similar words; arithmetic even works — famously, "king − man + woman ≈ queen". the model never sees symbols, only these coordinates, and all reasoning happens as motion through them.</p></div>
   </div>
-  <div class="node" data-title="gradient" style="left:50%;top:32%;">
+  <div class="node" data-title="gradient" style="left:50%;top:35%;">
     <span class="node-label">gradient flow</span>
     <div class="card-body"><h3>deep · gradient flow</h3><h4>🌊</h4><p>backprop sends a tiny correction backwards through every layer. in deep networks the signal can die out (vanishing gradients) or explode — so training is as much about plumbing as about maths. normalisation layers and careful initialisation exist to keep the gradient flowing.</p></div>
   </div>
-  <div class="node" data-title="alignment" style="left:62%;top:30%;">
+  <div class="node" data-title="alignment" style="left:70%;top:40%;">
     <span class="node-label">alignment</span>
     <div class="card-body"><h3>deep · alignment (rhlf)</h3><h4>🧭</h4><p>after pretraining, models get a final polish so they answer helpfully and refuse harm. humans rate many responses; a reward model learns what "good" means; the policy is fine-tuned to chase it. this is why a raw predictor feels like a helpful assistant.</p></div>
   </div>
-  <div class="node" data-title="sampling" style="left:70%;top:35%;">
+  <div class="node" data-title="sampling" style="left:72%;top:55%;">
     <span class="node-label">sampling</span>
     <div class="card-body"><h3>deep · sampling & temperature</h3><h4>🎲</h4><p>the model only outputs probabilities — a human or a sampling strategy turns them into words. pick the argmax and you get dull, safe text; sample with high temperature and you get novelty and mistakes. creativity in ai is literally a randomness dial.</p></div>
   </div>
-  <div class="node" data-title="myth" style="left:75%;top:45%;">
+  <div class="node" data-title="myth" style="left:55%;top:70%;">
     <span class="node-label">myth vs reality</span>
     <div class="card-body"><h3>deep · myth vs reality</h3><h4>🚫</h4><p>myth: the model "understands". reality: it predicts patterns with no ground truth. myth: it has a memory of your data. reality: weights are compressed shapes, not files. myth: bigger always means better. reality: it also means more cost, more energy, more hallucinations to police.</p></div>
   </div>
@@ -134,19 +134,19 @@
     <span class="node-label">overfitting</span>
     <div class="card-body"><h3>overfitting</h3><p>when the model memorises the training data instead of generalising, it becomes great at old examples and terrible at new ones. the ai equivalent of a student who learns the answers, not the subject.</p></div>
   </div>
-  <div class="node" data-title="parameter" style="left:60%;top:70%;">
+  <div class="node" data-title="parameter" style="left:40%;top:78%;">
     <span class="node-label">parameter</span>
     <div class="card-body"><h3>parameter</h3><p>one individual weight in the model. a "large language model" is large precisely because it has billions of these. think of parameters as the model's neurons, and edges as the connections between them.</p></div>
   </div>
-  <div class="node" data-title="hallucination-gloss" style="left:35%;top:78%;">
+  <div class="node" data-title="hallucination-gloss" style="left:28%;top:35%;">
     <span class="node-label">hallucination</span>
     <div class="card-body"><h3>hallucination</h3><p>when the model confidently predicts something false. because it only predicts plausible text, not verified truth, it can invent fluently. a reminder that fluency is not the same as knowing.</p></div>
   </div>
-  <div class="node" data-title="temperature-gloss" style="left:30%;top:72%;">
+  <div class="node" data-title="temperature-gloss" style="left:20%;top:25%;">
     <span class="node-label">temperature</span>
     <div class="card-body"><h3>temperature</h3><p>a dial on how randomly the model picks the next token. low temperature: safe, repetitive, predictable. high temperature: wild, creative, occasionally wrong. creativity and accuracy trade off against each other.</p></div>
   </div>
-  <div class="node" data-title="context-window" style="left:20%;top:75%;">
+  <div class="node" data-title="context-window" style="left:12%;top:45%;">
     <span class="node-label">context window</span>
     <div class="card-body"><h3>context window</h3><p>the amount of text the model can keep in mind at once. bigger context means it can weave together more threads — like a longer conversation, or a graph that keeps every fact you add alive.</p></div>
   </div>
