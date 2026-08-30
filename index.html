@@ -111,6 +111,7 @@
   var replyEl = document.getElementById('replytext');
 
   var ACCENT = '#ffa6c9';
+  var GREY = '#e4e4ea';
   var PULSE_DUR = 430;
 
   // ----------------------------------------------------------- chains
@@ -177,30 +178,74 @@
 
   var nodes = [];
   var W, H, DPR;
+  var W2, H2, glowCanvas, gctx;
   var now = 0, frame = 0;
-  var state = 'idle';      // idle | running | answered | settling
+  var state = 'idle';
   var promptNode = null;
-  var edges = [];          // { a, b, start, dur, fired(false->persist), decoy }
+  var edges = [];
   var litEdges = [];
   var t0 = 0;
-  var answeredAt = 0;
+  var answerAt = 0;
   var settleStart = 0;
-  var failedSub = false;
+
+  var motes = [];
+  var filaments = [];
+  var firedList = [];
+
+  function linkCP(a, b) {
+    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var amt = Math.min(len * 0.14, 40);
+    var side = (a.x + b.y > W / 2) ? 1 : -1;
+    return { x: mx + (-dy / len) * amt * side, y: my + (dx / len) * amt * side };
+  }
+
+  function bezierAt(a, cp, b, t) {
+    var it = 1 - t;
+    return {
+      x: it * it * a.x + 2 * it * t * cp.x + t * t * b.x,
+      y: it * it * a.y + 2 * it * t * cp.y + t * t * b.y
+    };
+  }
+
+  function strokeLink(a, cp, b, color, width, c) {
+    c = c || ctx;
+    c.beginPath();
+    c.moveTo(a.x, a.y);
+    c.quadraticCurveTo(cp.x, cp.y, b.x, b.y);
+    c.lineWidth = width;
+    c.strokeStyle = color;
+    c.stroke();
+  }
+
+  function lerpColor(alpha) {
+    return 'rgba(255,166,201,' + alpha.toFixed(3) + ')';
+  }
+
+  // ----------------------------------------------------------- build
 
   function buildNodes() {
     nodes = [];
     var keys = Object.keys(CHAINS);
     var pocket = { science: [W * 0.27, H * 0.44], craft: [W * 0.72, H * 0.52], myth: [W * 0.5, H * 0.78] };
     var rects = [];
-    ctx.save();
     for (var c = 0; c < keys.length; c++) {
       var chain = keys[c];
       var facts = CHAINS[chain].facts;
       for (var f = 0; f < facts.length; f++) {
         var text = facts[f][0];
         var hop = facts[f][1];
-        var node = { text: text, chain: chain, hop: hop, x: 0, y: 0, w: 0, h: 0, fired: false, flashT: 0, drain: 0 };
-        // measure
+        var node = {
+          text: text, chain: chain, hop: hop,
+          x: 0, y: 0, w: 0, h: 0,
+          fired: false, flashT: 0, drain: 0,
+          charge: 0,
+          trem: rand(0, Math.PI * 2),
+          glowph: rand(0, Math.PI * 2),
+          sparkT: rand(800, 6000),
+          sparkF: 0
+        };
         ctx.font = '12px "Helvetica Neue", sans-serif';
         node.w = ctx.measureText(text).width + 24;
         node.h = 24;
@@ -228,7 +273,50 @@
         nodes.push(node);
       }
     }
-    ctx.restore();
+    buildFilaments();
+  }
+
+  function buildFilaments() {
+    filaments = [];
+    var seen = {};
+    for (var i = 0; i < nodes.length; i++) {
+      var a = nodes[i];
+      var near = nodes.map(function (n, idx) {
+        return { n: n, d: dist(a.x, a.y, n.x, n.y), idx: idx };
+      }).filter(function (o) { return o.idx !== i; })
+        .sort(function (p, q) { return p.d - q.d; }).slice(0, 3);
+      for (var j = 0; j < near.length; j++) {
+        var keyi = Math.min(i, near[j].idx), keyj = Math.max(i, near[j].idx);
+        var key = keyi + '_' + keyj;
+        if (seen[key]) continue;
+        seen[key] = true;
+        filaments.push({ a: a, b: near[j].n, cp: linkCP(a, near[j].n) });
+      }
+    }
+  }
+
+  function buildMotes() {
+    motes = [];
+    for (var i = 0; i < 60; i++) {
+      motes.push({
+        x: rand(0, W), y: rand(0, H),
+        r: rand(0.6, 2.0),
+        ph: rand(0, Math.PI * 2),
+        vx: rand(-0.1, 0.1),
+        vy: rand(-0.08, 0.08),
+        pink: Math.random() < 0.3,
+        swirl: rand(-0.006, 0.006)
+      });
+    }
+  }
+
+  function buildGlow() {
+    W2 = Math.max(2, Math.round(W / 2));
+    H2 = Math.max(2, Math.round(H / 2));
+    if (!glowCanvas) glowCanvas = document.createElement('canvas');
+    glowCanvas.width = W2;
+    glowCanvas.height = H2;
+    gctx = glowCanvas.getContext('2d');
   }
 
   function gauss() {
@@ -257,67 +345,68 @@
       var n = nodes[j];
       if (n.chain === chain) res.push(n);
     }
-    // res[0..2] hop1, res[3..5] hop2, res[6] hop3
     return res[i];
   }
 
-  function runChain(chain, text) {
-    var facts = CHAINS[chain].facts;
-    var chosen = [0, 1, 2].slice();
-    // randomly pick 2 of the 3 hop-2 indices
-    var hop2Pool = [3, 4, 5];
-    var pick = hop2Pool.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
+  function mkPromptNode(text) {
+    var n = { text: text, x: W / 2, y: H * 0.16, w: 0, h: 22, fired: true, flashT: 1, drain: 0, charge: 1.4, trem: 0, glowph: 0, sparkT: 0, sparkF: 0 };
+    ctx.font = '700 13px "Helvetica Neue", sans-serif';
+    n.w = ctx.measureText(text).width + 30;
+    return n;
+  }
 
+  function runChain(chain, text) {
     var H1 = [0, 1, 2].map(function (i) { return nodeByChain(chain, i); });
-    var H2 = pick.map(function (i) { return nodeByChain(chain, i); });
+    var hop2Pool = [3, 4, 5].slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
+    var H2 = hop2Pool.map(function (i) { return nodeByChain(chain, i); });
     var H3 = nodeByChain(chain, 6);
 
-    promptNode = { text: text, x: W / 2, y: H * 0.16, w: 0, h: 22, fired: true, flashT: 1, drain: 0 };
-    ctx.font = '700 13px "Helvetica Neue", sans-serif';
-    promptNode.w = ctx.measureText(text).width + 30;
-
+    promptNode = mkPromptNode(text);
     edges = []; litEdges = [];
 
-    // hop 1: pulse from prompt to each H1 node, staggered
     for (var i = 0; i < 3; i++) {
-      edges.push({ a: promptNode, b: H1[i], start: t0 + 260 + i * 150, dur: PULSE_DUR, fire: true, decoy: false });
+      edges.push({ a: promptNode, b: H1[i], cp: linkCP(promptNode, H1[i]), start: t0 + 260 + i * 150, dur: PULSE_DUR, fire: true });
     }
-    // hop 2: from all H1 nodes to each chosen H2 node
     var t1 = t0 + 260 + 2 * 150 + PULSE_DUR + 600;
     for (var k = 0; k < H2.length; k++) {
       for (var j = 0; j < 3; j++) {
-        edges.push({ a: H1[j], b: H2[k], start: t1 + k * 160, dur: PULSE_DUR, fire: true, decoy: false });
+        edges.push({ a: H1[j], b: H2[k], cp: linkCP(H1[j], H2[k]), start: t1 + k * 160, dur: PULSE_DUR, fire: true });
       }
     }
-    // hop 3: from each chosen H2 node to H3
     var t2 = t1 + (H2.length - 1) * 160 + PULSE_DUR + 600;
     for (var h = 0; h < H2.length; h++) {
-      edges.push({ a: H2[h], b: H3, start: t2 + h * 120, dur: PULSE_DUR, fire: true, decoy: false });
+      edges.push({ a: H2[h], b: H3, cp: linkCP(H2[h], H3), start: t2 + h * 120, dur: PULSE_DUR, fire: true });
     }
-    // show reply after hop 3 arrived
     var t3 = t2 + (H2.length - 1) * 120 + PULSE_DUR;
     replyEl.textContent = CHAINS[chain].responses[Math.floor(Math.random() * CHAINS[chain].responses.length)];
-    setTimeout(function () { answerAt = performance.now(); state = 'answered'; setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200); }, (t3 - t0));
+    setTimeout(function () {
+      answerAt = performance.now();
+      state = 'answered';
+      setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200);
+    }, (t3 - t0));
   }
 
   function runFallback(text) {
-    promptNode = { text: text, x: W / 2, y: H * 0.16, w: 0, h: 22, fired: false, flashT: 1, drain: 0 };
-    ctx.font = '700 13px "Helvetica Neue", sans-serif';
-    promptNode.w = ctx.measureText(text).width + 30;
+    promptNode = mkPromptNode(text);
+    promptNode.fired = false;
+    promptNode.charge = 0.6;
 
     edges = []; litEdges = [];
-    // a few fizzle pulses at random nodes — nothing fires
     var fizz = [];
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 7; i++) {
       var n = nodes[Math.floor(Math.random() * nodes.length)];
       if (fizz.indexOf(n) < 0) fizz.push(n);
     }
     for (var j = 0; j < fizz.length; j++) {
-      edges.push({ a: promptNode, b: fizz[j], start: t0 + 300 + j * 260, dur: PULSE_DUR * 0.9, fire: false, decoy: true });
+      edges.push({ a: promptNode, b: fizz[j], cp: linkCP(promptNode, fizz[j]), start: t0 + 300 + j * 240, dur: PULSE_DUR * 0.9, fire: false });
     }
-    var lastEnd = t0 + 300 + (fizz.length - 1) * 260 + PULSE_DUR * 0.9;
+    var lastEnd = t0 + 300 + (fizz.length - 1) * 240 + PULSE_DUR * 0.9;
     replyEl.textContent = FALLBACK.responses[Math.floor(Math.random() * FALLBACK.responses.length)];
-    setTimeout(function () { answerAt = performance.now(); state = 'answered'; setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200); }, (lastEnd - t0));
+    setTimeout(function () {
+      answerAt = performance.now();
+      state = 'answered';
+      setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200);
+    }, (lastEnd - t0));
   }
 
   function run() {
@@ -326,8 +415,7 @@
     if (!text) return;
     setBox(true);
     document.querySelector('.reply').classList.remove('show');
-    for (var i = 0; i < nodes.length; i++) { nodes[i].fired = false; nodes[i].flashT = 0; nodes[i].drain = 0; }
-
+    for (var i = 0; i < nodes.length; i++) { nodes[i].fired = false; nodes[i].flashT = 0; nodes[i].drain = 0; nodes[i].charge = 0; }
     var chain = detect(text);
     t0 = performance.now();
     if (chain) runChain(chain, text);
@@ -339,24 +427,46 @@
   // ----------------------------------------------------------- update
 
   function update() {
+    // the organism is always alive: charge leaks away, sparks fire
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      n.charge *= 0.972;
+      if (n.sparkF > 0) n.sparkF -= 0.025;
+      if (n.sparkT > 0) {
+        n.sparkT -= 16.7;
+        if (n.sparkT <= 0) {
+          n.sparkT = rand(2600, 7200);
+          if (n.sparkF <= 0) n.sparkF = 1;
+        }
+      }
+    }
+    if (promptNode) promptNode.charge *= 0.992;
+    // lit energy cools toward a resting hum
+    for (var e = 0; e < litEdges.length; e++) {
+      litEdges[e].energy = Math.max((litEdges[e].energy || 1) - 0.0022, litEdges[e].fire ? 0.4 : 0.1);
+    }
+
     if (state === 'running') updateEdges();
     else if (state === 'answered') {
       if (now - answerAt > 4000) {
         state = 'settling';
         settleStart = now;
         document.querySelector('.reply').classList.remove('show');
-        for (var i = 0; i < nodes.length; i++) nodes[i].drain = 1;
+        for (var j = 0; j < nodes.length; j++) nodes[j].drain = 1;
         if (promptNode) promptNode.drain = 1;
       }
     } else if (state === 'settling') {
       var done = true;
-      var decay = (now - settleStart) / 900;
-      for (var j = 0; j < nodes.length; j++) {
-        if (nodes[j].drain > 0) { nodes[j].drain = Math.max(0, 1 - decay); done = done && nodes[j].drain === 0; }
+      var decay = (now - settleStart) / 950;
+      for (var k = 0; k < nodes.length; k++) {
+        if (nodes[k].drain > 0) {
+          nodes[k].drain = Math.max(0, 1 - decay);
+          if (nodes[k].drain !== 0) done = false;
+        }
       }
       if (done) {
         state = 'idle';
-        nodes.forEach(function (n) { n.fired = false; n.drain = 0; n.flashT = 0; });
+        nodes.forEach(function (nd) { nd.fired = false; nd.drain = 0; nd.flashT = 0; nd.charge = 0; });
         promptNode = null; edges = []; litEdges = [];
         setBox(false);
       }
@@ -364,18 +474,16 @@
   }
 
   function updateEdges() {
-    var k = edges.length - 1;
-    while (k >= 0) {
+    for (var k = edges.length - 1; k >= 0; k--) {
       var e = edges[k];
       if (now >= e.start + e.dur) {
-        // pulse arrived
-        if (e.fire && !e.decoy) {
-          if (!e.b.fired) { e.b.fired = true; e.b.flashT = 1; }
+        if (e.fire) {
+          if (!e.b.fired) { e.b.fired = true; e.b.flashT = 1; e.b.sparkF = 0; }
+          e.b.charge = Math.min(2.4, e.b.charge + 1.5);
         }
-        litEdges.push(e);
+        litEdges.push({ a: e.a, b: e.b, cp: e.cp, fire: e.fire, energy: 1 });
         edges.splice(k, 1);
       }
-      k--;
     }
   }
 
@@ -394,123 +502,248 @@
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
+    var breath = now * 0.0012;
 
     // decay flashes
-    for (var i = 0; i < nodes.length; i++) if (nodes[i].flashT > 0) nodes[i].flashT -= 0.02;
-    if (promptNode && promptNode.flashT > 0) promptNode.flashT -= 0.02;
+    for (var di = 0; di < nodes.length; di++) if (nodes[di].flashT > 0) nodes[di].flashT -= 0.03;
+    if (promptNode && promptNode.flashT > 0) promptNode.flashT -= 0.03;
 
-    var drainAll = 1;
+    // update live positions: quiver
+    for (var qi = 0; qi < nodes.length; qi++) {
+      var qn = nodes[qi];
+      var ampv = qn.fired ? 2.8 : 1.2;
+      qn.qx = qn.x + Math.sin(frame * 0.005 + qn.trem) * ampv;
+      qn.qy = qn.y + Math.cos(frame * 0.006 + qn.trem * 1.7) * ampv;
+      if (qn.fired) firedList.push(qn);
+    }
+
     var dmax = 0;
     for (var d = 0; d < nodes.length; d++) if (nodes[d].drain > dmax) dmax = nodes[d].drain;
-    drainAll = 1 - dmax * 0.92;
+    var drainAll = 1 - dmax * 0.92;
 
-    // persistent lit edges
-    ctx.lineCap = 'round';
-    for (var l = 0; l < litEdges.length; l++) {
-      var le = litEdges[l];
-      var strong = le.fire && !le.decoy;
-      ctx.strokeStyle = strong ? 'rgba(255,166,201,' + (0.5 * drainAll) + ')' : 'rgba(255,166,201,' + (0.08 * drainAll) + ')';
-      ctx.lineWidth = strong ? 1.6 : 1;
-      ctx.beginPath();
-      ctx.moveTo(le.a.x, le.a.y);
-      ctx.lineTo(le.b.x, le.b.y);
-      ctx.stroke();
+    // breathing ambient glow
+    var throb = 0.5 + 0.5 * Math.sin(breath);
+    var bg = ctx.createRadialGradient(W / 2, H * 0.6, 0, W / 2, H * 0.6, H * 0.9);
+    bg.addColorStop(0, lerpColor(0.012 + 0.018 * throb));
+    bg.addColorStop(0.55, lerpColor(0.004 + 0.004 * throb));
+    bg.addColorStop(1, 'rgba(255,166,201,0)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // ---- energy layer: all pink light goes here, bloomed back
+    gctx.setTransform(W2 / W, 0, 0, H2 / H, 0, 0);
+    gctx.clearRect(0, 0, W, H);
+    gctx.lineCap = 'round';
+
+    // lit axon energy
+    for (var le = 0; le < litEdges.length; le++) {
+      var le2 = litEdges[le];
+      var en = le2.energy * drainAll;
+      strokeLink(le2.a, le2.cp, le2.b, lerpColor(0.5 * en), 3 + 7 * en, gctx);
+    }
+    // travelling impulses
+    for (var pe = 0; pe < edges.length; pe++) {
+      var e2 = edges[pe];
+      if (now < e2.start) continue;
+      var pr2 = Math.min(1.08, (now - e2.start) / e2.dur);
+      var pos2 = bezierAt(e2.a, e2.cp, e2.b, pr2);
+      var amp2 = e2.fire ? 1 : 0.3;
+      var gg = gctx.createRadialGradient(pos2.x, pos2.y, 0, pos2.x, pos2.y, 14);
+      gg.addColorStop(0, lerpColor(0.8 * amp2 * drainAll));
+      gg.addColorStop(1, 'rgba(255,166,201,0)');
+      gctx.fillStyle = gg;
+      gctx.beginPath();
+      gctx.arc(pos2.x, pos2.y, 14, 0, Math.PI * 2);
+      gctx.fill();
+    }
+    // node energy
+    for (var ne = 0; ne < nodes.length; ne++) {
+      var nd = nodes[ne];
+      var ch = Math.min(1, nd.charge) * ndrain(nd) * (nd.fired ? 1 : 0);
+      if (ch > 0.02) {
+        var rg = gctx.createRadialGradient(nd.qx, nd.qy, 0, nd.qx, nd.qy, 14 + 22 * ch);
+        rg.addColorStop(0, lerpColor(0.42 * ch + Math.min(1, nd.flashT) * 0.3));
+        rg.addColorStop(1, 'rgba(255,166,201,0)');
+        gctx.fillStyle = rg;
+        gctx.beginPath();
+        gctx.arc(nd.qx, nd.qy, 14 + 22 * ch, 0, Math.PI * 2);
+        gctx.fill();
+      } else if (nd.sparkF > 0) {
+        var sgg = gctx.createRadialGradient(nd.qx, nd.qy, 0, nd.qx, nd.qy, 16);
+        sgg.addColorStop(0, lerpColor(0.18 * nd.sparkF));
+        sgg.addColorStop(1, 'rgba(255,166,201,0)');
+        gctx.fillStyle = sgg;
+        gctx.beginPath();
+        gctx.arc(nd.qx, nd.qy, 16, 0, Math.PI * 2);
+        gctx.fill();
+      }
+    }
+    // prompt energy
+    if (promptNode) {
+      var pnp = promptNode;
+      var ppd = pnp.drain > 0 ? (1 - pnp.drain) : 1;
+      var pg = gctx.createRadialGradient(pnp.x, pnp.y, 0, pnp.x, pnp.y, 36);
+      pg.addColorStop(0, lerpColor(0.4 * ppd));
+      pg.addColorStop(1, 'rgba(255,166,201,0)');
+      gctx.fillStyle = pg;
+      gctx.beginPath();
+      gctx.arc(pnp.x, pnp.y, 36, 0, Math.PI * 2);
+      gctx.fill();
     }
 
-    // travelling pulses
-    for (var p = 0; p < edges.length; p++) {
-      var e = edges[p];
-      if (now < e.start) continue;
-      var pr = (now - e.start) / e.dur;
-      if (pr < 0) continue;
-      var bx = e.a.x + (e.b.x - e.a.x) * Math.min(1.08, pr);
-      var by = e.a.y + (e.b.y - e.a.y) * Math.min(1.08, pr);
-      var isDead = !e.fire || e.decoy;
-      var amp = isDead ? 0.25 : 0.9;
-      // line glow behind pulse
-      ctx.strokeStyle = 'rgba(255,166,201,' + (0.25 * amp * drainAll) + ')';
-      ctx.lineWidth = 1.4;
+    // bloom composite — the mish soft-glow pass
+    ctx.filter = 'blur(2.5px)';
+    ctx.globalAlpha = 0.5;
+    ctx.drawImage(glowCanvas, 0, 0, W, H);
+    ctx.filter = 'blur(9px)';
+    ctx.globalAlpha = 0.4;
+    ctx.drawImage(glowCanvas, 0, 0, W, H);
+    ctx.filter = 'none';
+    ctx.globalAlpha = 1;
+
+    // ---- drifting motes: they curl with the field and lean toward lit cells
+    var cx = W / 2, cy = H * 0.6;
+    for (var m = 0; m < motes.length; m++) {
+      var mo = motes[m];
+      // gentle swirl around the field's core
+      var sc = Math.cos(mo.swirl), ss = Math.sin(mo.swirl);
+      var nvx = mo.vx * sc - mo.vy * ss;
+      mo.vy = mo.vx * ss + mo.vy * sc;
+      mo.vx = nvx;
+      // weak pull toward whatever is currently firing
+      if (firedList.length) {
+        var near = nearestOf(firedList, mo.x, mo.y);
+        var pdx = near.qx - mo.x, pdy = near.qy - mo.y;
+        var dl = Math.sqrt(pdx * pdx + pdy * pdy) || 1;
+        var pull = 3400 / (dl * dl + 4000);
+        mo.vx += (pdx / dl) * pull * 0.5;
+        mo.vy += (pdy / dl) * pull * 0.5;
+      }
+      mo.x += mo.vx; mo.y += mo.vy;
+      if (mo.x < -4) mo.x = W + 4; else if (mo.x > W + 4) mo.x = -4;
+      if (mo.y < -4) mo.y = H + 4; else if (mo.y > H + 4) mo.y = -4;
+      var tw = 0.5 + 0.5 * Math.sin(now * 0.001 + mo.ph);
+      ctx.globalAlpha = 0.04 + 0.07 * tw;
+      ctx.fillStyle = mo.pink ? ACCENT : GREY;
       ctx.beginPath();
-      ctx.moveTo(e.a.x, e.a.y);
-      ctx.lineTo(bx, by);
-      ctx.stroke();
-      // comet head
-      ctx.shadowColor = ACCENT;
-      ctx.shadowBlur = 14;
-      ctx.fillStyle = isDead ? 'rgba(255,166,201,0.35)' : ACCENT;
-      ctx.globalAlpha = amp * drainAll;
+      ctx.arc(mo.x, mo.y, mo.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ---- dendritic filaments, faint rest-state wiring
+    for (var f = 0; f < filaments.length; f++) {
+      var fi = filaments[f];
+      var endFired = fi.a.fired || fi.b.fired;
+      var base = endFired
+        ? (0.09 + 0.05 * (0.5 + 0.5 * Math.sin(now * 0.004 + f))) * drainAll
+        : (0.022 + 0.012 * (0.5 + 0.5 * Math.sin(breath * 2 + f * 0.8)));
+      strokeLink(fi.a, fi.cp, fi.b, lerpColor(base), 0.8);
+    }
+
+    // ---- crisp core of the lit paths
+    for (var l2 = 0; l2 < litEdges.length; l2++) {
+      var le3 = litEdges[l2];
+      var lp = le3.energy * 0.9 * drainAll;
+      strokeLink(le3.a, le3.cp, le3.b, lerpColor(lp), 1.1);
+    }
+
+    // crisp pulse heads
+    for (var ph = 0; ph < edges.length; ph++) {
+      var e3 = edges[ph];
+      if (now < e3.start) continue;
+      var pr3 = Math.min(1.08, (now - e3.start) / e3.dur);
+      var pos3 = bezierAt(e3.a, e3.cp, e3.b, pr3);
+      ctx.fillStyle = ACCENT;
+      ctx.globalAlpha = (e3.fire ? 1 : 0.4) * drainAll;
       ctx.beginPath();
-      ctx.arc(bx, by, isDead ? 1.6 : 3.2, 0, Math.PI * 2);
+      ctx.arc(pos3.x, pos3.y, e3.fire ? 2.6 : 1.4, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
     }
 
-    // nodes
+    // ---- nodes (crisp text on top of the light)
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    for (var n = 0; n < nodes.length; n++) {
-      var nd = nodes[n];
-      var x = nd.x, y = nd.y, w = nd.w, h = nd.h;
-      var ndrain = nd.drain > 0 ? (1 - nd.drain) : 1;
+    for (var n2 = 0; n2 < nodes.length; n2++) {
+      var nd2 = nodes[n2];
+      var ndr = ndrain(nd2);
+      var ch2 = Math.min(1, nd2.charge);
 
-      if (nd.fired) {
-        var flash = Math.min(1, nd.flashT);
-        var scale = 1 + 0.16 * Math.min(1, flash + (1 - ndrain));
+      if (nd2.fired) {
+        var ripple = nd2.flashT;
+        if (ripple > 0) {
+          ctx.strokeStyle = lerpColor(ripple * 0.6 * ndr);
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.arc(nd2.qx, nd2.qy, (1 - ripple) * 32, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        var scale = 1 + 0.08 * ch2 * (0.5 + 0.5 * Math.sin(now * 0.005 + nd2.glowph));
         ctx.save();
-        ctx.translate(x, y);
+        ctx.translate(nd2.qx, nd2.qy);
         ctx.scale(scale, scale);
-        ctx.shadowColor = ACCENT;
-        ctx.shadowBlur = 18 * ndrain;
-        ctx.strokeStyle = 'rgba(255,166,201,' + (0.75 * ndrain) + ')';
-        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = lerpColor((0.55 + 0.3 * ch2) * ndr);
+        ctx.lineWidth = 1.2;
         ctx.fillStyle = 'rgba(255,166,201,0.08)';
-        roundRect(-w / 2, -h / 2, w, h, h / 2);
+        roundRect(-nd2.w / 2, -nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
         ctx.fill();
         ctx.stroke();
-        ctx.shadowBlur = 0;
         ctx.font = '12px "Helvetica Neue", sans-serif';
         ctx.fillStyle = ACCENT;
-        ctx.globalAlpha = ndrain * (0.9 + flash * 0.1);
-        ctx.fillText(nd.text, 0, 0);
+        ctx.globalAlpha = ndr * (0.6 + 0.4 * ch2);
+        ctx.fillText(nd2.text, 0, 0);
         ctx.restore();
         ctx.globalAlpha = 1;
       } else {
-        var faint = 0;
-        if (nd.flashT > 0) faint = nd.flashT;
-        ctx.strokeStyle = 'rgba(230,230,236,' + (0.07 + faint * 0.2) + ')';
+        var rest = 0.5 + 0.5 * Math.sin(now * 0.002 + nd2.glowph);
+        var spark = nd2.sparkF > 0 ? nd2.sparkF : 0;
+        ctx.strokeStyle = 'rgba(230,230,236,' + (0.06 + rest * 0.02 + spark * 0.12).toFixed(3) + ')';
         ctx.lineWidth = 1;
-        roundRect(x - w / 2, y - h / 2, w, h, h / 2);
+        roundRect(nd2.qx - nd2.w / 2, nd2.qy - nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
         ctx.stroke();
         ctx.font = '12px "Helvetica Neue", sans-serif';
-        ctx.fillStyle = 'rgba(230,230,236,' + (0.3 + faint * 0.35) + ')';
-        ctx.globalAlpha = 1;
-        ctx.fillText(nd.text, x, y);
+        ctx.fillStyle = 'rgba(230,230,236,' + (0.28 + rest * 0.06 + spark * 0.5).toFixed(3) + ')';
+        ctx.fillText(nd2.text, nd2.qx, nd2.qy);
       }
     }
 
-    // prompt node
+    // prompt pill
     if (promptNode) {
       var pn = promptNode;
-      var pd = pn.drain > 0 ? (1 - pn.drain) : 1;
+      var pdd = pn.drain > 0 ? (1 - pn.drain) : 1;
+      var pxx = pn.x + Math.sin(breath * 1.3) * 3;
+      var pyy = pn.y + Math.cos(breath * 0.9) * 3;
       ctx.save();
-      ctx.translate(pn.x, pn.y);
-      ctx.shadowColor = ACCENT;
-      ctx.shadowBlur = 22;
-      ctx.strokeStyle = 'rgba(255,166,201,0.85)';
+      ctx.translate(pxx, pyy);
+      ctx.strokeStyle = lerpColor(0.85 * pdd);
       ctx.lineWidth = 1.6;
       ctx.fillStyle = 'rgba(255,166,201,0.1)';
       roundRect(-pn.w / 2, -pn.h / 2, pn.w, pn.h, pn.h / 2);
       ctx.fill();
       ctx.stroke();
-      ctx.shadowBlur = 0;
       ctx.font = '700 13px "Helvetica Neue", sans-serif';
       ctx.fillStyle = ACCENT;
-      ctx.globalAlpha = pd;
+      ctx.globalAlpha = pdd;
       ctx.fillText(pn.text, 0, 0);
       ctx.restore();
       ctx.globalAlpha = 1;
     }
+
+    firedList.length = 0;
+  }
+
+  function ndrain(n) {
+    return n.drain > 0 ? (1 - n.drain) : 1;
+  }
+
+  function nearestOf(list, x, y) {
+    var best = list[0], bd = Infinity;
+    for (var i = 0; i < list.length; i++) {
+      var d = dist(list[i].qy, list[i].qx, y, x);
+      if (d < bd) { bd = d; best = list[i]; }
+    }
+    return best;
   }
 
   // ----------------------------------------------------------- boot
@@ -538,8 +771,10 @@
     canvas.width = W * DPR;
     canvas.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    buildGlow();
     buildNodes();
-    state = 'idle'; edges = []; litEdges = []; promptNode = null;
+    buildMotes();
+    state = 'idle'; edges = []; litEdges = []; promptNode = null; firedList = [];
     document.querySelector('.reply').classList.remove('show');
     setBox(false);
   }
@@ -551,6 +786,7 @@
   // helpers
   function rand(a, b) { return a + Math.random() * (b - a); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
 })();
 </script>
 </body>

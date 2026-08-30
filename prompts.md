@@ -356,3 +356,29 @@ interaction (paste-ready brief):
 - user note: "even make the animation brain nerves like i want the
   simulation" — pulses should read as nerve impulses: signal arrives,
   cell fires, next cell down the chain.
+
+## 8 — make it alive; brainstorm from mish-sims
+
+this is not what i had in mind when i asked for simulating brain nerve
+thing — i want to make it feel more alive first, can u do that for me?
+a living breathing thing.
+
+(then: /Users/mishti/Desktop/widgets mish/mish-sims.jsx referenced
+for inspiration — a widget containing clifford attractor, diffusion-
+limited aggregation, lissajous ink, murmuration (boids), and gray-
+scott reaction-diffusion, all pink-on-dark with key techniques:)
+
+borrowed from mish-sims:
+- low-res offscreen buffer + layered blur compositing for soft organic
+  bloom (dla/turing style) — instead of crisp 1px lines, the pink
+  energy layer is rendered to a half-res canvas and drawn back
+  blurred 2.5px + 9px, giving everything a breathing glow.
+- energy/charge that decays — lit nodes carry a `charge` that leaks
+  away each frame and edges cool to a resting hum, so the lit web
+  behaves like a real fading neural trace instead of staying static.
+- living motes: 60 drifting particles that curl around the field's
+  core (tangential swirl) and are weakly pulled toward whichever
+  nodes just fired — cytoplasm currents leaning toward active cells.
+- everything already alive during idle: breathing radial glow,
+  resting flicker, spontaneous sparks on idle nodes, twitch quiver,
+  dendritic filaments that brighten when a neighbour fires.
