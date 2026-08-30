@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ask anything</title>
+<title>graphic.ai — ask anything</title>
 <link rel="preconnect" href="https://fonts.cdnfonts.com">
 <link href="https://fonts.cdnfonts.com/css/cmu-typewriter-text" rel="stylesheet">
 <style>
@@ -167,8 +167,10 @@
   .graphbox {
     position: relative; height: 54vh; min-height: 360px;
     border-radius: 18px; overflow: hidden;
-    background: rgba(10,7,4,0.55); border: 1px solid var(--line);
-    box-shadow: 0 0 60px rgba(230,185,110,0.05) inset;
+    background:
+      radial-gradient(120% 90% at 50% 20%, rgba(16,11,6,0.9) 0%, rgba(6,4,2,0.96) 70%);
+    border: 1px solid rgba(230,185,110,0.16);
+    box-shadow: 0 0 60px rgba(230,185,110,0.06) inset, 0 8px 40px rgba(0,0,0,0.5);
   }
   #graph { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .graphbox .stagehint {
@@ -255,7 +257,7 @@
 
       <!-- landing essay -->
       <div class="about" id="about">
-        <div class="kicker">a small observing machine</div>
+        <div class="kicker">graphic.ai</div>
         <div class="title">ask anything.</div>
         <div class="subtitle">one question becomes a web — each word finds the facts it knows, each fact lights a point in a growing graph, and when the graph is finished it folds itself into an answer that streams out, one token at a time.</div>
 
@@ -285,7 +287,7 @@
           <div class="fcols" id="fcols"></div>
         </div>
         <div class="zone graphzone" id="graphzone">
-          <span class="tag" id="graphtag">the graph learning</span>
+          <span class="tag" id="graphtag">graphic.ai — the graph</span>
           <div class="graphbox">
             <div class="stagehint">the graph grows here<span class="sub">it stays blank until you ask</span></div>
             <canvas id="graph"></canvas>
@@ -578,6 +580,7 @@
   // ------------------------------------------------------- state
 
   var BW = 0, BH = 0, GW = 0, GH = 0;
+  var laidOut = false;  // layout computed once so the graph never re-scatters
   var memory = [];      // accumulated graph knowledge: every created fact
   var allCables = [];
   var runEdges = [];
@@ -735,48 +738,51 @@
   // deterministic fresh-layout of every fact currently in memory (keeps fired state)
   function buildGraphLayout() {
     boutons = [];
-    var zx0 = 0.07, zx1 = 0.93, zy0 = 0.08, zy1 = 0.90;
+    if (!laidOut && GW > 4 && GH > 4) {
+      var zx0 = 0.07, zx1 = 0.93, zy0 = 0.08, zy1 = 0.90;
 
-    for (var c = 0; c < CHAIN_KEYS.length; c++) {
-      var key = CHAIN_KEYS[c];
-      var def = CHAINS[key];
-      var rng = srand(hashSeed(key));
-      var ax = (def.anchor[0] + (rng() - 0.5) * 0.02) * GW;
-      var ay = (def.anchor[1] + (rng() - 0.5) * 0.02) * GH;
-      var axn = def.anchor[0], ayn = def.anchor[1];
-      var pts = chainCells(key).filter(function (x) { return !x.generated; });
+      for (var c = 0; c < CHAIN_KEYS.length; c++) {
+        var key = CHAIN_KEYS[c];
+        var def = CHAINS[key];
+        var rng = srand(hashSeed(key));
+        var ax = (def.anchor[0] + (rng() - 0.5) * 0.02) * GW;
+        var ay = (def.anchor[1] + (rng() - 0.5) * 0.02) * GH;
+        var axn = def.anchor[0], ayn = def.anchor[1];
+        var pts = chainCells(key).filter(function (x) { return !x.generated; });
 
-      for (var f = 0; f < pts.length; f++) {
-        var cell = pts[f];
-        var ring = cell.ho === 1 ? 26 + rng() * 20 : cell.ho === 2 ? 42 + rng() * 24 : 58 + rng() * 26;
-        var a2 = rng() * Math.PI * 2;
-        var nX = ax + Math.cos(a2) * ring;
-        var nY = ay + Math.sin(a2) * ring;
-        cell.pnx = clamp(nX / GW, zx0, zx1);
-        cell.pny = clamp(nY / GH, zy0, zy1);
-      }
+        for (var f = 0; f < pts.length; f++) {
+          var cell = pts[f];
+          var ring = cell.ho === 1 ? 26 + rng() * 20 : cell.ho === 2 ? 42 + rng() * 24 : 58 + rng() * 26;
+          var a2 = rng() * Math.PI * 2;
+          var nX = ax + Math.cos(a2) * ring;
+          var nY = ay + Math.sin(a2) * ring;
+          cell.pnx = clamp(nX / GW, zx0, zx1);
+          cell.pny = clamp(nY / GH, zy0, zy1);
+        }
 
-      // relax overlaps in normalized space
-      for (var it = 0; it < 20; it++) {
-        for (var i = 0; i < pts.length; i++) {
-          for (var j = i + 1; j < pts.length; j++) {
-            var a = pts[i], b = pts[j];
-            var dx = (b.pnx - a.pnx) * GW, dy = (b.pny - a.pny) * GH;
-            var d = Math.sqrt(dx * dx + dy * dy) || 0.0001;
-            if (d < 10) {
-              var push = (10 - d) / 2;
-              a.pnx = clamp(a.pnx - (dx / d) * push / GW, zx0, zx1);
-              a.pny = clamp(a.pny - (dy / d) * push / GH, zy0, zy1);
-              b.pnx = clamp(b.pnx + (dx / d) * push / GW, zx0, zx1);
-              b.pny = clamp(b.pny + (dy / d) * push / GH, zy0, zy1);
+        // relax overlaps in normalized space
+        for (var it = 0; it < 20; it++) {
+          for (var i = 0; i < pts.length; i++) {
+            for (var j = i + 1; j < pts.length; j++) {
+              var a = pts[i], b = pts[j];
+              var dx = (b.pnx - a.pnx) * GW, dy = (b.pny - a.pny) * GH;
+              var d = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+              if (d < 10) {
+                var push = (10 - d) / 2;
+                a.pnx = clamp(a.pnx - (dx / d) * push / GW, zx0, zx1);
+                a.pny = clamp(a.pny - (dy / d) * push / GH, zy0, zy1);
+                b.pnx = clamp(b.pnx + (dx / d) * push / GW, zx0, zx1);
+                b.pny = clamp(b.pny + (dy / d) * push / GH, zy0, zy1);
+              }
             }
           }
         }
+        var cx = 0, cy = 0;
+        for (var m = 0; m < pts.length; m++) { cx += pts[m].pnx; cy += pts[m].pny; }
+        chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: 90 };
+        void axn; void ayn;
       }
-      var cx = 0, cy = 0;
-      for (var m = 0; m < pts.length; m++) { cx += pts[m].pnx; cy += pts[m].pny; }
-      chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: 90 };
-      void axn; void ayn;
+      laidOut = true;
     }
 
     projection();       // scale normalized coords to the panel + build arbors
@@ -1021,6 +1027,8 @@
 
   // which keyword a fact answers, for grouping into per-keyword panels
   function keywordFor(cell, chips) {
+    // generated facts belong to the keyword they were born for (stored first)
+    if (cell.generated && cell.k.length && chips.indexOf(cell.k[0]) >= 0) return cell.k[0];
     for (var i = 0; i < chips.length; i++) {
       var pool = expand(chips[i]);
       for (var pi = 0; pi < pool.length; pi++) {
@@ -1045,6 +1053,28 @@
     }
     return out;
   }
+
+  // the keyword's own related facts, ranked: direct keyword matches first,
+  // then facts from the keyword's chosen chain that share its topic. only
+  // relevant facts ever feed the keyword's series — never all of memory.
+  function relatedFacts(kw, chain) {
+    var pool = expand(kw);
+    var scored = [];
+    for (var i = 0; i < memory.length; i++) {
+      var cell = memory[i];
+      var overlap = 0;
+      for (var pi = 0; pi < pool.length; pi++) if (cell.k.indexOf(pool[pi]) >= 0) overlap++;
+      if (overlap > 0) scored.push({ c: cell, s: overlap * 10 + (cell.ch === chain ? 3 : 0) });
+    }
+    scored.sort(function (a, b) { return b.s - a.s; });
+    var top = [];
+    for (var q = 0; q < scored.length && top.length < 6; q++) if (top.indexOf(scored[q].c) < 0) top.push(scored[q].c);
+    if (top.length < 2) {
+      var chainFacts = chainCells(chain).filter(function (x) { return !x.generated; });
+      for (var g = 0; g < chainFacts.length && top.length < 6; g++) if (top.indexOf(chainFacts[g]) < 0) top.push(chainFacts[g]);
+    }
+    return top;
+  }
   function birthFact(seedA, seedB, kw, chain, already) {
     var text = buildSentence([seedA.text, seedB.text]);
     var tags = [kw];
@@ -1061,18 +1091,15 @@
   }
   function generatePerKeyword(chips, chain) {
     var created = [];
-    var everything = memory.slice();
     for (var c = 0; c < chips.length; c++) {
       var kw = chips[c];
-      var fam = factsForKeyword(kw);
-      if (!fam.length) fam = chainCells(chain).length ? chainCells(chain) : everything;
-      var pool2 = fam.concat(shuffle(everything));
+      var fam = relatedFacts(kw, chain);
+      if (fam.length < 2) continue;
       var series = 2 + rInt(2);
       var guard = 0;
-      while (series > 0 && guard < 80) {
+      while (series > 0 && guard < 60) {
         guard++;
-        var a = pool2[rInt(pool2.length)];
-        var b = pool2[rInt(pool2.length)];
+        var a = fam[rInt(fam.length)], b = fam[rInt(fam.length)];
         if (!a || !b || a === b) continue;
         var fresh = birthFact(a, b, kw, chain, created);
         created.push(fresh);
@@ -1090,6 +1117,9 @@
     if (off) inputEl.blur();
   }
   function scrollBottom() {
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function scrollTopNow() {
     logEl.scrollTop = 0;
   }
 
@@ -1098,19 +1128,19 @@
     fcolsEl.textContent = '';
     kwrowEl.classList.remove('on');
     factcolsEl.classList.remove('on');
-    graphzoneEl.classList.remove('on');
     kwtagEl.classList.remove('hot');
     facttagEl.classList.remove('hot');
     graphtagEl.classList.remove('hot');
-    if (stagehint) stagehint.style.display = '';
+    // the graph zone stays open: it is the accumulating brain, so it must not
+    // collapse and re-layout (which made the existing graph visibly "rewrite")
+    if (stagehint) stagehint.style.display = 'none';
   }
 
-  function appendTurn(promptText) {
-    // fresh stage each question: question pinned at the top, working animation
-    // in the middle, answer streaming below — all on one screen, no scrolling.
+  // the question goes to the top the moment you press enter; the working
+  // animation and the answer then unfold below it — one clean column.
+  function insertQuestion(promptText) {
     var oldTurns = logEl.querySelectorAll('.turn');
     for (var ok = 0; ok < oldTurns.length; ok++) oldTurns[ok].parentNode.removeChild(oldTurns[ok]);
-
     var qTurn = document.createElement('div');
     qTurn.className = 'turn qturn';
     var u = document.createElement('div');
@@ -1118,7 +1148,8 @@
     u.textContent = promptText;
     qTurn.appendChild(u);
     logEl.insertBefore(qTurn, workingEl);
-
+  }
+  function appendAnswer() {
     var aTurn = document.createElement('div');
     aTurn.className = 'turn aturn';
     var a = document.createElement('div');
@@ -1127,6 +1158,7 @@
     tx.className = 'ats';
     a.appendChild(tx);
     aTurn.appendChild(a);
+    logEl.appendChild(workingEl);
     logEl.appendChild(aTurn);
     return { el: a, tx: tx };
   }
@@ -1137,6 +1169,8 @@
     t0 = performance.now();
     aboutEl.classList.add('hide');
     resetWorking();
+    insertQuestion(text);
+    scrollTopNow();
     // the grown graph is not wiped — only this run's transient marks reset
     for (var i = 0; i < memory.length; i++) {
       memory[i].litIdx = 0; memory[i].flashT = 0; memory[i].drain = 0;
@@ -1323,7 +1357,6 @@
   var gw = 0, gh = 0;
 
   function drawGraph() {
-    var hide = false;
     var fade = (synthesis && state === 'forming') ? Math.max(0.18, synthesis.fade) : 1;
     if (fade <= 0.01) return;
 
@@ -1333,97 +1366,100 @@
     for (var i = 0; i < memory.length; i++) {
       var n = memory[i];
       n.charge *= 0.978;
-      n.qx = n.x + Math.sin(frame * 0.005 + i) * (n.fired ? 1.4 : 0.5);
-      n.qy = n.y + Math.cos(frame * 0.006 + i * 1.7) * (n.fired ? 1.4 : 0.5);
+      n.qx = n.x + Math.sin(frame * 0.005 + i) * (n.fired ? 1.2 : 0.4);
+      n.qy = n.y + Math.cos(frame * 0.006 + i * 1.7) * (n.fired ? 1.2 : 0.4);
       if (n.flashT > 0) n.flashT -= 0.035;
     }
 
-    for (var cn = 0; cn < memory.length; cn++) {
-      var cell = memory[cn];
-      var arbA = (0.028 + Math.min(0.45, cell.charge * 0.22)) * fade;
-      for (var ap = 0; ap < cell.arbors.length; ap++) drawFibre(grCtx, cell.arbors[ap], arbA, 1.0);
-    }
-    for (var cb = 0; cb < allCables.length; cb++) drawFibre(grCtx, allCables[cb].path, 0.028 * fade, 0.8);
-    for (var th = 0; th < threads.length; th++) drawFibre(grCtx, threads[th], 0.022 * fade, 0.7);
-
+    // --- obsidian-style links: thin, dim, clean -----------------------
+    for (var cb = 0; cb < allCables.length; cb++) drawEdge(allCables[cb].path, 0.05 * fade, 0.7);
+    for (var th = 0; th < threads.length; th++) drawEdge(threads[th], 0.03 * fade, 0.6);
     for (var re = 0; re < runEdges.length; re++) {
       var eg = runEdges[re];
       if (!eg.launched) continue;
       var frac = clamp((now - eg.buildT) / 520, 0, 1);
-      if (frac < 1) drawPathT(grCtx, eg.path, eg.cum, frac, 0.55 * fade, 1.3);
-      else drawFibre(grCtx, eg.path, 0.13 * fade, 1.0);
+      if (frac < 1) drawPathT(grCtx, eg.path, eg.cum, frac, 0.5 * fade, 1.0);
+      else drawEdge(eg.path, 0.11 * fade, 0.9);
     }
 
+    // --- sparks travelling the links ---------------------------------
     for (var im = 0; im < impulses.length; im++) {
       var imp = impulses[im];
       if (imp.done || now < imp.started) continue;
       var pos = pointAt(imp.path, imp.cum, imp.d);
-      var grad = grCtx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 7);
-      grad.addColorStop(0, lerpColorA(0.9, fade));
+      var grad = grCtx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 9);
+      grad.addColorStop(0, lerpColorA(1, fade));
       grad.addColorStop(1, 'rgba(230,185,110,0)');
       grCtx.fillStyle = grad;
-      grCtx.beginPath(); grCtx.arc(pos.x, pos.y, 7, 0, Math.PI * 2); grCtx.fill();
+      grCtx.beginPath(); grCtx.arc(pos.x, pos.y, 9, 0, Math.PI * 2); grCtx.fill();
     }
 
+    // --- nodes: a glowing constellation of notes ----------------------
     for (var n2 = 0; n2 < memory.length; n2++) {
       var nd2 = memory[n2];
       if (nd2.fired) {
-        var g = Math.min(30, 6 + Math.min(1, nd2.charge) * 20);
+        var g = 8 + Math.min(2, nd2.charge) * 14;
         var rad = grCtx.createRadialGradient(nd2.qx, nd2.qy, 0, nd2.qx, nd2.qy, g);
-        rad.addColorStop(0, lerpColor((0.24 + Math.min(1, nd2.charge) * 0.2) * fade));
+        rad.addColorStop(0, lerpColor(0.55 * fade));
+        rad.addColorStop(0.35, lerpColor(0.16 * fade));
         rad.addColorStop(1, 'rgba(230,185,110,0)');
         grCtx.fillStyle = rad;
         grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, g, 0, Math.PI * 2); grCtx.fill();
+        // bright honey core
+        grCtx.fillStyle = lerpColor(0.95 * fade);
+        grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, 2 + Math.min(3, nd2.charge), 0, Math.PI * 2); grCtx.fill();
         if (nd2.flashT > 0) {
-          grCtx.strokeStyle = lerpColor(nd2.flashT * 0.5 * fade);
-          grCtx.lineWidth = 1.3;
-          grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, (1 - nd2.flashT) * 26 + 7, 0, Math.PI * 2); grCtx.stroke();
+          grCtx.strokeStyle = lerpColor(nd2.flashT * 0.6 * fade);
+          grCtx.lineWidth = 1.1;
+          grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, (1 - nd2.flashT) * 22 + 8, 0, Math.PI * 2); grCtx.stroke();
         }
         if (nd2.litIdx > 0) {
-          grCtx.fillStyle = 'rgba(12,10,7,0.9)';
-          grCtx.beginPath(); grCtx.arc(nd2.qx + 10, nd2.qy - 5, 7, 0, Math.PI * 2); grCtx.fill();
-          grCtx.strokeStyle = lerpColor(0.85 * fade);
-          grCtx.lineWidth = 1.1;
+          grCtx.fillStyle = 'rgba(9,7,4,0.95)';
+          grCtx.beginPath(); grCtx.arc(nd2.qx + 11, nd2.qy - 6, 7, 0, Math.PI * 2); grCtx.fill();
+          grCtx.strokeStyle = lerpColor(0.8 * fade);
+          grCtx.lineWidth = 1;
           grCtx.stroke();
           grCtx.fillStyle = ACCENT;
           grCtx.font = '700 9px "CMU Typewriter Text", "Courier New", monospace';
           grCtx.textAlign = 'center'; grCtx.textBaseline = 'middle';
-          grCtx.fillText(String(nd2.litIdx), nd2.qx + 10, nd2.qy - 5);
+          grCtx.fillText(String(nd2.litIdx), nd2.qx + 11, nd2.qy - 6);
         }
       } else {
-        var rst = 0.5 + 0.5 * Math.sin(now * 0.002 + n2);
-        grCtx.globalAlpha = 0.07 * fade + rst * 0.05 * fade;
+        // dim idle constellation dot — the whole web is readable, like obsidian
+        var rst = 0.5 + 0.5 * Math.sin(now * 0.0016 + n2);
+        grCtx.globalAlpha = (0.11 + rst * 0.08) * fade;
         grCtx.fillStyle = GREY;
-        grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, 1.4, 0, Math.PI * 2); grCtx.fill();
+        grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, 1.3, 0, Math.PI * 2); grCtx.fill();
         grCtx.globalAlpha = 1;
       }
     }
 
+    // --- faint motes for depth ----------------------------------------
     for (var mo = 0; mo < motes.length; mo++) {
       var mm = motes[mo];
       mm.x += mm.vx; mm.y += mm.vy;
       if (mm.x < -4) mm.x = gw + 4; else if (mm.x > gw + 4) mm.x = -4;
       if (mm.y < -4) mm.y = gh + 4; else if (mm.y > gh + 4) mm.y = -4;
       var tw = 0.5 + 0.5 * Math.sin(now * 0.001 + mm.ph);
-      grCtx.globalAlpha = (0.10 + tw * 0.08) * fade;
+      grCtx.globalAlpha = (0.05 + tw * 0.05) * fade;
       grCtx.fillStyle = mm.pink ? ACCENT : GREY;
       grCtx.beginPath(); grCtx.arc(mm.x, mm.y, mm.r, 0, Math.PI * 2); grCtx.fill();
       grCtx.globalAlpha = 1;
     }
   }
 
-  function drawFibre(c, path, alpha, width) {
-    c.strokeStyle = ACCENT;
-    c.lineWidth = width;
-    c.lineCap = 'round';
-    c.lineJoin = 'round';
-    c.globalAlpha = Math.max(0, Math.min(1, alpha));
-    c.beginPath();
-    c.moveTo(path[0][0], path[0][1]);
-    for (var i = 1; i < path.length; i++) c.lineTo(path[i][0], path[i][1]);
-    c.stroke();
-    c.globalAlpha = 1;
+  function drawEdge(path, alpha, width) {
+    grCtx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    grCtx.strokeStyle = ACCENT;
+    grCtx.lineWidth = width;
+    grCtx.lineCap = 'round';
+    grCtx.beginPath();
+    grCtx.moveTo(path[0][0], path[0][1]);
+    for (var i = 1; i < path.length; i++) grCtx.lineTo(path[i][0], path[i][1]);
+    grCtx.stroke();
+    grCtx.globalAlpha = 1;
   }
+
   function drawPathT(c, path, cum, frac, alpha, width) {
     if (frac <= 0) return;
     var total = cum[cum.length - 1];
@@ -1525,7 +1561,7 @@
           skd.typeRate = Math.max(7, Math.min(15, Math.round(3000 / skd.text.length)));
           skd.typeIdx = 0;
           skd.thinkEnd = now + rand(700, 1500);
-          var at = appendTurn(skd.promptText);
+          var at = appendAnswer();
           skd.streamEl = at.el;
           skd.textEl = at.tx;
           // thinking indicator

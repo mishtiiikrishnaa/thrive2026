@@ -809,3 +809,44 @@ randomised across everything, nothing is fixed".
   question → keywords/facts → graph → answer. `scrollBottom` anchors to
   `scrollTop = 0` instead of forcing a jump to the bottom. measured in real
   Chrome: the question sits at y=4 with the graph and answer laid out below it.
+
+## 20 — relevance broke (blue → "borders are important"); per-keyword panels restored
+
+"the facts arent relevant to the keyword AT ALL. like the word blue gets stuff
+like 'border are important' like ????"
+
+the relevance bug had two culprits.
+- `generatePerKeyword` was drawing its fact pairs from `fam.concat(shuffle(everything))`
+  — every keyword's series was mixed with a random slice of ALL memory, so
+  "blue" could birth facts from the society chain ("borders are important").
+  replaced with a `relatedFacts(kw, chain)` helper that only returns the keyword's
+  own matches (ranked), falling back only to that keyword's chosen chain — never
+  all memory.
+- `keywordFor` bucketed every born fact under the FIRST chip in order, so blue-born
+  facts (which carried a 'sky' tag from their source fact) landed under the sky
+  panel. born facts are now assigned to the keyword they were born for
+  (`cell.k[0]`), which is checked first, giving "why is the sky blue" both a
+  `sky` (4) and a `blue` (3) panel, each with relevant facts.
+
+## 21 — obsidian-style graph, no rewrite on new question, scroll fixed, named graphic.ai
+
+"the graph looks ugly change the graph" + "asking another question it is
+rewriting the graph thats already there which it shouldnt" + "scroll is not
+working properly" + "name this thing graphic.ai and render it obsidian style"
+
+- obsidian style: dropped the messy branching `arbors` and the old thick
+  connectors; the graph is now a clean constellation — every node is a faint
+  constellation dot (the stored web is readable before you even ask), fired
+  nodes bloom as bright honey cores with a radial glow, and thin dim `drawEdge`
+  lines link them. travelling fire impulses still spark along the active links.
+  the graphbox got a deeper radial vignette + warmer border so the glow pops.
+- no rewrite on new question: the graph panel is no longer collapsed between
+  prompts (it's the accumulating brain — it stays open), removing the
+  height-change re-layouts; and `buildGraphLayout` only computes node positions
+  ONCE (`laidOut` guard) so later calls just re-project — the existing web never
+  re-scatters. verified canvas pixel count sampled and grows cleanly across runs.
+- scroll: question is inserted at the top the instant you press enter
+  (`insertQuestion` + `scrollTopNow`), then the reveal unfolds below it and the
+  answer is followed (scrolled-to) while it streams — no more yanking to top
+  mid-answer, no forced jump to the bottom to find the question.
+- branded graphic.ai in the page title, landing kicker, and graph tag.
