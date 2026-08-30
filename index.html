@@ -27,7 +27,7 @@
   #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   .title {
-    position: absolute; top: 6%; left: 0; right: 0;
+    position: absolute; top: 5.5%; left: 0; right: 0;
     text-align: center; pointer-events: none; user-select: none;
   }
   .title h1 {
@@ -40,41 +40,47 @@
     text-transform: uppercase; color: var(--dim);
   }
 
-  .ui {
-    position: absolute; bottom: 6%; left: 0; right: 0;
-    text-align: center; user-select: none;
+  .promptbox {
+    position: absolute; bottom: 7%; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 10px; padding: 0 20px;
+    user-select: none;
   }
-  .chips { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-  .chip {
-    font-size: 13.5px; letter-spacing: 0.03em; color: var(--grey);
-    background: transparent; border: 1px solid var(--dim);
-    border-radius: 999px; padding: 10px 22px; cursor: pointer; outline: none;
-    transition: color 0.35s ease, border-color 0.35s ease, opacity 0.35s ease;
+  .promptbox input {
+    flex: 0 1 420px;
+    font-size: 15px; letter-spacing: 0.02em; color: var(--ink);
+    background: rgba(20,20,30,0.6);
+    border: 1px solid var(--dim); border-radius: 999px;
+    padding: 13px 22px; outline: none;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease;
   }
-  .chip:hover:not(.off) { color: var(--accent); border-color: rgba(255,166,201,0.5); }
-  .chip.off { opacity: 0.3; cursor: default; pointer-events: none; }
-
-  .again {
-    display: inline-block; margin-top: 20px; font-size: 12px; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--grey); opacity: 0; cursor: pointer;
-    text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--dim);
-    transition: opacity 0.8s ease, color 0.3s ease;
+  .promptbox input::placeholder { color: #565662; }
+  .promptbox input:focus {
+    border-color: rgba(255,166,201,0.6);
+    box-shadow: 0 0 0 1px rgba(255,166,201,0.25), 0 0 26px rgba(255,166,201,0.12);
   }
-  .again:hover { color: var(--accent); }
-  .again.show { opacity: 1; }
+  .promptbox input:disabled { opacity: 0.4; }
+  .promptbox button {
+    font-size: 14px; letter-spacing: 0.05em; color: var(--ink);
+    background: rgba(255,166,201,0.12);
+    border: 1px solid rgba(255,166,201,0.4); border-radius: 999px;
+    padding: 0 24px; cursor: pointer; outline: none;
+    transition: background 0.3s ease, opacity 0.4s ease;
+  }
+  .promptbox button:hover:not([disabled]) { background: rgba(255,166,201,0.24); }
+  .promptbox button:disabled, .promptbox button[disabled] { opacity: 0.35; cursor: default; }
 
   .reply {
-    position: absolute; left: 0; right: 0; top: 63%;
+    position: absolute; left: 0; right: 0; top: 62%;
     text-align: center; pointer-events: none; user-select: none;
     opacity: 0; transform: translateY(8px);
-    transition: opacity 1.3s ease, transform 1.3s ease;
+    transition: opacity 1.2s ease, transform 1.2s ease;
   }
   .reply.show { opacity: 1; transform: translateY(0); }
   .reply p {
-    display: inline-block; max-width: 620px; margin: 0 auto; padding: 14px 26px;
+    display: inline-block; max-width: 640px; margin: 0 auto; padding: 16px 30px;
     font-family: Georgia, "Times New Roman", serif; font-style: italic;
-    font-size: 17px; line-height: 1.7; color: var(--ink);
-    background: rgba(10,10,15,0.72);
+    font-size: 18px; line-height: 1.7; color: var(--ink);
+    background: rgba(10,10,15,0.78);
     box-shadow: 0 0 0 1px rgba(255,166,201,0.08), 0 0 60px rgba(255,166,201,0.05);
     border-radius: 6px;
   }
@@ -87,14 +93,14 @@
 
     <div class="title">
       <h1>not a lookup. a lighting-up.</h1>
-      <div class="hint">choose a thought to feed it</div>
+      <div class="hint">type a thought. watch what it finds.</div>
     </div>
 
     <div class="reply"><p id="replytext"></p></div>
 
-    <div class="ui">
-      <div class="chips" id="chips"></div>
-      <div class="again" id="again">run again</div>
+    <div class="promptbox">
+      <input id="input" type="text" placeholder="ask something..." autocomplete="off" spellcheck="false">
+      <button id="submit">ask</button>
     </div>
   </div>
 
@@ -102,103 +108,99 @@
 (function () {
   var canvas = document.getElementById('stage');
   var ctx = canvas.getContext('2d');
-  var chipsEl = document.getElementById('chips');
+  var inputEl = document.getElementById('input');
+  var submitEl = document.getElementById('submit');
   var replyEl = document.getElementById('replytext');
-  var againEl = document.getElementById('again');
 
   var ACCENT = '#ffa6c9';
 
-  // ------------------------------------------------------------- the field
+  // ---------------------------------------------------------- bucket data
 
-  var WORDS_ALL = [
-    // science pocket
-    { t: 'rayleigh' },  { t: 'wavelength' }, { t: 'photon' },    { t: 'scatter' },
-    { t: 'atmosphere' },{ t: 'entropy' },    { t: 'gravity' },   { t: 'velocity' },
-    // craft pocket
-    { t: 'meter' },     { t: 'cadence' },    { t: 'stanza' },    { t: 'metaphor' },
-    { t: 'imagery' },   { t: 'rhyme' },      { t: 'silence' },   { t: 'ink' },
-    // appetite pocket
-    { t: 'hunger' },    { t: 'spice' },      { t: 'comfort' },   { t: 'craving' },
-    { t: 'warmth' },    { t: 'ritual' },     { t: 'coffee' },    { t: 'salt' },
-    // noise — no cluster
-    { t: 'arjuna' },    { t: 'dharma' },     { t: 'indigo' },    { t: 'static' },
-    { t: 'thunder' },   { t: 'lotus' },      { t: 'recursion' }, { t: 'horizon' },
-    { t: 'quartz' },    { t: 'mirror' },     { t: 'pulse' },     { t: 'tide' },
-    { t: 'fracture' },  { t: 'orbit' },      { t: 'whisper' },   { t: 'carnatic' },
-    { t: 'velvet' },    { t: 'echo' }
-  ];
-
-  var PROMPTS = [
-    {
-      text: 'why is the sky blue', words: ['why','is','the','sky','blue'],
-      edges: {
-        why:  ['rayleigh'],
-        is:   [],
-        the:  [],
-        sky:  ['rayleigh','wavelength','atmosphere'],
-        blue: ['scatter','wavelength','photon','atmosphere']
-      },
-      reply: 'blue light scatters more than any other wavelength when it hits the atmosphere.'
+  var BUCKETS = {
+    science: {
+      keywords: ['sky', 'blue', 'light', 'colour', 'color', 'why is'],
+      pool: ['rayleigh','wavelength','photon','scatter','atmosphere','spectrum','refraction','entropy','velocity'],
+      responses: [
+        "blue scatters more than the rest \u2014 that's the whole trick of it.",
+        "shorter wavelengths bend easiest. blue just bends the most, is all.",
+        "the sky isn't blue. it's just scattering blue at you loudest."
+      ]
     },
-    {
-      text: 'write me a poem', words: ['write','me','a','poem'],
-      edges: {
-        write: ['meter','cadence'],
-        me:    [],
-        a:     [],
-        poem:  ['cadence','stanza','metaphor','rhyme','silence']
-      },
-      reply: 'something with cadence, and one line that means more than it says.'
+    craft: {
+      keywords: ['poem', 'verse', 'longing', 'write me', 'love', 'line'],
+      pool: ['meter','cadence','stanza','metaphor','imagery','rhyme','silence','ink','verse'],
+      responses: [
+        "something with a line that means more than it says.",
+        "start with an image, not a feeling. the feeling follows.",
+        "one line about waiting long enough to forget what for."
+      ]
     },
-    {
-      text: 'what should i eat', words: ['what','should','i','eat'],
-      edges: {
-        what:   [],
-        should: [],
-        i:      ['hunger'],
-        eat:    ['hunger','comfort','spice','warmth','craving']
-      },
-      reply: 'something warm. something that isn\u2019t just calories.'
+    myth: {
+      keywords: ['arjuna', 'dharma', 'hesitate', 'krishna', 'duty', 'why did'],
+      pool: ['arjuna','dharma','hesitate','duty','krishna','battlefield','conscience','karma','doubt'],
+      responses: [
+        "not fear. just the weight of knowing both paths are real.",
+        "duty doesn't ask if you're ready. it just arrives.",
+        "even certainty pauses before it becomes action."
+      ]
     }
+  };
+
+  var FALLBACK = {
+    responses: [
+      "still forming an answer to that one.",
+      "that one hasn't lit up anything yet.",
+      "not every prompt finds its shape immediately."
+    ]
+  };
+
+  // ---------------------------------------------------------- the field
+
+  var FIELD = [
+    { t: 'rayleigh', cl: 0 },  { t: 'wavelength', cl: 0 }, { t: 'photon', cl: 0 },
+    { t: 'scatter', cl: 0 },   { t: 'atmosphere', cl: 0 }, { t: 'spectrum', cl: 0 },
+    { t: 'refraction', cl: 0 },{ t: 'entropy', cl: 0 },    { t: 'velocity', cl: 0 },
+    { t: 'meter', cl: 1 },     { t: 'cadence', cl: 1 },    { t: 'stanza', cl: 1 },
+    { t: 'metaphor', cl: 1 },  { t: 'imagery', cl: 1 },    { t: 'rhyme', cl: 1 },
+    { t: 'silence', cl: 1 },   { t: 'ink', cl: 1 },        { t: 'verse', cl: 1 },
+    { t: 'arjuna', cl: 2 },    { t: 'dharma', cl: 2 },     { t: 'hesitate', cl: 2 },
+    { t: 'duty', cl: 2 },      { t: 'krishna', cl: 2 },    { t: 'battlefield', cl: 2 },
+    { t: 'conscience', cl: 2 },{ t: 'karma', cl: 2 },      { t: 'doubt', cl: 2 },
+    { t: 'indigo', cl: -1 },   { t: 'static', cl: -1 },    { t: 'thunder', cl: -1 },
+    { t: 'lotus', cl: -1 },    { t: 'recursion', cl: -1 }, { t: 'horizon', cl: -1 },
+    { t: 'quartz', cl: -1 },   { t: 'mirror', cl: -1 },    { t: 'pulse', cl: -1 },
+    { t: 'tide', cl: -1 },     { t: 'fracture', cl: -1 },  { t: 'orbit', cl: -1 },
+    { t: 'whisper', cl: -1 },  { t: 'carnatic', cl: -1 },  { t: 'velvet', cl: -1 },
+    { t: 'echo', cl: -1 }
   ];
 
-  // per-word state: matchBy = prompt-word indices that lit it
   var words = [];
-  var wordIndex = {};   // text -> index
-
+  var wordIndex = {};
   var W, H, DPR;
   var now = 0, frame = 0;
-  var state = 'idle';        // idle | sequence | answered
+  var state = 'idle';       // idle | sequence | answered | settling
   var seeds = [];
   var started = 0;
+  var fallback = false;
 
-  // ------------------------------------------------------------ field build
+  // ------------------------------------------------------------ build
 
   function makeWordObjects() {
     words = [];
     wordIndex = {};
-    var base = [
-      { t: 'rayleigh', cl: 0 },  { t: 'wavelength', cl: 0 }, { t: 'photon', cl: 0 },   { t: 'scatter', cl: 0 },
-      { t: 'atmosphere', cl: 0 },{ t: 'entropy', cl: 0 },    { t: 'gravity', cl: 0 },  { t: 'velocity', cl: 0 },
-      { t: 'meter', cl: 1 },     { t: 'cadence', cl: 1 },    { t: 'stanza', cl: 1 },   { t: 'metaphor', cl: 1 },
-      { t: 'imagery', cl: 1 },   { t: 'rhyme', cl: 1 },      { t: 'silence', cl: 1 },  { t: 'ink', cl: 1 },
-      { t: 'hunger', cl: 2 },    { t: 'spice', cl: 2 },      { t: 'comfort', cl: 2 },  { t: 'craving', cl: 2 },
-      { t: 'warmth', cl: 2 },    { t: 'ritual', cl: 2 },     { t: 'coffee', cl: 2 },   { t: 'salt', cl: 2 }
-    ];
-    for (var j = 0; j < 18; j++) base.push({ t: WORDS_ALL[24 + j].t, cl: -1 });
-
-    for (var i = 0; i < base.length; i++) {
+    for (var i = 0; i < FIELD.length; i++) {
       var w = {
-        text: base[i].t,
+        text: FIELD[i].t,
         size: rand(10, 22),
         idleOp: rand(0.2, 0.5),
-        cl: base[i].cl,
+        cl: FIELD[i].cl,
         x: 0, y: 0,
         dp: rand(0, Math.PI * 2),
         ph: rand(0, Math.PI * 2),
         drift: rand(1.5, 6),
         matchBy: [],
         flashT: 0,
+        drain: 0,
         dims: null
       };
       words.push(w);
@@ -208,39 +210,27 @@
   }
 
   function placeWords() {
-    // pockets for themed clusters
     var pockets = [
-      { x: W * 0.26, y: H * 0.42, r: 150 },   // science
-      { x: W * 0.72, y: H * 0.52, r: 150 },   // craft
-      { x: W * 0.5,  y: H * 0.76, r: 150 }    // appetite
+      { x: W * 0.27, y: H * 0.42, r: 150 },  // science
+      { x: W * 0.72, y: H * 0.52, r: 150 },  // craft
+      { x: W * 0.5,  y: H * 0.76, r: 150 }   // myth
     ];
-
-    var idxs = [], order = [];
-    for (var i = 0; i < words.length; i++) idxs.push(i);
-    // shuffle slightly so placement isn't predictable
-    order = idxs.slice();
-    for (var k = order.length - 1; k > 0; k--) {
-      var r = Math.floor(Math.random() * (k + 1));
-      var tmp = order[k]; order[k] = order[r]; order[r] = tmp;
-    }
-
     var rects = [];
     ctx.save();
-    for (var n = 0; n < order.length; n++) {
-      var wi = order[n];
-      var w = words[wi];
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i];
       ctx.font = w.size + 'px "Helvetica Neue", sans-serif';
       var twid = ctx.measureText(w.text).width + 14;
-      var theight = w.size * 1.6;
+      var thgt = w.size * 1.6;
       var cx, cy, ok = false;
-      for (var att = 0; att < 500 && !ok; att++) {
+      for (var att = 0; att < 600 && !ok; att++) {
         if (w.cl >= 0) {
           var pc = pockets[w.cl];
           cx = pc.x + (gauss() * pc.r) * 0.55;
           cy = pc.y + (gauss() * pc.r) * 0.55;
         } else {
           cx = rand(0.03, 0.97) * W;
-          cy = rand(0.13, 0.94) * H;
+          cy = rand(0.13, 0.95) * H;
         }
         cx = clamp(cx, 30, W - 30);
         cy = clamp(cy, 40, H - 34);
@@ -249,13 +239,12 @@
           var rr = rects[q];
           if (cx + twid / 2 > rr.x - rr.w / 2 - 8 &&
               cx - twid / 2 < rr.x + rr.w / 2 + 8 &&
-              cy + theight / 2 > rr.y - rr.h / 2 - 8 &&
-              cy - theight / 2 < rr.y + rr.h / 2 + 8) {
-            ok = false; break;
-          }
+              cy + thgt / 2 > rr.y - rr.h / 2 - 8 &&
+              cy - thgt / 2 < rr.y + rr.h / 2 + 8) { ok = false; break; }
         }
       }
-      w.x = cx; w.y = cy; w.dims = { w: twid, h: theight, x: cx, y: cy };
+      w.x = cx; w.y = cy;
+      w.dims = { x: cx, y: cy, w: twid, h: thgt };
       rects.push(w.dims);
     }
     ctx.restore();
@@ -268,16 +257,96 @@
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   }
 
-  // ---------------------------------------------------------------- seeds
+  // ------------------------------------------------------- matching
 
-  function spawnWords(prompt, t0) {
+  function detect(text) {
+    var t = text.toLowerCase();
+    var keys = ['science', 'craft', 'myth'];
+    for (var i = 0; i < keys.length; i++) {
+      var kws = BUCKETS[keys[i]].keywords;
+      for (var j = 0; j < kws.length; j++) {
+        if (t.indexOf(kws[j]) >= 0) return keys[i];
+      }
+    }
+    return null;
+  }
+
+  function sample(arr, min, max) {
+    var n = min + Math.floor(Math.random() * (max - min + 1));
+    var pool = arr.slice();
+    var out = [];
+    while (out.length < n && pool.length) {
+      var i = Math.floor(Math.random() * pool.length);
+      out.push(pool.splice(i, 1)[0]);
+    }
+    return out;
+  }
+
+  // ----------------------------------------------------------- submit
+
+  function run() {
+    if (state !== 'idle') return;
+    var text = inputEl.value.trim();
+    if (!text) return;
+
+    setBox(true);
+    replyEl.closest('.reply').classList.remove('show');
+
+    var bucket = detect(text);
+    fallback = bucket === null;
+    var replyLines = fallback ? FALLBACK.responses : BUCKETS[bucket].responses;
+    var reply = replyLines[Math.floor(Math.random() * replyLines.length)];
+
+    // matched words: random 5-6 from that bucket pool, or none
+    var matched = [];
+    if (!fallback) {
+      matched = sample(BUCKETS[bucket].pool, 5, 6).map(function (t) { return wordIndex[t]; });
+    }
+
+    // prompt words from the typed text (up to 6)
+    var promptWords = text.toLowerCase().split(/\s+/).filter(function (s) { return s.length; }).slice(0, 6);
+    if (!promptWords.length) promptWords = [bucket || 'hmm'];
+
+    var t0 = performance.now();
+    spawnWords(promptWords, matched, t0);
+    replyEl.textContent = reply;
+    inputEl.value = '';
+
+    state = 'sequence';
+  }
+
+  function spawnWords(promptWords, matched, t0) {
     seeds = [];
-    var n = prompt.words.length;
+    var n = promptWords.length;
+
+    // assign each matched word to a prompt word (mostly one, sometimes two)
+    var seedTargets = [];
+    for (var s = 0; s < n; s++) seedTargets.push([]);
+    for (var m = 0; m < matched.length; m++) {
+      var prim = Math.floor(Math.random() * n);
+      seedTargets[prim].push(matched[m]);
+      if (Math.random() < 0.5) {
+        var sec = Math.floor(Math.random() * n);
+        if (sec !== prim) seedTargets[sec].push(matched[m]);
+      }
+    }
+
     for (var i = 0; i < n; i++) {
-      var targets = prompt.edges[prompt.words[i]] || [];
+      var targets = seedTargets[i];
+      // decoys: words near the seed's x that aren't targets — near-misses
+      var decoys = [];
+      var nt = 4 + Math.floor(Math.random() * 3);
+      var tries = 0;
+      while (decoys.length < nt && tries < 80) {
+        tries++;
+        var wi = Math.floor(Math.random() * words.length);
+        if (targets.indexOf(wi) >= 0 || decoys.indexOf(wi) >= 0) continue;
+        if (Math.abs(words[wi].x - W * (0.2 + i * (0.6 / (n > 1 ? n - 1 : 1)))) > W * 0.5) continue;
+        decoys.push(wi);
+      }
       seeds.push({
         idx: i,
-        text: prompt.words[i],
+        text: promptWords[i],
         x: W * (0.2 + i * (0.6 / (n > 1 ? n - 1 : 1))) + rand(-20, 20),
         y: -30,
         ty: H * (0.2 + (i % 2) * 0.06),
@@ -286,44 +355,49 @@
         stateAt: 0,
         testDelay: 300 + 120 * (i % 3),
         testStart: 0,
+        targets: targets,
+        decoys: decoys,
         probes: [],
-        resolvedP: null
+        doneAt: 0
       });
     }
+  }
 
-    // assign probes after words exist (wordIndex map ready)
-    for (var s = 0; s < seeds.length; s++) {
-      var sd = seeds[s];
-      sd.targets = (prompt.edges[sd.text] || []).map(function (t) { return wordIndex[t]; });
-      sd.decoys = [];
-      // a few nearby words that won't match — near-misses
-      var n2 = 4 + Math.floor(Math.random() * 3);
-      var tries = 0;
-      while (sd.decoys.length < n2 && tries < 60) {
-        tries++;
-        var wi = Math.floor(Math.random() * words.length);
-        if (sd.targets.indexOf(wi) >= 0 || sd.decoys.indexOf(wi) >= 0) continue;
-        if (Math.abs(words[wi].x - sd.x) > W * 0.55) continue; // keep rays plausible
-        sd.decoys.push(wi);
+  // ----------------------------------------------------------- updates
+
+  function update() {
+    if (state === 'sequence') updateSequence();
+    else if (state === 'answered') {
+      if (now - answeredAt > 4000) {
+        state = 'settling';
+        settleStart = now;
+        document.querySelector('.reply').classList.remove('show');
+        for (var i = 0; i < words.length; i++) words[i].drain = 1;
       }
-      sd._targets = sd.targets.slice();
-      sd._decoys = sd.decoys.slice();
+    } else if (state === 'settling') {
+      var done = true;
+      for (var j = 0; j < words.length; j++) {
+        if (words[j].drain > 0) {
+          words[j].drain -= 0.016;
+          done = false;
+        }
+      }
+      if (done) {
+        state = 'idle';
+        seeds = [];
+        for (var k = 0; k < words.length; k++) { words[k].matchBy = []; words[k].drain = 0; }
+        setBox(false);
+      }
     }
   }
 
-  // -------------------------------------------------------------- lifetime
-
-  function update() {
-    if (state === 'idle') return;
-    if (state === 'sequence') updateSequence();
-  }
+  var answeredAt = 0;
+  var settleStart = 0;
 
   function updateSequence() {
     var allDone = true;
-
     for (var i = 0; i < seeds.length; i++) {
       var s = seeds[i];
-
       if (s.state === 'pending' && now >= s.spawned) { s.state = 'falling'; s.vy = rand(0.5, 0.7); }
       if (s.state === 'falling') {
         s.vy += 0.004;
@@ -333,13 +407,12 @@
       if (s.state === 'landed' && now >= s.stateAt + s.testDelay) {
         s.state = 'testing';
         s.testStart = now;
-        // build probes: targets first (all catch), then decoys (all miss)
         var probes = [];
-        for (var t = 0; t < s._targets.length; t++) {
-          probes.push({ wi: s._targets[t], catch: true, p: 0, resolved: false });
+        for (var t = 0; t < s.targets.length; t++) {
+          probes.push({ wi: s.targets[t], catch: true, p: 0, resolved: false });
         }
-        for (var d = 0; d < s._decoys.length; d++) {
-          probes.push({ wi: s._decoys[d], catch: false, p: 0, resolved: false });
+        for (var d = 0; d < s.decoys.length; d++) {
+          probes.push({ wi: s.decoys[d], catch: false, p: 0, resolved: false });
         }
         s.probes = probes;
       }
@@ -348,21 +421,13 @@
         for (var j = 0; j < s.probes.length; j++) {
           var pr = s.probes[j];
           var wp = words[pr.wi];
-          var rp = clamp((now - s.testStart - j * 80) / 300, 0, 1);
-          pr.p = rp;
-          if (rp >= 0.9) {
-            if (!pr.resolved) {
-              pr.resolved = true;
-              wp.flashT = 1;
-              if (pr.catch && wp.matchBy.indexOf(s.idx) < 0) {
-                wp.matchBy.push(s.idx);
-              }
-            }
-            done++;
-            pr.doneDist = dist(s.x, s.y, wp.x, wp.y);
-          } else {
-            pr.doneDist = null;
+          pr.p = clamp((now - s.testStart - j * 70) / 280, 0, 1);
+          if (pr.p >= 0.9 && !pr.resolved) {
+            pr.resolved = true;
+            wp.flashT = 1;
+            if (pr.catch && wp.matchBy.indexOf(s.idx) < 0) wp.matchBy.push(s.idx);
           }
+          if (pr.resolved) done++;
         }
         if (done === s.probes.length) { s.state = 'done'; s.doneAt = now; }
       }
@@ -374,64 +439,63 @@
       for (var m = 0; m < seeds.length; m++) last = Math.max(last, seeds[m].doneAt);
       if (now - last > 900) {
         state = 'answered';
-        showReply();
+        answeredAt = now;
+        setTimeout(function () {
+          document.querySelector('.reply').classList.add('show');
+        }, 150);
       }
     }
   }
 
-  function showReply() {
-    setTimeout(function () {
-      document.querySelector('.reply').classList.add('show');
-      againEl.classList.add('show');
-    }, 200);
-  }
-
-  // ---------------------------------------------------------------- draw
+  // ------------------------------------------------------------- draw
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    // decay flashes
     for (var w = 0; w < words.length; w++) {
       if (words[w].flashT > 0) words[w].flashT -= 0.02;
     }
 
-    // connecting lines
-    if (state !== 'idle') {
-      for (var s = 0; s < seeds.length; s++) {
-        var sd = seeds[s];
-        if (sd.state !== 'testing' && sd.state !== 'done') continue;
-        for (var j = 0; j < sd.probes.length; j++) {
-          var pr = sd.probes[j];
-          if (!pr.resolved || !pr.catch) continue;
-          var wp = words[pr.wi];
-          var bright = wp.matchBy.length >= 2;
-          var x1 = sd.x, y1 = sd.y, x2 = wp.x, y2 = wp.y;
-          ctx.strokeStyle = bright ? 'rgba(255,166,201,0.95)' : 'rgba(255,166,201,0.4)';
-          ctx.lineWidth = bright ? 2.2 : 1.1;
-          ctx.beginPath();
-          ctx.moveTo(x1, y1);
-          ctx.lineTo(x2, y2);
-          ctx.stroke();
-        }
+    var updateDim = function () {
+      var m = 0;
+      for (var di = 0; di < words.length; di++) {
+        if (words[di].drain > m) m = words[di].drain;
       }
-      // sweep rays not yet resolved
-      for (var s2 = 0; s2 < seeds.length; s2++) {
-        var sd2 = seeds[s2];
-        if (sd2.state !== 'testing') continue;
-        for (var j2 = 0; j2 < sd2.probes.length; j2++) {
-          var pr2 = sd2.probes[j2];
-          if (pr2.resolved) continue;
-          var wp2 = words[pr2.wi];
-          var ang = Math.atan2(wp2.y - sd2.y, wp2.x - sd2.x);
-          var len = pr2.p * dist(sd2.x, sd2.y, wp2.x, wp2.y);
-          ctx.strokeStyle = 'rgba(255,166,201,' + (0.3 * Math.sin(pr2.p * Math.PI) + 0.05) + ')';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(sd2.x, sd2.y);
-          ctx.lineTo(sd2.x + Math.cos(ang) * len, sd2.y + Math.sin(ang) * len);
-          ctx.stroke();
-        }
+      return 1 - m * 0.85;
+    };
+    for (var s = 0; s < seeds.length; s++) {
+      var sd = seeds[s];
+      if (sd.state !== 'testing' && sd.state !== 'done') continue;
+      for (var j = 0; j < sd.probes.length; j++) {
+        var pr = sd.probes[j];
+        if (!pr.resolved || !pr.catch) continue;
+        var wp = words[pr.wi];
+        var bright = wp.matchBy.length >= 2;
+        ctx.strokeStyle = bright ? 'rgba(255,166,201,' + (0.95 * updateDim()) + ')' : 'rgba(255,166,201,' + (0.4 * updateDim()) + ')';
+        ctx.lineWidth = bright ? 2.2 : 1.1;
+        ctx.beginPath();
+        ctx.moveTo(sd.x, sd.y);
+        ctx.lineTo(wp.x, wp.y);
+        ctx.stroke();
+      }
+    }
+
+    // un-resolved sweep rays
+    for (var s2 = 0; s2 < seeds.length; s2++) {
+      var sd2 = seeds[s2];
+      if (sd2.state !== 'testing') continue;
+      for (var j2 = 0; j2 < sd2.probes.length; j2++) {
+        var pr2 = sd2.probes[j2];
+        if (pr2.resolved) continue;
+        var wp2 = words[pr2.wi];
+        var ang = Math.atan2(wp2.y - sd2.y, wp2.x - sd2.x);
+        var len = pr2.p * dist(sd2.x, sd2.y, wp2.x, wp2.y);
+        ctx.strokeStyle = 'rgba(255,166,201,' + (0.3 * Math.sin(pr2.p * Math.PI) + 0.05) + ')';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(sd2.x, sd2.y);
+        ctx.lineTo(sd2.x + Math.cos(ang) * len, sd2.y + Math.sin(ang) * len);
+        ctx.stroke();
       }
     }
 
@@ -445,14 +509,14 @@
 
       var lit = wd.matchBy.length > 0;
       var bright = wd.matchBy.length >= 2;
+      var drainDim = wd.drain > 0 ? (1 - wd.drain) : 1;
 
-      if (lit) {
+      if (lit || wd.drain > 0) {
         var scale = bright ? 1.3 : 1.2;
-        var size = wd.size * scale;
-        var op = 0.55 + Math.min(1, wd.flashT) * 0.45;
-        ctx.font = size + 'px "Helvetica Neue", sans-serif';
+        var op = (0.55 + Math.min(1, wd.flashT) * 0.45) * drainDim;
+        ctx.font = (wd.size * scale) + 'px "Helvetica Neue", sans-serif';
         ctx.fillStyle = ACCENT;
-        ctx.globalAlpha = op;
+        ctx.globalAlpha = clamp(op, 0.05, 1);
         ctx.shadowColor = ACCENT;
         ctx.shadowBlur = bright ? 18 : 10;
       } else if (wd.flashT > 0) {
@@ -473,60 +537,40 @@
       ctx.shadowBlur = 0;
     }
 
-    // prompt words on top
+    // prompt words
     if (state !== 'idle') {
       for (var p = 0; p < seeds.length; p++) {
-        var sd3 = seeds[p];
-        if (sd3.state === 'pending') continue;
+        var pd = seeds[p];
+        if (pd.state === 'pending') continue;
         ctx.font = '700 24px "Helvetica Neue", sans-serif';
         ctx.fillStyle = ACCENT;
         ctx.globalAlpha = 1;
         ctx.shadowColor = ACCENT;
         ctx.shadowBlur = 16;
-        ctx.fillText(sd3.text, sd3.x, sd3.y);
+        ctx.fillText(pd.text, pd.x, pd.y);
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
       }
     }
   }
 
-  // ---------------------------------------------------------------- boot
+  // ------------------------------------------------------------- boot
 
-  function run(idx) {
-    if (state !== 'idle') return;
-    setChips(true);
-    replyEl.closest('.reply').classList.remove('show');
-    againEl.classList.remove('show');
-    resetWordStates();
-    started = performance.now();
-    spawnWords(PROMPTS[idx], started);
-    replyEl.textContent = PROMPTS[idx].reply;
-    state = 'sequence';
+  function setBox(off) {
+    inputEl.disabled = off ? true : false;
+    submitEl.disabled = off ? true : false;
+    if (off) inputEl.blur();
   }
 
-  function resetWordStates() {
-    for (var i = 0; i < words.length; i++) {
-      words[i].matchBy = [];
-      words[i].flashT = 0;
-    }
+  function submit() {
+    run();
+    inputEl.focus();
   }
 
-  function reset() {
-    state = 'idle';
-    seeds = [];
-    for (var i = 0; i < words.length; i++) { words[i].matchBy = []; words[i].flashT = 0; }
-    document.querySelector('.reply').classList.remove('show');
-    againEl.classList.remove('show');
-    placeWords();                       // fresh scatter
-    setChips(false);
-  }
-
-  function setChips(off) {
-    var cs = document.querySelectorAll('.chip');
-    for (var i = 0; i < cs.length; i++) {
-      if (off) cs[i].classList.add('off'); else cs[i].classList.remove('off');
-    }
-  }
+  submitEl.addEventListener('click', submit);
+  inputEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') submit();
+  });
 
   function tick(ts) {
     now = ts; frame = ts;
@@ -544,19 +588,9 @@
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     makeWordObjects();
     state = 'idle'; seeds = [];
-    setChips(false);
+    document.querySelector('.reply').classList.remove('show');
+    setBox(false);
   }
-
-  for (var i = 0; i < PROMPTS.length; i++) {
-    (function (idx) {
-      var b = document.createElement('button');
-      b.className = 'chip';
-      b.textContent = PROMPTS[idx].text;
-      b.addEventListener('click', function () { run(idx); });
-      chipsEl.appendChild(b);
-    })(i);
-  }
-  againEl.addEventListener('click', reset);
 
   window.addEventListener('resize', resize);
   resize();

@@ -166,3 +166,88 @@ sans-serif for chip buttons and all field words. generous spacing.
 if layout chokes (overlap, unreadable at idle), drop word count from
 44 to ~28 first — cut unclustered noise words, keep every
 clustered/matched one.
+
+## 6 — real input, real-feeling reasoning
+
+okay yeah — this is the right instinct twice over. a fake prompt
+window with three chips was always a stand-in for "i didn't want to
+build real interaction under time pressure," and you just correctly
+refused to let me get away with that. and the non-determinism point is
+actually the more interesting fix, because it's true: a deterministic
+little animation quietly undersells the entire concept you're trying
+to visualize. an ai that gives the identical response to the identical
+prompt every time isn't "thinking," it's a lookup table with extra
+steps.
+
+the honest version of getting both without gambling the demo on a
+live model call: **don't wire in a real ai backend.** not because you
+can't, but because a live api call mid-judged-build is exactly what
+goes down at minute 2:58. instead — build a *real-looking* prompt box
+that does simple keyword matching against three theme-buckets, and
+randomize *within* each bucket every time. from the outside
+"keyword-triggered but randomized" and "actually semantic" are
+indistinguishable in a 15-second demo. that's how you satisfy
+"simulation" in the brief while keeping something you can trust.
+
+better prompt themes — swap out "what should i eat" (the weakest),
+use a myth/introspective bucket that pulls from the noise words so
+connections feel earned:
+- science — triggers: sky, blue, light, colour/color, "why is"
+- craft/poetry — triggers: poem, verse, longing, "write me", love,
+  line
+- mythology/introspective — triggers: arjuna, dharma, hesitate,
+  krishna, duty, "why did"
+
+randomization spec, concretely:
+- each bucket gets a pool of ~9 words; every submission randomly
+  select 5–6 to light up. same prompt, different lit subset each time.
+- each bucket gets 3 pre-written response lines; randomly pick one per
+  submission. same prompt, different answer each time — the visible
+  non-determinism.
+- typed input matching nothing → fallback state: rays sweep the whole
+  field, nothing brightens past idle, response is one of 2–3 quiet
+  "still forming" lines. thematically correct, not a bug state.
+
+the field pools (idle):
+- science pool: rayleigh, wavelength, photon, scatter, atmosphere,
+  spectrum, refraction, entropy, velocity
+- craft pool: meter, cadence, stanza, metaphor, imagery, rhyme,
+  silence, ink, verse
+- myth pool: arjuna, dharma, hesitate, duty, krishna, battlefield,
+  conscience, karma, doubt
+- scattered noise, never matched: indigo, static, thunder, lotus,
+  recursion, horizon, quartz, mirror, pulse, tide, fracture, orbit,
+  whisper, carnatic, velvet, echo
+
+interaction:
+- styled text input, centered, placeholder "ask something...", submit
+  button + enter-to-submit. rounded, subtle border, pink focus glow —
+  an actual prompt box, not chips.
+- on submit, matched bucket: random 5-6 pool words light up; typed
+  prompt's words appear large bright pink top-center, staggered
+  ~150ms; rays sweep, matched words brighten/scale ~20%/pink-tint with
+  persistent connecting lines, others flash then fade; after ~1.5-2s
+  fade in one randomly chosen response line; matched words + lines
+  stay lit while the response shows.
+- fallback: rays sweep the whole field, nothing brightens past idle,
+  after ~1.5s fade in a random "still forming" line.
+- after any submission, clear the input; field settles back toward
+  idle after ~4s, ready for the next prompt.
+
+response sets (pick one at random):
+science: ["blue scatters more than the rest — that's the whole trick
+  of it.", "shorter wavelengths bend easiest. blue just bends the
+  most, is all.", "the sky isn't blue. it's just scattering blue at
+  you loudest."]
+craft: ["something with a line that means more than it says.",
+  "start with an image, not a feeling. the feeling follows.", "one
+  line about waiting long enough to forget what for."]
+myth: ["not fear. just the weight of knowing both paths are real.",
+  "duty doesn't ask if you're ready. it just arrives.", "even
+  certainty pauses before it becomes action."]
+fallback: ["still forming an answer to that one.", "that one hasn't
+  lit up anything yet.", "not every prompt finds its shape
+  immediately."]
+
+text above the field: "not a lookup. a lighting-up." (serif); serif
+for response, sans-serif for input and field words. generous spacing.
