@@ -128,25 +128,7 @@
   }
   .card:hover{transform:translateY(-8px);border-color:rgba(255,166,201,0.45);box-shadow:0 14px 40px rgba(255,166,201,0.08)}
   /* ---------- graph-themed cards ---------- */
-  .node{position:absolute;border-radius:50%;cursor:pointer;transition:all 0.3s ease;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;}
-  .node h3{font-family:var(--mono);font-size:0.9rem;color:var(--pink-soft);text-align:center;margin-top:0.4rem;max-width:140px;line-height:1.2}
-  .node p{font-size:0.78rem;color:var(--txt-dim);text-align:center;max-width:160px;display:none;line-height:1.4}
-  .node.expanded p{display:block}
-  .node .dot{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,166,201,0.25),rgba(203,176,232,0.15));border:1.5px solid rgba(255,166,201,0.35);display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 0 18px rgba(255,166,201,0.15);transition:all 0.3s;}
-  .node:hover .dot,.node.expanded .dot{transform:scale(1.15);box-shadow:0 0 30px rgba(255,166,201,0.35);border-color:rgba(255,166,201,0.6);}
-  .node.expanded{z-index:20;position:absolute;transform:scale(1.4);}
-  .node.expanded .dot{width:80px;height:80px;font-size:2rem;box-shadow:0 0 50px rgba(255,166,201,0.45);border-color:rgba(255,166,201,0.8);}
-  .node.expanded h3{font-size:1.15rem;margin-top:0.8rem;max-width:220px;color:#fff;}
-  .node.expanded p{display:block;font-size:0.88rem;color:var(--txt-dim);max-width:240px;margin-top:0.5rem;}
-  /* ---------- node connections ---------- */
-  .node-connector{position:absolute;pointer-events:none;z-index:1;}
-  .node-connector line{stroke:rgba(255,166,201,0.2);stroke-width:1.5;stroke-dasharray:4 3;}
-  .node-connector circle{fill:rgba(203,176,232,0.5);r:2.5;}
-  /* knowledge-graph layout container */
-  #graph-landing{
-    position:relative;width:100%;min-height:140vh;padding-top:12vh;
-    background:radial-gradient(ellipse at center,rgba(255,166,201,0.06),transparent 60%);
-  }
+  .card{position:relative;overflow:hidden}
   .card::after{
     content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);
     width:70%;height:2px;background:linear-gradient(90deg,transparent,var(--pink-dim),transparent);
@@ -418,95 +400,18 @@
     <a href="#play">grow the graph</a>
   </div>
 </nav>
-<!-- ============ LANDING / GRAPH ============ -->
-<section id="landing-graph">
-  <h2 class="sec-title" style="margin-bottom:4rem">knowledge <span>graph</span></h2>
-  <div id="graph-landing" style="position:relative;">
-    <!-- 9 cards = nodes -->
-    <div class="node" data-id="training" style="left:5%;top:30%;">
-      <div class="dot">🍞</div><h3>01 · training</h3><p>an ai is not programmed with rules. it is fed staggering amounts of text — books, code, conversations — and learns the statistical shape of language within them.</p>
-    </div>
-    <div class="node" data-id="weights" style="left:22%;top:18%;">
-      <div class="dot">🧠</div><h3>02 · weights</h3><p>inside, millions of small numbers called weights are nudged during training. adjusting them is how the model stores what it has learned.</p>
-    </div>
-    <div class="node" data-id="attention" style="left:42%;top:10%;">
-      <div class="dot">🌐</div><h3>03 · attention</h3><p>transformers don't read one word at a time. an attention mechanism weighs every word against every other.</p>
-    </div>
-    <div class="node" data-id="inference" style="left:62%;top:18%;">
-      <div class="dot">🪄</div><h3>04 · inference</h3><p>when you prompt, the model runs the maths forward and predicts the next token — over and over — until an answer emerges.</p>
-    </div>
-    <div class="node" data-id="backprop" style="left:78%;top:30%;">
-      <div class="dot">📉</div><h3>05 · loss & backprop</h3><p>the model compares its guess to the truth, measures the error, and walks the weights back a little. learning is just error, iterated.</p>
-    </div>
-    <div class="node" data-id="generation" style="left:85%;top:55%;">
-      <div class="dot">🔁</div><h3>06 · generation</h3><p>nothing is truly "created". the model joins the most probable pieces of what it has seen.</p>
-    </div>
-    <div class="node" data-id="token" style="left:65%;top:65%;">
-      <div class="dot">🔤</div><h3>07 · tokenization</h3><p>text never enters the model as letters you see. it is chopped into tokens — word pieces — then mapped to numbers.</p>
-    </div>
-    <div class="node" data-id="creativity" style="left:40%;top:70%;">
-      <div class="dot">🎲</div><h3>08 · creativity & temperature</h3><p>the model outputs probabilities for the next token, not a single word. turn the temperature up and it samples more freely.</p>
-    </div>
-    <div class="node" data-id="hallucination" style="left:18%;top:60%;">
-      <div class="dot">👻</div><h3>09 · hallucination</h3><p>a model that only predicts the next likely word will sometimes invent one with total confidence.</p>
-    </div>
-
-    <!-- 6 deep cards = nodes -->
-    <div class="node deep-node" data-id="scaling" style="left:12%;top:5%;">
-      <div class="dot">📏</div><h3>deep · scaling laws</h3><p>performance grows predictably with three dials: more parameters, more data, and more compute.</p>
-    </div>
-    <div class="node deep-node" data-id="embedding" style="left:30%;top:5%;">
-      <div class="dot">🧮</div><h3>deep · embedding space</h3><p>a word's embedding is its address in a high-dimensional map of meaning.</p>
-    </div>
-    <div class="node deep-node" data-id="gradient" style="left:48%;top:5%;">
-      <div class="dot">🌊</div><h3>deep · gradient flow</h3><p>backprop sends a tiny correction backwards through every layer.</p>
-    </div>
-    <div class="node deep-node" data-id="alignment" style="left:68%;top:5%;">
-      <div class="dot">🧭</div><h3>deep · alignment (rhlf)</h3><p>after pretraining, models get a final polish so they answer helpfully and refuse harm.</p>
-    </div>
-    <div class="node deep-node" data-id="sampling" style="left:82%;top:78%;">
-      <div class="dot">🎲</div><h3>deep · sampling & temperature</h3><p>the model only outputs probabilities — a sampling strategy turns them into words.</p>
-    </div>
-    <div class="node deep-node" data-id="myth" style="left:58%;top:78%;">
-      <div class="dot">🚫</div><h3>deep · myth vs reality</h3><p>myth: the model "understands". reality: it predicts patterns with no ground truth.</p>
-    </div>
-
-    <!-- 11 glossary = nodes -->
-    <div class="node gloss-node" data-id="token-gloss" style="left:8%;top:85%;">
-      <div class="dot">🔤</div><h3>token</h3><p>text is split into tokens — small chunks of characters the model can reason over.</p>
-    </div>
-    <div class="node gloss-node" data-id="embedding-gloss" style="left:22%;top:88%;">
-      <div class="dot">🧮</div><h3>embedding</h3><p>each token becomes a vector — a list of numbers.</p>
-    </div>
-    <div class="node gloss-node" data-id="attention-gloss" style="left:36%;top:90%;">
-      <div class="dot">🌐</div><h3>attention</h3><p>a mechanism where each token asks how relevant every other token is.</p>
-    </div>
-    <div class="node gloss-node" data-id="self-attention" style="left:50%;top:85%;">
-      <div class="dot">🔄</div><h3>self-attention</h3><p>attention where a token attends to the whole sequence, including itself.</p>
-    </div>
-    <div class="node gloss-node" data-id="weights-gloss" style="left:65%;top:88%;">
-      <div class="dot">⚖️</div><h3>weights</h3><p>the learnable numbers that transform inputs into predictions.</p>
-    </div>
-    <div class="node gloss-node" data-id="backprop-gloss" style="left:78%;top:85%;">
-      <div class="dot">↩️</div><h3>backpropagation</h3><p>from the greek, "backwards propagation of error".</p>
-    </div>
-    <div class="node gloss-node" data-id="gradient-gloss" style="left:88%;top:90%;">
-      <div class="dot">📉</div><h3>gradient descent</h3><p>the optimisation that follows the downhill slope of the error.</p>
-    </div>
-    <div class="node gloss-node" data-id="overfitting" style="left:92%;top:78%;">
-      <div class="dot">🔒</div><h3>overfitting</h3><p>when the model memorises the training data instead of generalising.</p>
-    </div>
-    <div class="node gloss-node" data-id="parameter" style="left:72%;top:75%;">
-      <div class="dot">📊</div><h3>parameter</h3><p>one individual weight in the model.</p>
-    </div>
-    <div class="node gloss-node" data-id="hallucination-gloss" style="left:42%;top:92%;">
-      <div class="dot">👻</div><h3>hallucination</h3><p>when the model confidently predicts something false.</p>
-    </div>
-    <div class="node gloss-node" data-id="temperature-gloss" style="left:30%;top:82%;">
-      <div class="dot">🎲</div><h3>temperature</h3><p>a dial on how randomly the model picks the next token.</p>
-    </div>
-  </div>
-</section>
+<!-- ============ LANDING ============ -->
+<header id="hero">
+  <div class="eyebrow">an interactive explainer</div>
+  <h1 class="brand">graphic<span class="dot">.</span>ai</h1>
+  <p class="tagline">
+    an answer that grows. drop in a question and watch it bloom into a
+    graph of facts — each node a piece, each edge a thought — until the
+    whole picture of <em>how ai works</em> is laid out before you.
+    &nbsp;type, watch the graph grow, click nodes, read the answer.
+  </p>
+  <a class="nudge" href="#play">grow it ↓</a>
+</header>
 <!-- ============ HOW AI WORKS ============ -->
 <section id="how">
   <h2 class="sec-title">how do machines <span>learn to think?</span></h2>
@@ -1697,16 +1602,6 @@
   updateStats();
   requestAnimationFrame(loop);
   requestAnimationFrame(drawHero);
-  // ---------- knowledge-graph click expand ----------
-  document.querySelectorAll('.node').forEach(node=>{
-    node.addEventListener('click',()=>{
-      node.classList.toggle('expanded');
-      // close others when opening this one (optional)
-      if(node.classList.contains('expanded')){
-        document.querySelectorAll('.node').forEach(n=>{ if(n!==node)n.classList.remove('expanded'); });
-      }
-    });
-  });
 })();
 </script>
 </body>
