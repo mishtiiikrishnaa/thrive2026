@@ -562,3 +562,52 @@ sentences, given from the connections, from the facts.
   phase sequence observed on every prompt is keywords > facts >
   connections > forming > answered > settling > idle, with group
   sizes 4–6 and full-sentence answers incl. the gibberish fallback.
+
+## 14 — landing rebuild: centred prompt, keyword facts, brain connections, one answer sentence
+
+looks janky as fuck. can you redo the entire thing from scratch like
+(1) prompt box in the center like a landing page, (2) when clicked the
+prompt goes above and keywords are chosen (with animation), (3) then
+keywords should elaborate on facts each keyword represents, (4) find
+connections between facts simulating brain — show nerves — they form
+sentences, (5) sentence displayed.
+
+- the whole page was rebuilt from scratch as one centred column on a
+  dark landing: the ask line (input + button) floats mid-screen at
+  idle, and on submit the whole column rises to the top while the
+  haloed question root glows just above it — no more floating prompt
+  pill, the question belongs to the page now.
+- sequence is fully staged in the column itself, top to bottom:
+  a "keywords" zone types the chosen chips one character at a time;
+  a "the facts each keyword holds" zone lists each fact grouped under
+  the question keyword it answers (keyword label + fact, reading left
+  to right); a "connections" zone drops in the link chips ("1 → 2"
+  etc.) as each nerve finishes; then the final "answer" sentence fades
+  in at the bottom.
+- the canvas is now pure brain: neurons are drawn as light only — no
+  text pills on the canvas, all words live in the DOM column — so
+  nothing fights the reading. fired neurons keep their numbered order
+  badges; the plexus, arbors, cables, wandering threads, boutons and
+  pulses are otherwise untouched from the nerve-plexus pass.
+- each nerve grows crisp on the canvas the moment the DOM link chip
+  appears (build scheduled at conStart + n·conEach, di-bit; lateral
+  skip-nerve after the chain), then an impulse runs it and it cools
+  into the tissue. delivery threads stream from each lit fact down to
+  the answer while it types.
+- the answer is ONE sentence composed from the group: up to four
+  facts folded into a single sentence (first clause capitalised, rest
+  lowercased, joined with commas and a final ", and"), typed
+  character by character.
+- fixes on review before commit: the answer-typing loop added dt
+  inside the loop so the remainder never dropped below the char
+  threshold and the whole sentence slammed out in one frame — the
+  accumulator now adds dt once per frame and steps at 16ms/char, so
+  the typing is actually visible; `.fkg` fact rows gained `opacity:0`
+  + a transition so reveal is a fade, not a snap.
+- verified by a node harness driving the real loop for five cycles:
+  every prompt runs keywords > facts > connections > forming >
+  answered > settling > idle, chains resolve correctly (sky/blue →
+  cosmos, recursion → code, gravity → cosmos, nonsense → everything
+  fallback with ≥4 facts), the answer is a single capitalised
+  sentence, every fact row fades in, all zones clear between runs,
+  and a quick re-run works (delivery-thread cache reset confirmed).
