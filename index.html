@@ -130,24 +130,6 @@
   .card .ic{font-size:2.2rem;margin-bottom:1.2rem;display:block}
   .card h3{color:var(--pink-soft);font-size:1.3rem;margin-bottom:0.7rem}
   .card p{color:var(--txt-dim);font-size:1.02rem;line-height:1.75}
-  /* ---------- obsidian graph landing ---------- */
-  #how,#anatomy,#glossary,#deep{display:none!important}
-  body{overflow:hidden;position:fixed;width:100vw;height:100vh;}
-  #hero{display:none!important}
-  #landing-graph{position:fixed!important;inset:0!important;z-index:3!important;background:#140b12!important;overflow:hidden!important}
-  #graph-landing{position:relative!important;width:100%!important;height:100vh!important;min-height:0!important;padding:0!important;}
-  .node{position:absolute;cursor:pointer;transition:all 0.3s ease;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;}
-  .node h3{font-family:var(--mono);font-size:0.85rem;color:var(--pink-soft);text-align:center;margin-top:0.3rem;max-width:120px;line-height:1.15;}
-  .node p{font-size:0.72rem;color:var(--txt-dim);text-align:center;max-width:130px;display:none;line-height:1.35;}
-  .node.expanded p{display:block}
-  .node .dot{width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,166,201,0.3),rgba(203,176,232,0.2));border:2px solid rgba(255,166,201,0.5);display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 0 20px rgba(255,166,201,0.25);transition:all 0.3s;}
-  .node:hover:not(.expanded) .dot{transform:scale(1.08);box-shadow:0 0 30px rgba(255,166,201,0.35);border-color:rgba(255,255,255,0.7);}
-  .node:not(.expanded){opacity:0.3;filter:brightness(0.6) grayscale(0.8);transition:opacity 0.3s,filter 0.3s;}
-  .node:hover:not(.expanded){opacity:0.85;filter:brightness(1) grayscale(0);}
-  .node.expanded{z-index:30;opacity:1!important;filter:none!important;box-shadow:0 0 80px rgba(255,166,201,0.5);}
-  .node.expanded .dot{width:72px;height:72px;font-size:2rem;box-shadow:0 0 60px rgba(255,166,201,0.6),inset 0 0 25px rgba(255,255,255,0.12);border-color:#fff;background:radial-gradient(circle at 35% 35%,rgba(255,166,201,0.45),rgba(203,176,232,0.3));}
-  .node.expanded h3{font-size:1.05rem;margin-top:0.6rem;max-width:200px;color:#fff;text-shadow:0 0 20px rgba(255,166,201,0.6);}
-  .node.expanded p{display:block;font-size:0.8rem;color:var(--txt-dim);max-width:200px;margin-top:0.4rem;line-height:1.45;}
   /* deep dive */
   .deepgrid{
     max-width:82rem;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;align-items:stretch;
@@ -401,32 +383,8 @@
   </p>
   <a class="nudge" href="#play">grow it ↓</a>
 </header>
-<!-- ============ LANDING / GRAPH ============ -->
-<section id="landing-graph">
-  <h2 class="sec-title" style="margin-bottom:2rem">knowledge <span>graph</span></h2>
-  <p style="text-align:center;color:var(--txt-dim);font-size:0.85rem;margin-bottom:1.5rem;">click any node to expand · others fade</p>
-  <div id="graph-landing" style="position:relative;">
-    <svg class="node-connector" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;">
-      <line x1="22%" y1="25%" x2="42%" y2="15%" /><line x1="42%" y1="15%" x2="65%" y2="25%" />
-      <line x1="22%" y1="25%" x2="20%" y2="65%" /><line x1="65%" y1="25%" x2="85%" y2="58%" />
-      <line x1="42%" y1="72%" x2="20%" y2="65%" /><line x1="42%" y1="72%" x2="65%" y2="65%" />
-      <line x1="42%" y1="72%" x2="42%" y2="88%" /><line x1="20%" y1="65%" x2="10%" y2="88%" />
-      <line x1="65%" y1="65%" x2="90%" y2="88%" /><line x1="10%" y1="12%" x2="30%" y2="12%" />
-      <line x1="50%" y1="12%" x2="70%" y2="12%" /><line x1="30%" y1="12%" x2="50%" y2="12%" />
-    </svg>
-    <div class="node" data-id="training" style="left:10%;top:20%;"><div class="dot">🍞</div><h3>01 · training</h3><p>an ai is not programmed with rules. it is fed staggering amounts of text and learns the statistical shape of language within them.</p></div>
-    <div class="node" data-id="weights" style="left:22%;top:25%;"><div class="dot">🧠</div><h3>02 · weights</h3><p>inside, millions of small numbers called weights are nudged during training. adjusting them is how the model stores what it has learned.</p></div>
-    <div class="node" data-id="attention" style="left:38%;top:15%;"><div class="dot">🌐</div><h3>03 · attention</h3><p>transformers don't read one word at a time. an attention mechanism weighs every word against every other.</p></div>
-    <div class="node" data-id="inference" style="left:58%;top:22%;"><div class="dot">🪄</div><h3>04 · inference</h3><p>when you prompt, the model runs the maths forward and predicts the next token — over and over — until an answer emerges.</p></div>
-    <div class="node" data-id="backprop" style="left:78%;top:25%;"><div class="dot">📉</div><h3>05 · loss & backprop</h3><p>the model compares its guess to the truth, measures the error, and walks the weights back a little.</p></div>
-    <div class="node" data-id="generation" style="left:85%;top:55%;"><div class="dot">🔁</div><h3>06 · generation</h3><p>nothing is truly "created". the model joins the most probable pieces of what it has seen.</p></div>
-    <div class="node" data-id="token" style="left:65%;top:58%;"><div class="dot">🔤</div><h3>07 · tokenization</h3><p>text never enters the model as letters you see. it is chopped into tokens — word pieces — then mapped to numbers.</p></div>
-    <div class="node" data-id="creativity" style="left:42%;top:72%;"><div class="dot">🎲</div><h3>08 · creativity & temperature</h3><p>the model outputs probabilities for the next token, not a single word. turn the temperature up and it samples more freely.</p></div>
-    <div class="node" data-id="hallucination" style="left:18%;top:60%;"><div class="dot">👻</div><h3>09 · hallucination</h3><p>a model that only predicts the next likely word will sometimes invent one with total confidence.</p></div>
-  </div>
-</section>
-<!-- ============ HOW AI WORKS (content below graph) ============ -->
-<section id="how" style="display:none;">
+<!-- ============ HOW AI WORKS ============ -->
+<section id="how">
   <h2 class="sec-title">how do machines <span>learn to think?</span></h2>
   <p class="sec-sub">no magic, no ghosts. strip away the hype and an ai is a very large, very patient machine for finding patterns. nine parts — training, the maths, and the quirks that make it feel alive.</p>
   <div class="how">
