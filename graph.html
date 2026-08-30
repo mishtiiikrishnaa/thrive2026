@@ -10,11 +10,16 @@
 <link href="https://fonts.cdnfonts.com/css/cmu-typewriter-text" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --ink: #e9e9ee;
-    --dim: #40404a;
-    --faint: #565662;
-    --accent: #ffa6c9;
+    --bg: #0c0906;
+    --ink: #efe7d4;
+    --dim: #4b402c;
+    --faint: #6f6349;
+    --honey: #e6b96e;
+    --honey-soft: rgba(230,185,110,0.55);
+    --rose: #d88fa1;
+    --sage: #a8b893;
+    --glass: rgba(28,22,13,0.55);
+    --line: rgba(230,185,110,0.24);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,162 +32,276 @@
     color: var(--ink);
   }
 
-  .scene { position: relative; height: 100vh; }
-  #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #bg { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
 
-  /* the single centred column */
-  .col {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    top: 46%; width: min(92vw, 680px); text-align: center;
-    transition: top 0.95s cubic-bezier(0.22, 0.9, 0.24, 1);
-    z-index: 3;
-  }
-  .col.raised { top: 3.5%; }
+  /* chat column: scrollable log on top, askbar pinned at the bottom */
+  .scene { position: fixed; inset: 0; z-index: 3; display: flex; flex-direction: column; }
 
-  /* ---- the landing: nothing but the ask line ---- */
-  .askline { display: flex; justify-content: center; gap: 10px; }
-  .askline input {
-    flex: 0 1 480px;
-    font-size: 17px; letter-spacing: 0.02em; color: var(--ink);
-    background: rgba(18,18,28,0.72);
-    border: 1px solid var(--dim); border-radius: 999px;
-    padding: 15px 26px; outline: none;
-    transition: border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease;
+  .log {
+    position: relative; flex: 1 1 auto; overflow-y: auto;
+    display: flex; flex-direction: column;
+    padding: 44px clamp(18px, 4vw, 40px) 30px;
   }
-  .askline input::placeholder { color: var(--faint); font-style: italic; }
-  .askline input:focus {
-    border-color: rgba(255,166,201,0.55);
-    box-shadow: 0 0 0 1px rgba(255,166,201,0.22), 0 0 34px rgba(255,166,201,0.12);
-  }
-  .askline input:disabled { opacity: 0.5; }
-  .askline button {
-    font-size: 14px; letter-spacing: 0.06em; color: var(--ink);
-    background: rgba(255,166,201,0.12);
-    border: 1px solid rgba(255,166,201,0.4); border-radius: 999px;
-    padding: 0 28px; cursor: pointer; outline: none;
-    transition: background 0.3s ease, opacity 0.4s ease;
-  }
-  .askline button:hover:not([disabled]) { background: rgba(255,166,201,0.24); }
-  .askline button[disabled] { opacity: 0.35; cursor: default; }
+  .log::-webkit-scrollbar { width: 8px; }
+  .log::-webkit-scrollbar-thumb { background: rgba(230,185,110,0.16); border-radius: 8px; }
 
-  /* ---- the two half-panels: facts (left) and the growing graph ---- */
-  .split {
-    display: flex; gap: 28px; margin-top: 26px; text-align: left;
-    opacity: 0; transform: translateY(8px);
-    transition: opacity 0.7s ease, transform 0.7s ease, max-height 0.8s ease;
-    max-height: 0; overflow: hidden;
+  /* ================================================================ */
+  /* LANDING — a whole essay of "how this works", ethereal            */
+  /* ================================================================ */
+  .about {
+    margin: auto; width: min(92%, 760px); text-align: center;
+    opacity: 1; transition: opacity 0.7s ease, margin-top 0.7s ease;
   }
-  .split.on { opacity: 1; transform: translateY(0); max-height: 640px; }
+  .about.hide { opacity: 0; margin-top: -40px; pointer-events: none; }
 
-  .side { flex: 1 1 50%; min-width: 0; }
+  .kicker {
+    display: inline-block; font-family: "CMU Typewriter Text", monospace;
+    font-size: 9px; letter-spacing: 0.45em; text-transform: uppercase;
+    color: var(--honey); opacity: 0.9; margin-bottom: 24px;
+  }
+
+  .title {
+    font-family: "CMU Serif", Georgia, serif;
+    font-size: clamp(30px, 6vw, 52px); line-height: 1.05;
+    font-weight: 500; color: var(--ink);
+    text-shadow: 0 0 40px rgba(230,185,110,0.15);
+  }
+  .subtitle {
+    margin: 18px auto 0 auto; max-width: 560px;
+    font-family: "CMU Serif", Georgia, serif; font-size: 17px; line-height: 1.6;
+    color: var(--faint); font-style: italic;
+  }
+
+  .how {
+    margin: 40px auto 0 auto; max-width: 760px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px; text-align: left;
+  }
+  .how .step {
+    position: relative; padding: 18px 18px 18px 46px;
+    background: var(--glass); border: 1px solid var(--line); border-radius: 14px;
+    backdrop-filter: blur(6px);
+    transition: border-color 0.4s ease, transform 0.4s ease;
+  }
+  .how .step:hover { border-color: var(--honey-soft); transform: translateY(-2px); }
+  .how .step .no {
+    position: absolute; left: 14px; top: 16px;
+    font-family: "CMU Typewriter Text", monospace; font-size: 11px;
+    color: var(--honey); letter-spacing: 0.1em;
+  }
+  .how .step h4 {
+    font-family: "CMU Serif", Georgia, serif; font-weight: 500;
+    font-size: 15px; color: var(--ink); margin-bottom: 7px;
+  }
+  .how .step p {
+    font-family: "CMU Typewriter Text", monospace;
+    font-size: 11.5px; line-height: 1.55; color: var(--faint);
+  }
+  .how .step p .hot { color: var(--honey); }
+  .how .step p .sage { color: var(--sage); }
+  .how .step p .rose { color: var(--rose); }
+
+  .legend {
+    margin: 24px auto 0 auto; max-width: 760px; text-align: center;
+    font-family: "CMU Typewriter Text", monospace; font-size: 11px;
+    line-height: 2; color: var(--faint);
+  }
+  .legend .lg { display: inline-block; margin: 0 12px; }
+  .legend .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--honey); box-shadow: 0 0 8px var(--honey-soft);
+    margin-right: 5px; vertical-align: middle;
+  }
+  .legend .thr {
+    display: inline-block; width: 22px; height: 1px; background: var(--honey-soft);
+    margin-right: 5px; vertical-align: middle;
+  }
+  .legend .sage { color: var(--sage); }
+
+  /* ================================================================ */
+  /* the transient working area — keywords, fact panels, graph        */
+  /* ================================================================ */
+  .working { width: min(100%, 820px); margin: 0 auto; }
+  .zone { opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.7s ease, max-height 0.8s ease, margin-top 0.8s ease; }
+  .zone.on { opacity: 1; }
+
+  .kwrow.on { margin-top: 30px; max-height: 120px; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .chip {
+    font-family: "CMU Typewriter Text", monospace; font-size: 12px;
+    letter-spacing: 0.12em; text-transform: lowercase; color: var(--honey);
+    background: rgba(230,185,110,0.07); border: 1px solid rgba(230,185,110,0.32);
+    border-radius: 999px; padding: 7px 16px;
+  }
   .tag {
     display: block; font-family: "CMU Typewriter Text", monospace;
     font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase;
     color: var(--dim); margin-bottom: 14px;
     transition: color 0.5s ease, text-shadow 0.5s ease;
   }
-  .tag.hot { color: var(--accent); text-shadow: 0 0 14px rgba(255,166,201,0.4); }
+  .tag.hot { color: var(--honey); text-shadow: 0 0 14px rgba(230,185,110,0.35); }
 
-  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 18px; }
-  .chip {
-    font-size: 12px; letter-spacing: 0.04em; color: var(--accent);
-    background: rgba(255,166,201,0.07);
-    border: 1px solid rgba(255,166,201,0.32); border-radius: 999px;
-    padding: 6px 14px;
+  .factcols.on { margin-top: 26px; max-height: 900px; }
+  .fcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .fcol {
+    border: 1px solid var(--line); border-radius: 14px;
+    background: var(--glass); padding: 15px 17px; backdrop-filter: blur(6px);
   }
-
-  /* the fact list — each fact is generated fast, with a little dot */
-  .flist { display: flex; flex-direction: column; gap: 9px; }
-  .fkg {
-    display: flex; align-items: baseline; gap: 10px;
-    opacity: 0; transition: opacity 0.5s ease;
+  .fcol .fkey {
+    font-family: "CMU Typewriter Text", monospace; font-size: 12px;
+    letter-spacing: 0.18em; text-transform: lowercase; color: var(--sage);
+    margin-bottom: 11px; padding-bottom: 8px; border-bottom: 1px dashed var(--line);
   }
+  .fkg { display: flex; align-items: baseline; gap: 10px; padding: 3px 0; opacity: 0; transition: opacity 0.5s ease; }
   .fkg .fdot {
-    flex: 0 0 auto;
-    width: 15px; height: 15px; border-radius: 50%;
-    border: 1px solid rgba(255,166,201,0.7);
-    color: var(--accent);
-    font-family: "CMU Sans Serif", sans-serif;
-    font-size: 8.5px; font-weight: 700;
+    flex: 0 0 auto; width: 15px; height: 15px; border-radius: 50%;
+    border: 1px solid var(--honey-soft); color: var(--honey);
+    font-family: "CMU Sans Serif", sans-serif; font-size: 8.5px; font-weight: 700;
     display: inline-flex; align-items: center; justify-content: center;
-    transform: translateY(2px);
   }
   .fkg .fl {
-    font-family: "CMU Serif", Georgia, serif; font-size: 14px;
-    color: rgba(233,233,238,0.9); letter-spacing: 0.01em; line-height: 1.5;
+    font-family: "CMU Typewriter Text", monospace; font-size: 12.5px;
+    color: rgba(239,231,212,0.92); line-height: 1.55;
   }
-  .fkg .fl .hl { color: var(--accent); }
+  .fkg .fl .hl { color: var(--honey); }
 
-  /* the graph region holds the canvas where nerves grow */
-  .graphbox { position: relative; height: 300px; border-radius: 14px; }
+  .graphzone.on { margin-top: 26px; max-height: 70vh; }
+  .graphbox {
+    position: relative; height: 54vh; min-height: 360px;
+    border-radius: 18px; overflow: hidden;
+    background: rgba(10,7,4,0.55); border: 1px solid var(--line);
+    box-shadow: 0 0 60px rgba(230,185,110,0.05) inset;
+  }
   #graph { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .graphbox .stagehint {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-family: "CMU Typewriter Text", monospace; font-size: 10px;
-    letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim);
+    flex-direction: column; gap: 8px;
+    font-family: "CMU Typewriter Text", monospace; font-size: 10.5px;
+    letter-spacing: 0.32em; text-transform: uppercase; color: var(--faint);
   }
+  .graphbox .stagehint .sub { font-size: 9px; color: var(--dim); letter-spacing: 0.2em; }
 
-  /* ---- the answer ---- */
-  .answer {
-    margin-top: 40px; max-width: 100%;
-    opacity: 0; transition: opacity 1.1s ease;
-    user-select: none;
-    text-align: left;
+  /* ================================================================ */
+  /* the accumulating chat log                                          */
+  /* ================================================================ */
+  .turn {
+    width: min(100%, 760px); margin: 0 auto 34px auto; text-align: left;
   }
-  .answer.show { opacity: 1; }
-  .answer .ans {
-    font-family: "CMU Serif", Georgia, serif;
-    font-size: 16px; line-height: 1.85;
-    color: rgba(233,233,238,0.95);
-    letter-spacing: 0.01em;
-    text-shadow: 0 0 18px rgba(255,166,201,0.12);
+  .turn .user {
+    font-family: "CMU Serif", Georgia, serif; font-size: 16px;
+    color: var(--ink); line-height: 1.5; margin-bottom: 6px;
+    padding-left: 14px; border-left: 2px solid var(--honey-soft);
+  }
+  .turn .assn {
+    font-family: "CMU Serif", Georgia, serif; font-size: 16.5px;
+    line-height: 1.9; color: rgba(239,231,212,0.95);
     white-space: pre-wrap;
+    padding-left: 14px;
+    text-shadow: 0 0 18px rgba(230,185,110,0.08);
   }
+  .turn .think {
+    font-family: "CMU Typewriter Text", monospace; font-size: 12px;
+    color: var(--faint); letter-spacing: 0.05em; margin-top: 4px;
+  }
+  .turn .think .tap { animation: tap 1s infinite; }
+  .turn .think .tap:nth-child(2) { animation-delay: 0.15s; }
+  .turn .think .tap:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes tap { 0%,100% { opacity: 0.2; } 50% { opacity: 1; } }
 
-  .again {
-    margin-top: 26px; text-align: center;
-    font-family: "CMU Typewriter Text", monospace;
-    font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
-    color: var(--faint);
-    transition: color 0.5s ease, opacity 0.6s ease;
-    opacity: 0;
+  .caret {
+    display: inline-block; width: 7px; height: 16px;
+    background: var(--honey); vertical-align: text-bottom;
+    margin-left: 2px; animation: blink 1s steps(1) infinite;
   }
-  .again.show { opacity: 1; }
-  .again.bright { color: var(--accent); }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ================================================================ */
+  /* the askbar, pinned at the bottom like a real chat                  */
+  /* ================================================================ */
+  .askbar {
+    flex: 0 0 auto; padding: 14px clamp(18px, 4vw, 40px) 26px;
+    display: flex; flex-direction: column; align-items: center;
+    background: linear-gradient(to top, rgba(12,9,6,0.95), rgba(12,9,6,0));
+  }
+  .askline { display: flex; justify-content: center; gap: 10px; width: min(100%, 700px); }
+  .askline input {
+    flex: 1 1 auto; font-size: 16px; letter-spacing: 0.02em; color: var(--ink);
+    background: rgba(20,16,9,0.8); border: 1px solid var(--dim); border-radius: 999px;
+    padding: 14px 24px; outline: none; min-width: 0;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+  .askline input::placeholder { color: var(--faint); font-style: italic; }
+  .askline input:focus {
+    border-color: var(--honey-soft);
+    box-shadow: 0 0 0 1px rgba(230,185,110,0.16), 0 0 30px rgba(230,185,110,0.09);
+  }
+  .askline input:disabled { opacity: 0.5; }
+  .askline button {
+    font-family: "CMU Typewriter Text", monospace; font-size: 13px;
+    letter-spacing: 0.14em; text-transform: lowercase; color: var(--ink);
+    background: rgba(230,185,110,0.10); border: 1px solid var(--honey-soft);
+    border-radius: 999px; padding: 0 28px; cursor: pointer; outline: none;
+    transition: background 0.3s ease, opacity 0.4s ease;
+  }
+  .askline button:hover:not([disabled]) { background: rgba(230,185,110,0.20); }
+  .askline button[disabled] { opacity: 0.35; cursor: default; }
 </style>
 </head>
 <body>
 
-  <div class="scene">
-    <canvas id="stage"></canvas>
+  <canvas id="bg"></canvas>
 
-    <div class="col" id="col">
-      <div class="askline">
-        <input id="input" type="text" placeholder="ask anything…" autocomplete="off" spellcheck="false">
-        <button id="submit">ask</button>
+  <div class="scene" id="scene">
+    <div class="log" id="log">
+
+      <!-- landing essay -->
+      <div class="about" id="about">
+        <div class="kicker">a small observing machine</div>
+        <div class="title">ask anything.</div>
+        <div class="subtitle">one question becomes a web — each word finds the facts it knows, each fact lights a point in a growing graph, and when the graph is finished it folds itself into an answer that streams out, one token at a time.</div>
+
+        <div class="how">
+          <div class="step"><span class="no">01</span><h4>you ask</h4><p>your question is cut into its real words — the keywords — and nothing is repeated.</p></div>
+          <div class="step"><span class="no">02</span><h4>each keyword grows its own facts</h4><p>every keyword finds the stored facts nearest to it. <span class="hot">each keyword gets its own panel,</span> and its facts appear inside, one by one.</p></div>
+          <div class="step"><span class="no">03</span><h4>every fact drops a dot</h4><p>as a fact is generated it lights a <span class="hot">small numbered dot</span> in the graph below — the same order you saw it appear.</p></div>
+          <div class="step"><span class="no">04</span><h4>the graph connects</h4><p>nerves grow between the lit dots like <span class="sage">synapses</span> — from your question, down through the chain of facts.</p></div>
+          <div class="step"><span class="no">05</span><h4>the graph speaks</h4><p>once every connection is made the web <span class="rose">dissolves and the answer streams out of it</span> — a block of sentences, in the order the dots lit.</p></div>
+        </div>
+
+        <div class="legend">
+          <span class="lg"><span class="dot"></span>one fired fact</span>
+          <span class="lg"><span class="thr"></span>a connection it just learned</span>
+          <span class="lg sage">every keyword a separate panel</span>
+        </div>
       </div>
 
-      <div class="split" id="split">
-        <div class="side">
-          <span class="tag" id="kwtag">keywords</span>
+      <!-- the transient staging animation for the current question -->
+      <div class="working" id="working">
+        <div class="zone kwrow" id="kwrow">
+          <span class="tag hot" id="kwtag">keywords</span>
           <div class="chips" id="chips"></div>
-          <span class="tag" id="facttag">where each keyword leads</span>
-          <div class="flist" id="flist"></div>
         </div>
-        <div class="side">
+        <div class="zone factcols" id="factcols">
+          <span class="tag" id="facttag">each keyword holds these facts</span>
+          <div class="fcols" id="fcols"></div>
+        </div>
+        <div class="zone graphzone" id="graphzone">
           <span class="tag" id="graphtag">the graph learning</span>
-          <div class="graphbox" id="graphbox">
-            <div class="stagehint">growing…</div>
+          <div class="graphbox">
+            <div class="stagehint">the graph grows here<span class="sub">it stays blank until you ask</span></div>
             <canvas id="graph"></canvas>
           </div>
         </div>
       </div>
 
-      <div class="answer" id="answerzone">
-        <p class="ans" id="ans"></p>
-      </div>
+    </div>
 
-      <div class="again" id="again">ask anything else…</div>
+    <!-- the askbar -->
+    <div class="askbar" id="askbar">
+      <div class="askline">
+        <input id="input" type="text" placeholder="ask anything…" autocomplete="off" spellcheck="false">
+        <button id="submit">ask</button>
+      </div>
     </div>
   </div>
 
@@ -190,28 +309,30 @@
 (function () {
   'use strict';
 
-  var bgCanvas = document.getElementById('stage');
+  var bgCanvas = document.getElementById('bg');
   var bgCtx = bgCanvas.getContext('2d');
   var grCanvas = document.getElementById('graph');
   var grCtx = grCanvas.getContext('2d');
   var inputEl = document.getElementById('input');
   var submitEl = document.getElementById('submit');
-  var colEl = document.getElementById('col');
-  var splitEl = document.getElementById('split');
+  var sceneEl = document.getElementById('scene');
+  var logEl = document.getElementById('log');
+  var aboutEl = document.getElementById('about');
+  var workingEl = document.getElementById('working');
+  var kwrowEl = document.getElementById('kwrow');
   var chipsEl = document.getElementById('chips');
-  var flistEl = document.getElementById('flist');
-  var ansEl = document.getElementById('ans');
-  var answerEl = document.getElementById('answerzone');
-  var againEl = document.getElementById('again');
+  var factcolsEl = document.getElementById('factcols');
+  var fcolsEl = document.getElementById('fcols');
+  var graphzoneEl = document.getElementById('graphzone');
   var kwtagEl = document.getElementById('kwtag');
   var facttagEl = document.getElementById('facttag');
   var graphtagEl = document.getElementById('graphtag');
+  var stagehint = document.querySelector('.stagehint');
 
-  var ACCENT = '#ffa6c9';
-  var GREY = '#e9e9ee';
+  var ACCENT = '#e6b96e';
+  var GREY = '#efe7d4';
   var CHIP_MS = 28;
   var KW_STAGGER = 150;
-  var GRAPH_H = 300;
 
   // ------------------------------------------------------- the domain
 
@@ -458,7 +579,7 @@
   // ------------------------------------------------------- state
 
   var BW = 0, BH = 0, GW = 0, GH = 0;
-  var cells = [];
+  var memory = [];      // accumulated graph knowledge: every created fact
   var allCables = [];
   var runEdges = [];
   var boutons = [];
@@ -466,20 +587,35 @@
   var motes = [];
   var chainMeta = {};
 
-  var GR = null;             // graph renderer
   var impulses = [];
   var synthesis = null;
+  var runCount = 0;     // how many prompts have fired, drives growth
+  var nextId = 1;
+  var genSeq = 0;       // creation order of grown (generated) fact-neurons
 
   var now = 0, frame = 0, lastT = 0, t0 = 0;
-  var state = 'idle';        // idle | keywords | facts | connections | forming | answered | settling
+  var state = 'idle';        // idle | keywords | facts | connections | forming | answered
+  var startedFirst = false;
 
   // ------------------------------------------------------- helpers
 
   function rand(a, b) { return a + Math.random() * (b - a); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+  // deterministic PRNG so the accumulating graph keeps a stable shape
+  function srand(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  var R = srand(20260830);
   function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
-  function lerpColor(a) { return 'rgba(255,166,201,' + a.toFixed(3) + ')'; }
-  function lerpColorA(a, al) { return 'rgba(255,166,201,' + (a * al).toFixed(3) + ')'; }
+  function lerpColor(a) { return 'rgba(230,185,110,' + a.toFixed(3) + ')'; }
+  function lerpColorA(a, al) { return 'rgba(230,185,110,' + (a * al).toFixed(3) + ')'; }
 
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
@@ -573,59 +709,110 @@
 
   // ------------------------------------------------------- layout (graph panel coords)
 
+  function hashSeed(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+
+  // seed the accumulated graph's memory once from the curated chains
+  function seedMemory() {
+    memory = []; boutons = []; runCount = 0;
+    for (var c = 0; c < CHAIN_KEYS.length; c++) {
+      var key = CHAIN_KEYS[c];
+      var def = CHAINS[key];
+      for (var f = 0; f < def.facts.length; f++) {
+        var fact = def.facts[f];
+        memory.push({
+          id: nextId++, text: fact[0], ch: key, ho: fact[1], k: fact[2],
+          born: 0, generated: false,
+          fired: false, litIdx: 0, flashT: 0, drain: 0, charge: 0,
+          x: 0, y: 0, qx: 0, qy: 0, arbors: []
+        });
+      }
+    }
+  }
+
+  // deterministic fresh-layout of every fact currently in memory (keeps fired state)
   function buildGraphLayout() {
-    cells = []; boutons = [];
-    var zx0 = GW * 0.08, zx1 = GW * 0.92, zy0 = GH * 0.10, zy1 = GH * 0.86;
+    boutons = [];
+    var zx0 = 0.07, zx1 = 0.93, zy0 = 0.08, zy1 = 0.90;
 
     for (var c = 0; c < CHAIN_KEYS.length; c++) {
       var key = CHAIN_KEYS[c];
       var def = CHAINS[key];
-      var ax = (def.anchor[0] + rand(-0.01, 0.01)) * GW;
-      var ay = (def.anchor[1] + rand(-0.01, 0.01)) * GH;
-      var pts = [];
+      var rng = srand(hashSeed(key));
+      var ax = (def.anchor[0] + (rng() - 0.5) * 0.02) * GW;
+      var ay = (def.anchor[1] + (rng() - 0.5) * 0.02) * GH;
+      var axn = def.anchor[0], ayn = def.anchor[1];
+      var pts = chainCells(key).filter(function (x) { return !x.generated; });
 
-      for (var f = 0; f < def.facts.length; f++) {
-        var fact = def.facts[f];
-        var ring = fact[1] === 1 ? rand(26, 46) : fact[1] === 2 ? rand(42, 66) : rand(58, 84);
-        var a2 = rand(0, Math.PI * 2);
-        pts.push({
-          text: fact[0], ch: key, ho: fact[1], k: fact[2],
-          fired: false, litIdx: 0, flashT: 0, drain: 0, charge: 0,
-          x: clamp(ax + Math.cos(a2) * ring, zx0, zx1),
-          y: clamp(ay + Math.sin(a2) * ring, zy0, zy1),
-          qx: 0, qy: 0
-        });
+      for (var f = 0; f < pts.length; f++) {
+        var cell = pts[f];
+        var ring = cell.ho === 1 ? 26 + rng() * 20 : cell.ho === 2 ? 42 + rng() * 24 : 58 + rng() * 26;
+        var a2 = rng() * Math.PI * 2;
+        var nX = ax + Math.cos(a2) * ring;
+        var nY = ay + Math.sin(a2) * ring;
+        cell.pnx = clamp(nX / GW, zx0, zx1);
+        cell.pny = clamp(nY / GH, zy0, zy1);
       }
 
+      // relax overlaps in normalized space
       for (var it = 0; it < 20; it++) {
         for (var i = 0; i < pts.length; i++) {
           for (var j = i + 1; j < pts.length; j++) {
             var a = pts[i], b = pts[j];
-            var dx = b.x - a.x, dy = b.y - a.y;
+            var dx = (b.pnx - a.pnx) * GW, dy = (b.pny - a.pny) * GH;
             var d = Math.sqrt(dx * dx + dy * dy) || 0.0001;
             if (d < 10) {
               var push = (10 - d) / 2;
-              a.x = clamp(a.x - (dx / d) * push, zx0, zx1);
-              a.y = clamp(a.y - (dy / d) * push, zy0, zy1);
-              b.x = clamp(b.x + (dx / d) * push, zx0, zx1);
-              b.y = clamp(b.y + (dy / d) * push, zy0, zy1);
+              a.pnx = clamp(a.pnx - (dx / d) * push / GW, zx0, zx1);
+              a.pny = clamp(a.pny - (dy / d) * push / GH, zy0, zy1);
+              b.pnx = clamp(b.pnx + (dx / d) * push / GW, zx0, zx1);
+              b.pny = clamp(b.pny + (dy / d) * push / GH, zy0, zy1);
             }
           }
         }
       }
-
-      for (var k = 0; k < pts.length; k++) {
-        pts[k].qx = pts[k].x; pts[k].qy = pts[k].y;
-        pts[k].arbors = growArbor(pts[k].x, pts[k].y);
-      }
       var cx = 0, cy = 0;
-      for (var m = 0; m < pts.length; m++) { cx += pts[m].x; cy += pts[m].y; }
+      for (var m = 0; m < pts.length; m++) { cx += pts[m].pnx; cy += pts[m].pny; }
       chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: 90 };
-      cells = cells.concat(pts);
+      void axn; void ayn;
     }
 
+    projection();       // scale normalized coords to the panel + build arbors
+    placeGenerated();   // spread the grown (generated) nodes deterministically
     buildNerveNet();
     buildMotes();
+  }
+
+  // normalize -> concrete pixels (called on every size change; stable by design)
+  function projection() {
+    var zx0 = GW * 0.07, zy0 = GH * 0.08;
+    for (var i = 0; i < memory.length; i++) {
+      var n = memory[i];
+      if (n.generated) { n.x = zx0 + n.pnx * (GW * 0.86); n.y = zy0 + n.pny * (GH * 0.82); }
+      else { n.x = n.pnx * GW; n.y = n.pny * GH; }
+      n.qx = n.x; n.qy = n.y;
+      n.arbors = growArbor(n.x, n.y);
+    }
+  }
+
+  // generated nodes grow outward on a golden spiral, deterministic and stable
+  function placeGenerated() {
+    var zx0 = GW * 0.02, zy0 = GH * 0.02, zx1 = GW * 0.98, zy1 = GH * 0.98;
+    for (var i = 0; i < memory.length; i++) {
+      var n = memory[i];
+      if (!n.generated) continue;
+      if (!n.seq) n.seq = ++genSeq;
+      var ang = n.seq * 2.39996 + (hashSeed('born' + n.id) % 100) / 100 * 0.3;
+      var norm = Math.min(0.36, 0.05 + n.seq * 0.014);
+      var cx = 0.5 + Math.cos(ang) * norm, cy = 0.5 + Math.sin(ang) * norm;
+      n.pnx = clamp(cx, 0, 1);
+      n.pny = clamp(cy, 0, 1);
+      n.x = clamp(zx0 + n.pnx * (zx1 - zx0), zx0, zx1);
+      n.y = clamp(zy0 + n.pny * (zy1 - zy0), zy0, zy1);
+    }
   }
 
   function buildNerveNet() {
@@ -644,7 +831,7 @@
   }
   function chainCells(key, ho) {
     var out = [];
-    for (var i = 0; i < cells.length; i++) if (cells[i].ch === key && cells[i].ho === ho) out.push(cells[i]);
+    for (var i = 0; i < memory.length; i++) if (memory[i].ch === key && (ho === undefined || memory[i].ho === ho)) out.push(memory[i]);
     return out;
   }
   function makeCable(a, b) { return { a: a, b: b, path: growCablePath(a.x, a.y, b.x, b.y) }; }
@@ -693,8 +880,8 @@
     var toks = tokens(promptText);
     var raw = ' ' + promptText.toLowerCase() + ' ';
     var scores = {};
-    for (var c = 0; c < cells.length; c++) {
-      var cell = cells[c];
+    for (var c = 0; c < memory.length; c++) {
+      var cell = memory[c];
       var s = 0;
       for (var kw = 0; kw < cell.k.length; kw++) {
         var keyword = cell.k[kw];
@@ -707,14 +894,14 @@
           }
         }
       }
-      if (s > 0) scores[cells.indexOf(cell)] = s;
+      if (s > 0) scores[c] = s;
     }
     return scores;
   }
   function pickChain(scores) {
     var byChain = {};
     for (var c = 0; c < CHAIN_KEYS.length; c++) byChain[CHAIN_KEYS[c]] = 0;
-    for (var i in scores) { var cell = cells[i]; if (byChain[cell.ch] === undefined) byChain[cell.ch] = 0; byChain[cell.ch] += scores[i]; }
+    for (var key2 in scores) { var cell = memory[key2]; if (byChain[cell.ch] === undefined) byChain[cell.ch] = 0; byChain[cell.ch] += scores[key2]; }
     var best = null, bestS = 0;
     for (var k = 0; k < CHAIN_KEYS.length; k++) if (byChain[CHAIN_KEYS[k]] > bestS) { bestS = byChain[CHAIN_KEYS[k]]; best = CHAIN_KEYS[k]; }
     return best;
@@ -749,7 +936,6 @@
     return s.charAt(0).toUpperCase() + s.slice(1) + '.';
   }
 
-  // the answer: always a collection of sentences, randomised shape each run
   function generateBlock(group, chips) {
     var facts = group.slice(0, 6).map(function (f) { return f.text.replace(/[.!?]+$/, ''); });
     var chip = chips[rInt(chips.length)];
@@ -777,9 +963,9 @@
         var a = units.shift(), b = units.shift();
         units.unshift(buildSentence([a, b]));
       }
-      text = units.join('\n');
+      text = units.join('\n\n');
     } else {
-      text = units.join('\n');
+      text = units.join('\n\n');
     }
 
     if (Math.random() < 0.3) {
@@ -793,12 +979,56 @@
       ][rInt(6)];
       text = lead + lowerFirst(text);
     }
-    if (text.length < 60 && Math.random() < 0.6) {
+    if (text.length < 60 && text.indexOf('\n') < 0 && Math.random() < 0.5) {
       var fu = FOLLOW_UPS[rInt(FOLLOW_UPS.length)];
-      text += '\n' + fu.charAt(0).toUpperCase() + fu.slice(1);
+      text += '\n\n' + fu.charAt(0).toUpperCase() + fu.slice(1);
     }
     text = text.charAt(0).toUpperCase() + text.slice(1);
     return text;
+  }
+
+  // the graph grows: keywords give birth to brand-new fact-neurons each prompt.
+  // a new fact is built by knitting two distinct matched facts into one fresh
+  // statement, tagged with the prompt's keywords so later questions can find it.
+  function generateFacts(sel, chips, chain) {
+    var created = [];
+    sel = sel.filter(function (x) { return x && x.text != null; });
+    if (sel.length < 2) return created;
+    var target = 1 + rInt(2);            // always birth 1-2 new neurons
+    var used = [];
+    var guard = 0;
+    while (created.length < target && guard < 14 && sel.length >= 2) {
+      guard++;
+      var a = sel[rInt(sel.length)];
+      var b = sel[rInt(sel.length)];
+      if (a === b) continue;
+      if (sel.length > 2 && used.indexOf(a) >= 0 && used.indexOf(b) >= 0) continue;
+      used.push(a); used.push(b);
+      var text = buildSentence([a.text, b.text]);
+      var tags = chips.slice();
+      for (var t2 = 0; t2 < a.k.length && tags.length < 10; t2++) if (tags.indexOf(a.k[t2]) < 0) tags.push(a.k[t2]);
+      for (var t3 = 0; t3 < b.k.length && tags.length < 10; t3++) if (tags.indexOf(b.k[t3]) < 0) tags.push(b.k[t3]);
+      var m = {
+        id: nextId++, text: text, ch: chain, ho: 3, k: tags,
+        born: 0, generated: true, seq: 0,
+        fired: false, litIdx: 0, flashT: 0, drain: 0, charge: 0,
+        x: 0, y: 0, qx: 0, qy: 0, arbors: []
+      };
+      memory.push(m);
+      created.push(m);
+    }
+    return created;
+  }
+
+  // which keyword a fact answers, for grouping into per-keyword panels
+  function keywordFor(cell, chips) {
+    for (var i = 0; i < chips.length; i++) {
+      var pool = expand(chips[i]);
+      for (var pi = 0; pi < pool.length; pi++) {
+        if (cell.k.indexOf(pool[pi]) >= 0) return chips[i];
+      }
+    }
+    return chips[0];
   }
 
   // ------------------------------------------------------- answering
@@ -808,26 +1038,52 @@
     submitEl.disabled = off;
     if (off) inputEl.blur();
   }
+  function scrollBottom() {
+    logEl.scrollTop = logEl.scrollHeight;
+  }
 
-  function resetPanels() {
+  function resetWorking() {
     chipsEl.textContent = '';
-    flistEl.textContent = '';
-    splitEl.classList.remove('on');
+    fcolsEl.textContent = '';
+    kwrowEl.classList.remove('on');
+    factcolsEl.classList.remove('on');
+    graphzoneEl.classList.remove('on');
+    kwtagEl.classList.remove('hot');
+    facttagEl.classList.remove('hot');
+    graphtagEl.classList.remove('hot');
+    if (stagehint) stagehint.style.display = '';
+  }
+
+  function appendTurn(promptText) {
+    var turn = document.createElement('div');
+    turn.className = 'turn';
+    var u = document.createElement('div');
+    u.className = 'user';
+    u.textContent = promptText;
+    var a = document.createElement('div');
+    a.className = 'assn';
+    var tx = document.createElement('span');
+    tx.className = 'ats';
+    a.appendChild(tx);
+    turn.appendChild(u);
+    turn.appendChild(a);
+    logEl.appendChild(turn);
+    return { el: a, tx: tx };
   }
 
   function run(text) {
     if (state === 'keywords' || state === 'facts' || state === 'connections' || state === 'forming') return;
     setBox(true);
     t0 = performance.now();
-    resetPanels();
-    for (var i = 0; i < cells.length; i++) {
-      cells[i].fired = false; cells[i].litIdx = 0; cells[i].flashT = 0; cells[i].drain = 0; cells[i].charge = 0;
+    aboutEl.classList.add('hide');
+    resetWorking();
+    // the grown graph is not wiped — only this run's transient marks reset
+    for (var i = 0; i < memory.length; i++) {
+      memory[i].litIdx = 0; memory[i].flashT = 0; memory[i].drain = 0;
     }
     for (var j = 0; j < boutons.length; j++) boutons[j].flare = 0;
     runEdges = [];
     impulses = [];
-
-    colEl.classList.add('raised');
 
     var chips = tokens(text).slice(0, 6);
     if (!chips.length) chips = ['answer'];
@@ -835,10 +1091,26 @@
     var scores = scoreFacts(text);
     var chain = pickChain(scores);
 
-    var scoredAll = cells.map(function (c, idx) { return { c: c, s: scores[idx] || 0 }; })
+    var scoredAll = memory.map(function (c, idx) { return { c: c, s: scores[idx] || 0 }; })
       .filter(function (x) { return x.s > 0; })
       .sort(function (a, b) { return b.s - a.s; });
     var chainBest = scoredAll.filter(function (x) { return x.c.ch === chain; });
+
+    // keywords give birth to new fact-neurons first, so the graph visibly grows
+    var seedSel = chainBest.length ? [chainBest[0].c] : [];
+    seedSel = seedSel.concat(shuffle(chainBest.slice(1, 8)).map(function (x) { return x.c; }));
+    seedSel = seedSel.filter(function (x, idx, arr) { return x && arr.indexOf(x) === idx; });
+    if (seedSel.length < 2) {
+      var more = scoredAll.concat(chainCells(chain), chainCells('everything'));
+      for (var mo2 = 0; mo2 < more.length && seedSel.length < 2; mo2++) {
+        var cand = more[mo2].c || more[mo2];
+        if (seedSel.indexOf(cand) < 0) seedSel.push(cand);
+      }
+    }
+    var genSeed = seedSel.slice(0, 2);
+    var newborn = generateFacts(genSeed, chips, chain);
+    runCount++;
+    if (newborn.length) { placeGenerated(); for (var nb2 = 0; nb2 < newborn.length; nb2++) { newborn[nb2].qx = newborn[nb2].x; newborn[nb2].qy = newborn[nb2].y; newborn[nb2].arbors = growArbor(newborn[nb2].x, newborn[nb2].y); } }
 
     var nTarget = 4 + Math.floor(Math.random() * 3);
     var sel = [];
@@ -849,53 +1121,50 @@
     }
     if (sel.length < nTarget) {
       var cross = shuffle(scoredAll.filter(function (x) { return x.c.ch !== chain; }));
-      for (var cs = 0; cs < cross.length && sel.length < nTarget; cs++) {
-        if (sel.indexOf(cross[cs].c) < 0) sel.push(cross[cs].c);
+      for (var cr2 = 0; cr2 < cross.length && sel.length < nTarget; cr2++) {
+        if (sel.indexOf(cross[cr2].c) < 0) sel.push(cross[cr2].c);
       }
     }
     if (sel.length < nTarget && chain) {
-      var rest = shuffle(chainCells(chain, 1).concat(chainCells(chain, 2), chainCells(chain, 3)));
-      for (var r = 0; r < rest.length && sel.length < nTarget; r++) {
-        if (sel.indexOf(rest[r]) < 0) sel.push(rest[r]);
-      }
+      var rest = shuffle(chainCells(chain).filter(function (x) { return sel.indexOf(x) < 0; }));
+      for (var r = 0; r < rest.length && sel.length < nTarget; r++) sel.push(rest[r]);
     }
     if (sel.length < nTarget) {
-      var gt = shuffle(chainCells('everything', 1).concat(chainCells('everything', 2), chainCells('everything', 3)));
-      for (var g = 0; g < gt.length && sel.length < nTarget; g++) {
-        if (sel.indexOf(gt[g]) < 0) sel.push(gt[g]);
-      }
+      var gt = shuffle(chainCells('everything').filter(function (x) { return sel.indexOf(x) < 0; }));
+      for (var g = 0; g < gt.length && sel.length < nTarget; g++) sel.push(gt[g]);
     }
-    sel = sel.slice(0, 6);
 
-    var spine0 = chainCells(chain, 1)[0];
+    // the born facts are part of this round's firing & answer
+    sel = sel.slice(0, 6 - newborn.length);
+    sel = sel.concat(newborn);
+
+    var spine0 = chainCells(chain, 1).filter(function (x) { return sel.indexOf(x) >= 0; })[0];
     var ordered = sel.slice().sort(function (a, b) { return a.ho - b.ho || (Math.random() < 0.5 ? -1 : 1); });
-    if (spine0 && sel.indexOf(spine0) >= 0) {
+    if (spine0) {
       ordered = [spine0].concat(ordered.filter(function (x) { return x !== spine0; }));
     }
     for (var oi = 0; oi < ordered.length; oi++) ordered[oi].litIdx = oi + 1;
 
     var answerText = generateBlock(ordered, chips);
-    var sentences = answerText.split('\n').length;
-    var avgLen = Math.max(30, Math.round(answerText.length / (sentences || 1)));
 
     synthesis = {
       chain: chain, ordered: ordered, chips: chips, text: answerText,
-      kwStart: t0 + 240, kwStagger: KW_STAGGER, kwEnd: 0,
-      factStart: 0, factEach: 210, factEnd: 0,
-      conStart: 0, conEach: 150, conEnd: 0,
-      answerStart: 0,
-      perFact: 620 + 16 * avgLen, flowStart: 0,
-      typeHold: 0, typeIdx: 0, typeRate: 14, fade: 1,
-      builtEdges: [], flowStart: 0,
-      typeHold: 0, typeIdx: 0, typeRate: 14, fade: 1,
+      promptText: text,
+      kwStart: t0 + 180, kwStagger: KW_STAGGER, kwEnd: 0,
+      factStart: 0, factEach: 300, factEnd: 0,
+      conStart: 0, conEach: 160, conEnd: 0,
+      answerStart: 0, flowStart: 0,
+      thinkEnd: 0, typeHold: 0, typeIdx: 0, typeRate: 14, fade: 1,
+      rows: {}, streamEl: null, caret: null
     };
     synthesis.kwEnd = synthesis.kwStart + chips.length * synthesis.kwStagger + 220;
-    synthesis.factStart = synthesis.kwEnd + 240;
-    synthesis.factEnd = synthesis.factStart + (ordered.length - 1) * synthesis.factEach + 260;
-    synthesis.conStart = synthesis.factEnd + 200;
+    synthesis.factStart = synthesis.kwEnd + 260;
+    synthesis.factEnd = synthesis.factStart + (ordered.length - 1) * synthesis.factEach + 240;
+    synthesis.conStart = synthesis.factEnd + 240;
     synthesis.conEnd = synthesis.conStart + ordered.length * synthesis.conEach;
-    synthesis.answerStart = synthesis.conEnd + 260;
+    synthesis.answerStart = synthesis.conEnd + 280;
 
+    // graph cables: question -> fact1 -> fact2 -> ...
     var from = { x: GW / 2, y: 14 };
     for (var o = 0; o < ordered.length; o++) {
       var to = ordered[o];
@@ -917,40 +1186,62 @@
       });
     }
 
-    // fact list with little dots, generated fast
-    flistEl.textContent = '';
-    var hl = chips.slice(0, 3);
+    // build per-keyword fact panels (each keyword its own growing panel)
+    fcolsEl.textContent = '';
+    var group = {};
+    var gorder = [];
     for (var fx = 0; fx < ordered.length; fx++) {
       var cell = ordered[fx];
-      var row = document.createElement('div');
-      row.className = 'fkg';
-      var dEl = document.createElement('span');
-      dEl.className = 'fdot';
-      dEl.textContent = String(cell.litIdx);
-      var tEl = document.createElement('span');
-      tEl.className = 'fl';
-      var txt = cell.text;
-      for (var hi = 0; hi < hl.length; hi++) {
-        if (!hl[hi]) continue;
-        var rx = new RegExp('(' + hl[hi].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
-        txt = txt.replace(rx, function (m) { return '<span class="hl">' + m + '</span>'; });
+      var keyw = keywordFor(cell, chips);
+      if (!group[keyw]) { group[keyw] = []; gorder.push(keyw); }
+      group[keyw].push(cell);
+    }
+    var hl = chips.slice(0, 4);
+    for (var gk = 0; gk < gorder.length; gk++) {
+      var kw = gorder[gk];
+      var col = document.createElement('div');
+      col.className = 'fcol';
+      var kEl = document.createElement('div');
+      kEl.className = 'fkey';
+      kEl.textContent = kw;
+      var lst = document.createElement('div');
+      lst.className = 'flist';
+      col.appendChild(kEl);
+      col.appendChild(lst);
+      for (var fl = 0; fl < group[kw].length; fl++) {
+        var c2 = group[kw][fl];
+        var row = document.createElement('div');
+        row.className = 'fkg';
+        var dEl = document.createElement('span');
+        dEl.className = 'fdot';
+        dEl.textContent = String(c2.litIdx);
+        var tEl = document.createElement('span');
+        tEl.className = 'fl';
+        var txt = c2.text;
+        for (var hi = 0; hi < hl.length; hi++) {
+          if (!hl[hi]) continue;
+          var rx = new RegExp('(' + hl[hi].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+          txt = txt.replace(rx, function (m) { return '<span class="hl">' + m + '</span>'; });
+        }
+        tEl.innerHTML = txt;
+        row.appendChild(dEl);
+        row.appendChild(tEl);
+        lst.appendChild(row);
+        synthesis.rows[c2.litIdx] = row;
       }
-      tEl.innerHTML = txt;
-      row.appendChild(dEl);
-      row.appendChild(tEl);
-      flistEl.appendChild(row);
+      fcolsEl.appendChild(col);
     }
 
-    readGraphSize();
-    splitEl.classList.add('on');
+    // show working zones
+    kwrowEl.classList.add('on');
+    factcolsEl.classList.add('on');
+    graphzoneEl.classList.add('on');
     kwtagEl.classList.add('hot');
-    inputEl.value = '';
-    ansEl.textContent = '';
-    answerEl.classList.remove('show');
-    againEl.classList.remove('show');
-    againEl.classList.remove('bright');
+    if (stagehint) stagehint.style.display = 'none';
 
+    inputEl.value = '';
     state = 'keywords';
+    scrollBottom();
   }
 
   // ------------------------------------------------------- graph renderer
@@ -958,8 +1249,8 @@
   function readGraphSize() {
     gw = grCanvas.clientWidth; gh = grCanvas.clientHeight;
     var dpr = Math.max(1, window.devicePixelRatio || 1);
-    grCanvas.width = gw * dpr;
-    grCanvas.height = gh * dpr;
+    grCanvas.width = Math.max(2, gw * dpr);
+    grCanvas.height = Math.max(2, gh * dpr);
     grCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (gw > 4 && gh > 4 && (gw !== GW || gh !== GH)) {
       GW = gw; GH = gh;
@@ -967,64 +1258,58 @@
     }
     return { gw: gw, gh: gh };
   }
-
-  // cached graph size for drawing
   var gw = 0, gh = 0;
 
   function drawGraph() {
-    var hide = state === 'forming' || state === 'answered';
-    var fade = (synthesis && hide) ? synthesis.fade : 1;
+    var hide = false;
+    var fade = (synthesis && state === 'forming') ? Math.max(0.18, synthesis.fade) : 1;
     if (fade <= 0.01) return;
 
     grCtx.clearRect(0, 0, gw, gh);
 
     for (var b = 0; b < boutons.length; b++) boutons[b].flare = Math.max(0, boutons[b].flare - 0.006);
-    for (var i = 0; i < cells.length; i++) {
-      var n = cells[i];
-      n.charge *= 0.972;
-      n.qx = n.x + Math.sin(frame * 0.005 + i) * (n.fired ? 1.3 : 0.5);
-      n.qy = n.y + Math.cos(frame * 0.006 + i * 1.7) * (n.fired ? 1.3 : 0.5);
+    for (var i = 0; i < memory.length; i++) {
+      var n = memory[i];
+      n.charge *= 0.978;
+      n.qx = n.x + Math.sin(frame * 0.005 + i) * (n.fired ? 1.4 : 0.5);
+      n.qy = n.y + Math.cos(frame * 0.006 + i * 1.7) * (n.fired ? 1.4 : 0.5);
       if (n.flashT > 0) n.flashT -= 0.035;
     }
 
-    // the plexus (arbors + base cables + threads) as light
-    for (var cn = 0; cn < cells.length; cn++) {
-      var cell = cells[cn];
-      var arbA = (0.03 + Math.min(0.5, cell.charge * 0.25)) * fade;
+    for (var cn = 0; cn < memory.length; cn++) {
+      var cell = memory[cn];
+      var arbA = (0.028 + Math.min(0.45, cell.charge * 0.22)) * fade;
       for (var ap = 0; ap < cell.arbors.length; ap++) drawFibre(grCtx, cell.arbors[ap], arbA, 1.0);
     }
-    for (var cb = 0; cb < allCables.length; cb++) drawFibre(grCtx, allCables[cb].path, 0.03 * fade, 0.8);
-    for (var th = 0; th < threads.length; th++) drawFibre(grCtx, threads[th], 0.025 * fade, 0.7);
+    for (var cb = 0; cb < allCables.length; cb++) drawFibre(grCtx, allCables[cb].path, 0.028 * fade, 0.8);
+    for (var th = 0; th < threads.length; th++) drawFibre(grCtx, threads[th], 0.022 * fade, 0.7);
 
-    // freshly grown run-edges
     for (var re = 0; re < runEdges.length; re++) {
       var eg = runEdges[re];
       if (!eg.launched) continue;
       var frac = clamp((now - eg.buildT) / 520, 0, 1);
-      if (frac < 1) drawPathT(grCtx, eg.path, eg.cum, frac, 0.5 * fade, 1.2);
-      else drawFibre(grCtx, eg.path, 0.12 * fade, 1.0);
+      if (frac < 1) drawPathT(grCtx, eg.path, eg.cum, frac, 0.55 * fade, 1.3);
+      else drawFibre(grCtx, eg.path, 0.13 * fade, 1.0);
     }
 
-    // impulse wakes
     for (var im = 0; im < impulses.length; im++) {
       var imp = impulses[im];
       if (imp.done || now < imp.started) continue;
       var pos = pointAt(imp.path, imp.cum, imp.d);
       var grad = grCtx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 7);
-      grad.addColorStop(0, lerpColorA(0.8, fade));
-      grad.addColorStop(1, 'rgba(255,166,201,0)');
+      grad.addColorStop(0, lerpColorA(0.9, fade));
+      grad.addColorStop(1, 'rgba(230,185,110,0)');
       grCtx.fillStyle = grad;
       grCtx.beginPath(); grCtx.arc(pos.x, pos.y, 7, 0, Math.PI * 2); grCtx.fill();
     }
 
-    // neurons: bright rings for the chosen facts, faint motes otherwise
-    for (var n2 = 0; n2 < cells.length; n2++) {
-      var nd2 = cells[n2];
+    for (var n2 = 0; n2 < memory.length; n2++) {
+      var nd2 = memory[n2];
       if (nd2.fired) {
         var g = Math.min(30, 6 + Math.min(1, nd2.charge) * 20);
         var rad = grCtx.createRadialGradient(nd2.qx, nd2.qy, 0, nd2.qx, nd2.qy, g);
-        rad.addColorStop(0, lerpColor((0.25 + Math.min(1, nd2.charge) * 0.2) * fade));
-        rad.addColorStop(1, 'rgba(255,166,201,0)');
+        rad.addColorStop(0, lerpColor((0.24 + Math.min(1, nd2.charge) * 0.2) * fade));
+        rad.addColorStop(1, 'rgba(230,185,110,0)');
         grCtx.fillStyle = rad;
         grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, g, 0, Math.PI * 2); grCtx.fill();
         if (nd2.flashT > 0) {
@@ -1033,26 +1318,25 @@
           grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, (1 - nd2.flashT) * 26 + 7, 0, Math.PI * 2); grCtx.stroke();
         }
         if (nd2.litIdx > 0) {
-          grCtx.fillStyle = 'rgba(10,10,15,0.9)';
-          grCtx.beginPath(); grCtx.arc(nd2.qx + 10, nd2.qy - 5, 6, 0, Math.PI * 2); grCtx.fill();
-          grCtx.strokeStyle = lerpColor(0.8 * fade);
-          grCtx.lineWidth = 1;
+          grCtx.fillStyle = 'rgba(12,10,7,0.9)';
+          grCtx.beginPath(); grCtx.arc(nd2.qx + 10, nd2.qy - 5, 7, 0, Math.PI * 2); grCtx.fill();
+          grCtx.strokeStyle = lerpColor(0.85 * fade);
+          grCtx.lineWidth = 1.1;
           grCtx.stroke();
           grCtx.fillStyle = ACCENT;
-          grCtx.font = '700 8px "CMU Sans Serif", sans-serif';
+          grCtx.font = '700 9px "CMU Sans Serif", sans-serif';
           grCtx.textAlign = 'center'; grCtx.textBaseline = 'middle';
           grCtx.fillText(String(nd2.litIdx), nd2.qx + 10, nd2.qy - 5);
         }
       } else {
-        var rst = 0.5 + 0.5 * Math.sin(now * 0.002 + nd2.litIdx * 99 + n2);
-        grCtx.globalAlpha = 0.08 * fade + rst * 0.05 * fade;
+        var rst = 0.5 + 0.5 * Math.sin(now * 0.002 + n2);
+        grCtx.globalAlpha = 0.07 * fade + rst * 0.05 * fade;
         grCtx.fillStyle = GREY;
         grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, 1.4, 0, Math.PI * 2); grCtx.fill();
         grCtx.globalAlpha = 1;
       }
     }
 
-    // motes drift through the graph
     for (var mo = 0; mo < motes.length; mo++) {
       var mm = motes[mo];
       mm.x += mm.vx; mm.y += mm.vy;
@@ -1071,7 +1355,7 @@
     c.lineWidth = width;
     c.lineCap = 'round';
     c.lineJoin = 'round';
-    c.globalAlpha = alpha;
+    c.globalAlpha = Math.max(0, Math.min(1, alpha));
     c.beginPath();
     c.moveTo(path[0][0], path[0][1]);
     for (var i = 1; i < path.length; i++) c.lineTo(path[i][0], path[i][1]);
@@ -1084,7 +1368,7 @@
     var d = total * Math.min(1, frac);
     var lo = 0, hi = cum.length - 1;
     while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (cum[mid] <= d) lo = mid; else hi = mid; }
-    c.globalAlpha = alpha;
+    c.globalAlpha = Math.max(0, Math.min(1, alpha));
     c.strokeStyle = ACCENT;
     c.lineWidth = width;
     c.lineCap = 'round';
@@ -1116,11 +1400,20 @@
     chipsEl.textContent = '';
     for (var fi = 0; fi < frags.length; fi++) chipsEl.appendChild(frags[fi]);
   }
-  function revealFactsAt(start, each) {
-    var rows = flistEl.querySelectorAll('.fkg');
-    for (var i = 0; i < rows.length; i++) {
-      if (now >= start + i * each) rows[i].style.opacity = '1';
+  function revealFacts() {
+    if (!synthesis) return;
+    for (var i = 1; i <= synthesis.ordered.length; i++) {
+      var row = synthesis.rows[i];
+      if (!row) continue;
+      var want = now >= synthesis.factStart + (i - 1) * synthesis.factEach;
+      if (want) row.style.opacity = '1';
     }
+  }
+
+  function makeCaret() {
+    var c = document.createElement('span');
+    c.className = 'caret';
+    return c;
   }
 
   function update(dt) {
@@ -1138,7 +1431,7 @@
       }
 
       if (state === 'facts') {
-        revealFactsAt(skd.factStart, skd.factEach);
+        revealFacts();
         for (var fo = 0; fo < skd.ordered.length; fo++) {
           var ft = skd.factStart + fo * skd.factEach;
           if (now >= ft && !skd.ordered[fo].fired) fireNode(skd.ordered[fo]);
@@ -1165,45 +1458,58 @@
         }
         if (allLaunched && now >= skd.answerStart) {
           state = 'forming';
-          splitEl.classList.remove('on');
-          colEl.classList.remove('raised');
+          // the grown graph stays — it is the accumulation of every prompt
           skd.fade = 1;
-          skd.typeRate = Math.max(6, Math.min(16, Math.round(3400 / skd.text.length)));
+          skd.typeRate = Math.max(7, Math.min(15, Math.round(3000 / skd.text.length)));
+          skd.typeIdx = 0;
+          skd.thinkEnd = now + rand(700, 1500);
+          var at = appendTurn(skd.promptText);
+          skd.streamEl = at.el;
+          skd.textEl = at.tx;
+          // thinking indicator
+          var th = document.createElement('span');
+          th.className = 'think';
+          th.innerHTML = '<span class="tap">\u2022</span> <span class="tap">\u2022</span> <span class="tap">\u2022</span>';
+          skd.streamEl.appendChild(th);
+          skd.thinkEl = th;
+          skd.caret = null;
           skd.flowStart = now;
-          answerEl.classList.add('show');
+          scrollBottom();
         }
       }
 
       if (state === 'forming') {
-        skd.typeHold += dt;
-        while (skd.typeIdx < skd.text.length && skd.typeHold >= skd.typeRate) {
-          skd.typeHold -= skd.typeRate;
-          skd.typeIdx++;
-          ansEl.textContent = skd.text.slice(0, skd.typeIdx) + (skd.typeIdx < skd.text.length ? '\u2009\u258b' : '');
+        if (now >= skd.thinkEnd && skd.thinkEl) {
+          skd.thinkEl.remove();
+          skd.thinkEl = null;
+          skd.typeHold = 0;
         }
-        skd.fade = Math.max(0, skd.fade - dt / 900);
+        if (!skd.thinkEl) {
+          skd.typeHold += dt;
+          while (skd.typeIdx < skd.text.length && skd.typeHold >= skd.typeRate) {
+            skd.typeHold -= skd.typeRate;
+            skd.typeIdx++;
+          }
+          if (!skd.caret) { skd.caret = makeCaret(); skd.streamEl.appendChild(skd.caret); }
+          skd.textEl.textContent = skd.text.slice(0, skd.typeIdx);
+          skd.caret.style.display = skd.typeIdx < skd.text.length ? '' : 'none';
+          // keep streamed text + caret as last children
+          if (skd.typeIdx < skd.text.length) scrollBottom();
+        } else {
+          skd.fade = Math.max(0, skd.fade - dt / 900);
+        }
       }
       if (state === 'forming' && skd.typeIdx >= skd.text.length) {
-        ansEl.textContent = skd.text;
+        if (skd.caret) skd.caret.remove();
+        skd.textEl.textContent = skd.text;
         state = 'answered';
-        againEl.classList.add('show');
-        againEl.classList.add('bright');
         setBox(false);
-        inputEl.focus();
         inputEl.placeholder = 'ask anything else\u2026';
+        inputEl.focus();
+        scrollBottom();
       } else if (state === 'answered') {
         skd.fade = Math.max(0, skd.fade - dt / 420);
-        for (var zz = 0; zz < cells.length; zz++) cells[zz].charge *= 0.985;
-      } else if (state === 'settling') {
-        if (synthesis && now - skd.flowStart > 2000) {
-          state = 'idle';
-          for (var v = 0; v < cells.length; v++) {
-            cells[v].fired = false; cells[v].litIdx = 0; cells[v].drain = 0; cells[v].charge = 0;
-          }
-          impulses = []; runEdges = []; synthesis = null;
-          againEl.classList.remove('bright');
-          setBox(false);
-        }
+        for (var zz = 0; zz < memory.length; zz++) memory[zz].charge *= 0.985;
       }
     }
 
@@ -1230,24 +1536,37 @@
     return { path: edge.path, cum: edge.cum, d: 0, speed: len / dur, started: started, done: false, onEnd: onEnd };
   }
 
-  // ------------------------------------------------------- background canvas (the quiet page)
+  // ------------------------------------------------------- background canvas — ethereal aurora
 
   function drawBackground() {
-    var breath = now * 0.0015;
     bgCtx.clearRect(0, 0, BW, BH);
-    var throb = 0.5 + 0.5 * Math.sin(breath);
-    var bg = bgCtx.createRadialGradient(BW / 2, BH * 0.5, 0, BW / 2, BH * 0.5, BH * 0.95);
-    bg.addColorStop(0, lerpColor(0.006 + 0.008 * throb));
-    bg.addColorStop(1, 'rgba(255,166,201,0)');
-    bgCtx.fillStyle = bg;
+    var base = bgCtx.createRadialGradient(BW / 2, BH * 0.45, 0, BW / 2, BH * 0.45, BH * 1.0);
+    base.addColorStop(0, 'rgba(30,24,14,0.35)');
+    base.addColorStop(1, 'rgba(8,6,3,0)');
+    bgCtx.fillStyle = base;
     bgCtx.fillRect(0, 0, BW, BH);
+
+    var t = now * 0.00008;
+    var blobs = [
+      { x: BW * (0.3 + 0.13 * Math.sin(t * 1.1)), y: BH * (0.30 + 0.12 * Math.cos(t * 0.9)), r: Math.max(BW, BH) * 0.34, c: '230,185,110', a: 0.05 },
+      { x: BW * (0.68 + 0.15 * Math.sin(t * 0.8 + 2)), y: BH * (0.60 + 0.10 * Math.cos(t * 1.2)), r: Math.max(BW, BH) * 0.30, c: '168,184,147', a: 0.045 },
+      { x: BW * (0.5 + 0.18 * Math.sin(t * 0.6 + 4)), y: BH * (0.48 + 0.16 * Math.cos(t * 0.7 + 1)), r: Math.max(BW, BH) * 0.42, c: '216,143,161', a: 0.025 }
+    ];
+    for (var i = 0; i < blobs.length; i++) {
+      var bl = blobs[i];
+      var g = bgCtx.createRadialGradient(bl.x, bl.y, 0, bl.x, bl.y, bl.r);
+      g.addColorStop(0, 'rgba(' + bl.c + ',' + bl.a + ')');
+      g.addColorStop(1, 'rgba(' + bl.c + ',0)');
+      bgCtx.fillStyle = g;
+      bgCtx.fillRect(0, 0, BW, BH);
+    }
   }
 
   // ------------------------------------------------------- boot
 
   function sizeBackground() {
     var dpr = Math.max(1, window.devicePixelRatio || 1);
-    BW = bgCanvas.clientWidth; BH = bgCanvas.clientHeight;
+    BW = window.innerWidth; BH = window.innerHeight;
     bgCanvas.width = BW * dpr;
     bgCanvas.height = BH * dpr;
     bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1262,7 +1581,7 @@
     now = ts; frame = ts;
     update(dt);
     drawBackground();
-    if (synthesis && (state === 'facts' || state === 'connections' || state === 'forming' || state === 'answered')) {
+    if (synthesis || runCount > 0) {
       drawGraph();
     } else {
       grCtx.clearRect(0, 0, gw, gh);
@@ -1273,19 +1592,28 @@
   function resize() {
     sizeBackground();
     readGraphSize();
-    colEl.classList.remove('raised');
-    resetPanels();
+    resetWorking();
     setBox(false);
     state = 'idle';
     synthesis = null; runEdges = []; impulses = [];
   }
 
   window.addEventListener('resize', resize);
-  resize();
+  sizeBackground();
+  seedMemory();
+  readGraphSize();
   requestAnimationFrame(tick);
 
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { readGraphSize(); });
+  }
+
+  // invisible test hook (only activates under the drive harness)
+  if (typeof window !== 'undefined' && window.__GRAPH_TEST__) {
+    window.__GRAPH_STATS__ = function () {
+      var grown = memory.filter(function (m) { return m.generated; }).length;
+      return { memory: memory.length, runCount: runCount, grown: grown, fired: memory.filter(function (m) { return m.fired; }).length };
+    };
   }
 })();
 </script>

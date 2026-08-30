@@ -721,3 +721,45 @@ for their next sentence.
   keywords → facts → connections → forming → answered on seven prompts
   incl. gibberish, 4-6 facts each, panels dissolve, column centres,
   answer shows, next-prompt cue appears.
+
+## 17 — the graph accumulates & grows with every prompt
+
+"the graph must grow with each prompt like accumulated — only thats
+where the answers come form" and "the nodes come from facts which is
+generated from keywords that is how the graph keeps growing and the
+connections happen".
+
+so the rebuild-from-scratch model is gone. the graph is no longer wiped
+and redrawn each run — it now *persists and grows* for the whole
+session, and every answer is read out of that accumulated web.
+
+- new persistent model: a single `memory` list of fact-nodes, seeded
+  once from the 14 curated chains (`seedMemory`), never rebuilt from
+  scratch. `scoreFacts`/`pickChain`/selection now read from `memory`.
+- keywords give birth to new fact-neurons: each prompt, `generateFacts`
+  knits two distinct matched facts into a fresh composite statement
+  ("x, which is why y…") and appends it to `memory` as a brand-new node,
+  tagged with that prompt's keywords so later questions can find it
+  again. one or two born per prompt — the graph visibly thickens.
+- growth is deterministic and stable: positions come from a seeded PRNG
+  (`srand`/`hashSeed`) so the web holds its shape across resizes; born
+  nodes grow outward on a golden spiral keyed by their creation
+  sequence, so old nodes don't jump when new ones appear. fired state is
+  kept across every run — nodes lit in earlier prompts stay lit, so the
+  graph reads as a growing, accumulating brain.
+- the graph no longer "dissolves to nothing": the graph zone stays open
+  through `forming`/`answered` and keeps drawing the accumulated web
+  (`drawGraph` runs whenever `runCount > 0`), so you see the growth.
+- the answer each run is composed from the fired graph nodes for that
+  round — which now include the newly-born composites plus the best
+  matched accumulated facts — so it genuinely comes from the graph.
+- robustness fixes landed with this: `seedSel` treated `{c, s}` wrapper
+  objects as cells (undefined `.text` → crash in `buildSentence`);
+  streaming now writes to a dedicated `.ats` span instead of fragile
+  `childNodes[0]`; the drive harness was rebuilt for the current DOM
+  (`#log`, `#working`, `.fkg`, `.ats`) and drives many sequential prompts.
+- harness check on 5+ prompts incl. gibberish: memory 154→162, grown
+  nodes climbing every run (1,3,4,6,8), fired nodes accumulating
+  (6,10,13,19,25), `< 6` fact rows per run (panels reset correctly),
+  every run reaching `answered` with streamed text. `index.html` still
+  byte-for-byte untouched.
