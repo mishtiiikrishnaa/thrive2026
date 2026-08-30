@@ -134,9 +134,7 @@
   .node.expanded p{display:block}
   .node .dot{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,166,201,0.25),rgba(203,176,232,0.15));border:1.5px solid rgba(255,166,201,0.35);display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 0 18px rgba(255,166,201,0.15);transition:all 0.3s;}
   .node:hover .dot,.node.expanded .dot{transform:scale(1.15);box-shadow:0 0 30px rgba(255,166,201,0.35);border-color:rgba(255,166,201,0.6);}
-  .node:not(.expanded){opacity:0.35;filter:grayscale(0.6);transition:opacity 0.4s,filter 0.4s;}
-  .node.expanded{z-index:20;position:absolute;transform:scale(1.4);opacity:1;filter:none;box-shadow:0 0 60px rgba(255,166,201,0.25);}
-  .node:hover:not(.expanded){opacity:0.7;filter:grayscale(0.3);}
+  .node.expanded{z-index:20;position:absolute;transform:scale(1.4);}
   .node.expanded .dot{width:80px;height:80px;font-size:2rem;box-shadow:0 0 50px rgba(255,166,201,0.45);border-color:rgba(255,166,201,0.8);}
   .node.expanded h3{font-size:1.15rem;margin-top:0.8rem;max-width:220px;color:#fff;}
   .node.expanded p{display:block;font-size:0.88rem;color:var(--txt-dim);max-width:240px;margin-top:0.5rem;}
@@ -424,15 +422,6 @@
 <section id="landing-graph">
   <h2 class="sec-title" style="margin-bottom:4rem">knowledge <span>graph</span></h2>
   <div id="graph-landing" style="position:relative;">
-    <svg class="node-connector" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;">
-      <!-- edges between nodes -->
-      <line x1="8%" y1="32%" x2="24%" y2="20%" /><line x1="24%" y1="20%" x2="44%" y2="12%" />
-      <line x1="44%" y1="12%" x2="64%" y2="20%" /><line x1="64%" y1="20%" x2="80%" y2="32%" />
-      <line x1="5%" y1="32%" x2="20%" y2="62%" /><line x1="80%" y1="32%" x2="85%" y2="57%" />
-      <line x1="42%" y1="72%" x2="22%" y2="62%" /><line x1="42%" y1="72%" x2="65%" y2="67%" />
-      <line x1="65%" y1="67%" x2="85%" y2="80%" /><line x1="85%" y1="57%" x2="90%" y2="80%" />
-      <line x1="14%" y1="7%" x2="32%" y2="7%" /><line x1="32%" y1="7%" x2="50%" y2="7%" /><line x1="50%" y1="7%" x2="70%" y2="7%" />
-    </svg>
     <!-- 9 cards = nodes -->
     <div class="node" data-id="training" style="left:5%;top:30%;">
       <div class="dot">🍞</div><h3>01 · training</h3><p>an ai is not programmed with rules. it is fed staggering amounts of text — books, code, conversations — and learns the statistical shape of language within them.</p>
@@ -519,7 +508,7 @@
   </div>
 </section>
 <!-- ============ HOW AI WORKS ============ -->
-<section id="how" style="display:none;">
+<section id="how">
   <h2 class="sec-title">how do machines <span>learn to think?</span></h2>
   <p class="sec-sub">no magic, no ghosts. strip away the hype and an ai is a very large, very patient machine for finding patterns. nine parts — training, the maths, and the quirks that make it feel alive.</p>
   <div class="how">
@@ -571,7 +560,7 @@
   </div>
 </section>
 <!-- ============ ANATOMY ============ -->
-<section id="anatomy" style="display:none;">
+<section id="anatomy">
   <h2 class="sec-title">the anatomy of <span>a transformer</span></h2>
   <p class="sec-sub">a model is not one thing — it is a pipeline. each stage hands its work to the next. here is what happens between "you type" and "it answers".</p>
   <div class="anatomy">
@@ -599,7 +588,7 @@
   </div>
 </section>
 <!-- ============ GLOSSARY ============ -->
-<section id="glossary" style="display:none;">
+<section id="glossary">
   <h2 class="sec-title">the pieces that <span>make it work</span></h2>
   <p class="sec-sub">the vocabulary, decoded. click a term to unfold it. these are the same ideas the graph above will start drawing for you.</p>
   <div class="glossary">
@@ -618,7 +607,7 @@
   </div>
 </section>
 <!-- ============ DEEPER DIVE ============ -->
-<section id="deep" style="display:none;">
+<section id="deep">
   <h2 class="sec-title">go <span>deeper</span></h2>
   <p class="sec-sub">the glossy summary is over. this is the stuff under the hood — what the big words actually mean, and what people get wrong.</p>
   <div class="deepgrid">
