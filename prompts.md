@@ -466,3 +466,47 @@ webs like search the net for inspo also
 - cells scatter per-chain around jittered anchors (science/craft/myth/
   mind/machine) with relaxation so nothing stacks, clamped out of the
   reply-card window.
+
+## 12 — nerve endings, bigger domain, any prompt answers
+
+looks bad... like lightning struck the page. i want nerve endings.
+first master that, and make the domain broader — whatever i type i
+want a correct answer, i want to see the sentence form from the
+existing facts.
+
+- the jagged lightning look is dead. everything is smooth now:
+  catmull-rom `smooth()` on every path, `growArbor()` draws tapered
+  dendrites that fork into twigs and seal with bouton beads, cables
+  hang as gentle sagging curves, and the neuropil threads are shallow
+  long arcs — no sharp zigzags anywhere. tissue equilibrium for arbors
+  0.009 / cables 0.006 / threads 0.005 keeps it wispy rather than
+  struck-by-lightning.
+- domain widened from 5 chains / 35 facts to 7 chains / ~70 facts:
+  science, craft, myth, mind, machine, nature, and an "everything"
+  ground-truth chain, each anchored where the plexus is spare.
+- any prompt now answers. the matcher: `tokens()` strips stopwords,
+  `expand()` adds a SYN synonym map (weather/water/cold/hot/sun/night/
+  animal/eat/feel/fast/money/love/sad/music/language/memory/death/
+  beginning/inside/together/apart/choice/grow), `scoreFacts()` scores
+  per fact (raw substring +3, synonym hit +1, prefix +0.5),
+  `pickChain()` takes the best chain, the top facts compose the
+  sentence. if under 3 facts, it pads from the winning chain, then from
+  the everything chain — so even gibberish yields a formed answer from
+  stored facts.
+- `compose()` rebuilds a sentence: capitals, trailing periods, joined
+  with two spaces. the reply card types it out char by char (each fact
+  gets a ~1s delivery window). dashed delivery threads draw from the
+  lit facts into the card while it forms; discovered cable paths
+  between chosen facts are added to the web as faint assocEdges that
+  cool back into the tissue.
+- impulses now travel the actual cable path with 14-step soft wakes
+  and physical hop via charge on the target so nothing fires until the
+  previous cell has fired. chain watermark labels light for the chain
+  that answered.
+- fixes on review before commit: `t0` was read before it was set so
+  first-run impulses all fired at once — `t0 = performance.now()` now
+  precedes cable construction; the delivery-thread path cache was
+  sticky across runs so it is cleared at the top of every run; and the
+  synthesised sentence is verified by a node smoke harness (boot +
+  ten real prompts incl. gibberish → all reach forming, chains resolve:
+  sky→science, recursion→machine, weather→nature, love→myth).

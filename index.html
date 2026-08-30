@@ -82,13 +82,14 @@
   }
   .reply.show { opacity: 1; transform: translateY(0); }
   .reply p {
-    display: inline-block; max-width: 680px; margin: 0 auto;
+    display: inline-block; max-width: 700px; margin: 0 auto;
     padding: 14px 28px; font-family: "CMU Serif", Georgia, serif;
     font-size: 16px; line-height: 1.75; color: var(--ink);
     background: rgba(10,10,15,0.88);
     border: 1px solid rgba(255,166,201,0.12);
     box-shadow: 0 0 60px rgba(255,166,201,0.06);
-    border-radius: 8px;
+    border-radius: 10px;
+    white-space: pre-wrap;
   }
 </style>
 </head>
@@ -99,7 +100,7 @@
 
     <div class="title">
       <h1>type something and watch what connects.</h1>
-      <div class="hint">a prompt fires a fact, the fact fires the next</div>
+      <div class="hint">any prompt — the answer assembles from the stored facts</div>
     </div>
 
     <div class="reply"><p id="replytext"></p></div>
@@ -122,147 +123,169 @@
   var ACCENT = '#ffa6c9';
   var GREY = '#e9e9ee';
 
-  // ----------------------------------------------------------- chains
+  // ------------------------------------------------------- the domain
 
-  var CHAIN_KEYS = ['science', 'craft', 'myth', 'mind', 'machine'];
+  var CHAINS = {};
 
-  var CHAINS = {
-    science: {
-      label: 'science',
-      keywords: ['sky', 'blue', 'light', 'colour', 'color', 'sunlight', 'wavelength', 'scatter', 'atmosphere'],
-      anchor: [0.50, 0.55],
-      facts: [
-        ['the sky looks blue during the day.', 1],
-        ['sunlight is many colors mixed.', 1],
-        ['each color of light has its own wavelength.', 1],
-        ['blue light\u2019s wavelength is short.', 2],
-        ['short wavelengths scatter off small particles.', 2],
-        ['the air is full of tiny gas molecules.', 2],
-        ['that scattering is rayleigh scattering.', 3]
-      ],
-      responses: [
-        "blue light's wavelength is short, so gas molecules in the air scatter it hardest — that's rayleigh scattering, the reason the sky reads blue.",
-        "sunlight is many colors; short wavelengths like blue scatter off air molecules more than the rest, and rayleigh scattering is what you end up seeing."
-      ]
-    },
-    craft: {
-      label: 'craft',
-      keywords: ['poem', 'verse', 'haiku', 'rhyme', 'line', 'write me', 'poetry', 'sonnet', 'stanza'],
-      anchor: [0.17, 0.60],
-      facts: [
-        ['a poem is writing arranged in lines.', 1],
-        ['lines use rhythm and sometimes rhyme.', 1],
-        ['a haiku is a short fixed-shape poem.', 1],
-        ['a haiku has three lines.', 2],
-        ['its first line has five syllables.', 2],
-        ['free verse skips fixed rhyme.', 2],
-        ['line breaks control the reader\u2019s pause.', 3]
-      ],
-      responses: [
-        "a poem is arranged in lines; a haiku fixes that into three, while free verse uses line breaks alone — the pause is the craft.",
-        "the line is the poet's unit; some forms like haiku lock the rhythm in, others shape it by where the lines break."
-      ]
-    },
-    myth: {
-      label: 'myth',
-      keywords: ['arjuna', 'dharma', 'krishna', 'duty', 'hesitate', 'karma', 'mahabharata', 'battlefield', 'warrior'],
-      anchor: [0.28, 0.24],
-      facts: [
-        ['arjuna is a warrior of the mahabharata.', 1],
-        ['arjuna hesitates before kurukshetra.', 1],
-        ['his relatives stand on the enemy side.', 1],
-        ['krishna drives arjuna\u2019s chariot.', 2],
-        ['krishna says fighting is his duty.', 2],
-        ['this idea of duty is called dharma.', 2],
-        ['skipping that duty would cause more harm.', 3]
-      ],
-      responses: [
-        "arjuna hesitates to fight his own relatives, and krishna answers that the duty of a warrior is dharma — skipping it would do more harm than the battle.",
-        "the enemy side holds his own family, so arjuna doubts; krishna's reply is that his warrior's duty — dharma — outweighs the cost."
-      ]
-    },
-    mind: {
-      label: 'mind',
-      keywords: ['nerve', 'neuron', 'brain', 'signal', 'synapse', 'memory', 'think', 'thought', 'mind', 'threshold', 'how does memory'],
-      anchor: [0.78, 0.26],
-      facts: [
-        ['signals travel along nerves as pulses.', 1],
-        ['a cell fires when inputs cross a threshold.', 1],
-        ['stronger signals make it fire more.', 1],
-        ['cells pass the signal on at a synapse.', 2],
-        ['repeated firing strengthens the connection.', 2],
-        ['that is how patterns become memory.', 2],
-        ['the whole network settles into a response.', 3]
-      ],
-      responses: [
-        "a signal crosses a threshold, a cell fires, and repeated firing strengthens the path until the network settles into a response — that is a thought taking shape.",
-        "nerves pass pulses across synapses; what fires often gets stronger, and out of that wiring a settled answer emerges."
-      ]
-    },
-    machine: {
-      label: 'machine',
-      keywords: ['program', 'code', 'loop', 'function', 'recursion', 'algorithm', 'computer', 'software', 'bug', 'compile'],
-      anchor: [0.79, 0.60],
-      facts: [
-        ['a program runs steps one after another.', 1],
-        ['some steps only run if a condition holds.', 1],
-        ['a loop repeats until a condition stops it.', 1],
-        ['a function is a named, callable block.', 2],
-        ['recursion is a function calling itself.', 2],
-        ['the deepest call returns last.', 2],
-        ['answers assemble from the deepest call up.', 3]
-      ],
-      responses: [
-        "a loop repeats until a condition stops it, and recursion returns from its base case outward — both of them assemble an answer from pieces.",
-        "branches pick a path, loops repeat until a condition ends them, and recursion builds the result from the deepest call upward."
-      ]
-    }
+  var CHAIN_KEYS = ['science', 'craft', 'myth', 'mind', 'machine', 'nature', 'everything'];
+
+  function chain(key, label, anchor, facts) {
+    CHAINS[key] = { label: label, anchor: anchor, facts: facts };
+  }
+
+  chain('science', 'science', [0.68, 0.22], [
+    ['the sky looks blue during the day.', 1, ['sky', 'blue', 'day']],
+    ['sunlight is many colors mixed.', 1, ['sunlight', 'color', 'light']],
+    ['each color of light has its own wavelength.', 1, ['wavelength', 'color', 'light']],
+    ['blue light\u2019s wavelength is short.', 2, ['wavelength', 'blue']],
+    ['short wavelengths scatter off small particles.', 2, ['scatter', 'particle', 'wave']],
+    ['the air is full of tiny gas molecules.', 2, ['air', 'molecule', 'gas', 'atmosphere']],
+    ['that scattering is rayleigh scattering.', 3, ['scatter', 'rayleigh', 'light']],
+    ['water bends light as it enters and leaves it.', 2, ['water', 'bend', 'refract', 'light']],
+    ['ice is water slowed into a quiet lattice.', 3, ['ice', 'cold', 'freeze', 'winter', 'snow']],
+    ['fire is light and heat grown out of fuel.', 3, ['fire', 'heat', 'flame', 'burn', 'warm']],
+    ['sound is a shake passing through the air.', 2, ['sound', 'noise', 'music', 'vibrate', 'hear']],
+    ['heavy things fall because mass pulls on mass.', 3, ['gravity', 'fall', 'weight', 'heavy', 'pull']]
+  ]);
+
+  chain('craft', 'craft', [0.18, 0.54], [
+    ['a poem is writing arranged in lines.', 1, ['poem', 'line', 'write']],
+    ['lines use rhythm and sometimes rhyme.', 1, ['rhyme', 'rhythm', 'line']],
+    ['a haiku is a short fixed-shape poem.', 1, ['haiku', 'poem', 'short']],
+    ['a haiku has three lines.', 2, ['haiku', 'line']],
+    ['its first line has five syllables.', 2, ['syllable', 'line']],
+    ['free verse skips fixed rhyme.', 2, ['verse', 'rhyme', 'free']],
+    ['line breaks control the reader\u2019s pause.', 3, ['line', 'pause', 'reader']],
+    ['a story is a way of carrying attention somewhere.', 2, ['story', 'narrative', 'tale', 'plot', 'fiction']],
+    ['a song is a poem held together by pitch.', 3, ['song', 'music', 'melody', 'sing', 'lyric']],
+    ['an image can carry meaning without a single word.', 2, ['image', 'picture', 'art', 'draw', 'visual']],
+    ['metaphor is saying one thing to mean another.', 3, ['metaphor', 'symbol', 'compare', 'figure']]
+  ]);
+
+  chain('myth', 'myth', [0.26, 0.22], [
+    ['arjuna is a warrior of the mahabharata.', 1, ['arjuna', 'mahabharata', 'warrior']],
+    ['arjuna hesitates before kurukshetra.', 1, ['arjuna', 'hesitate', 'kurukshetra']],
+    ['his relatives stand on the enemy side.', 1, ['family', 'enemy', 'relatives']],
+    ['krishna drives arjuna\u2019s chariot.', 2, ['krishna', 'chariot', 'arjuna']],
+    ['krishna says fighting is his duty.', 2, ['krishna', 'duty', 'fight']],
+    ['this idea of duty is called dharma.', 2, ['dharma', 'duty']],
+    ['skipping that duty would cause more harm.', 3, ['duty', 'harm', 'choose', 'choice']],
+    ['indra throws thunder from the open sky.', 3, ['indra', 'thunder', 'storm', 'god']],
+    ['agni carries offerings between the worlds.', 3, ['agni', 'offer', 'ritual', 'sacrifice']],
+    ['sita walks through fire and comes out whole.', 3, ['sita', 'rama', 'fire', 'trial', 'pure']],
+    ['icarus falls for flying too near the sun.', 2, ['icarus', 'fly', 'ambition', 'sun', 'wax']],
+    ['orpheus looks back and loses what he loved.', 2, ['orpheus', 'love', 'look', 'loss', 'underworld']]
+  ]);
+
+  chain('mind', 'mind', [0.48, 0.42], [
+    ['signals travel along nerves as pulses.', 1, ['nerve', 'signal', 'pulse', 'neuron']],
+    ['a cell fires when inputs cross a threshold.', 1, ['threshold', 'fire', 'cell']],
+    ['stronger signals make it fire more.', 1, ['signal', 'strong', 'fire']],
+    ['cells pass the signal on at a synapse.', 2, ['synapse', 'signal', 'connect']],
+    ['repeated firing strengthens the connection.', 2, ['repeat', 'strengthen', 'memory', 'habit']],
+    ['that is how patterns become memory.', 2, ['memory', 'remember', 'pattern', 'forget']],
+    ['the whole network settles into a response.', 3, ['network', 'settle', 'response', 'answer']],
+    ['fear is the mind rehearsing a disaster.', 3, ['fear', 'anxiety', 'worry', 'afraid', 'danger']],
+    ['sleep is where the day gets sorted and filed.', 3, ['sleep', 'dream', 'night', 'rest', 'bed']],
+    ['attention is a clear, narrow stream.', 2, ['attention', 'focus', 'notice', 'concentrate']],
+    ['a feeling that lasts becomes a habit of the heart.', 3, ['feeling', 'emotion', 'habit', 'heart', 'love']]
+  ]);
+
+  chain('machine', 'machine', [0.80, 0.64], [
+    ['a program runs steps one after another.', 1, ['program', 'code', 'run', 'step']],
+    ['some steps only run if a condition holds.', 1, ['condition', 'if', 'branch', 'logic']],
+    ['a loop repeats until a condition stops it.', 1, ['loop', 'repeat', 'condition']],
+    ['a function is a named, callable block.', 2, ['function', 'name', 'call', 'block']],
+    ['recursion is a function calling itself.', 2, ['recursion', 'function', 'self']],
+    ['the deepest call returns last.', 2, ['call', 'deep', 'return', 'stack']],
+    ['answers assemble from the deepest call up.', 3, ['assemble', 'answer', 'return']],
+    ['a network is many small pieces passing messages.', 3, ['network', 'message', 'node', 'link', 'internet']],
+    ['data is recorded experience arranged in rows.', 2, ['data', 'record', 'number', 'database', 'table']],
+    ['a bug is the gap between plan and behaviour.', 3, ['bug', 'error', 'mistake', 'fault', 'wrong']],
+    ['an ai is weighted links learning from examples.', 3, ['ai', 'artificial', 'learning', 'model', 'intelligence']]
+  ]);
+
+  chain('nature', 'nature', [0.63, 0.52], [
+    ['the sea keeps its own unhurried time.', 1, ['sea', 'ocean', 'wave', 'tide', 'salt']],
+    ['a river eventually finds the lowest road.', 1, ['river', 'stream', 'flow', 'path', 'valley']],
+    ['rain is water returning from where it rose.', 1, ['rain', 'water', 'cloud', 'storm', 'wet']],
+    ['a forest is a city of trees and quiet politics.', 2, ['forest', 'tree', 'wood', 'plant', 'leaf']],
+    ['mountains wear down into the sand they stand on.', 2, ['mountain', 'hill', 'rock', 'stone', 'sand']],
+    ['stars are fires too far away to burn us.', 2, ['star', 'space', 'night', 'sky', 'galaxy']],
+    ['wind is the air changing its mind.', 3, ['wind', 'air', 'breeze', 'weather', 'blow']],
+    ['the moon is a clock made of light and rock.', 3, ['moon', 'night', 'tide', 'clock', 'rock']]
+  ]);
+
+  chain('everything', 'everything', [0.30, 0.72], [
+    ['every fact here is already sitting in the web.', 1, ['fact', 'answer', 'know', 'exist', 'everything', 'stored']],
+    ['nothing arrives out of nowhere.', 1, ['cause', 'reason', 'origin', 'why', 'source', 'begin']],
+    ['answers are rarely far from what you already noticed.', 1, ['answer', 'notice', 'solve', 'question', 'clue', 'hint']],
+    ['a word means what the words around it give it.', 2, ['word', 'meaning', 'language', 'speak', 'say']],
+    ['what repeats becomes part of the pattern.', 2, ['pattern', 'repeat', 'again', 'cycle', 'habit']],
+    ['a small change can move a whole chain.', 2, ['change', 'small', 'effect', 'ripple', 'influence']],
+    ['almost everything is closer than it first looks.', 2, ['close', 'near', 'connect', 'together', 'alike']],
+    ['time feels faster when the mind is occupied.', 3, ['time', 'fast', 'slow', 'wait', 'busy', 'hurry']],
+    ['the present is where everything else arrives.', 3, ['now', 'present', 'moment', 'today', 'here', 'live']]
+  ]);
+
+  // token -> related concepts, so off-the-shelf words still land somewhere
+  var SYN = {
+    weather: ['rain', 'storm', 'cloud', 'wind', 'sky', 'sun', 'cold', 'hot', 'sunny'],
+    water: ['rain', 'river', 'sea', 'ocean', 'ice', 'drink', 'swim', 'liquid'],
+    cold: ['ice', 'winter', 'freeze', 'snow', 'chill'],
+    hot: ['fire', 'heat', 'sun', 'burn', 'warm', 'summer'],
+    sun: ['light', 'heat', 'star', 'sky', 'warm', 'day'],
+    night: ['moon', 'star', 'sleep', 'dark', 'dream'],
+    animal: ['bird', 'cat', 'dog', 'fish', 'fish', 'snake'],
+    eat: ['food', 'hunger', 'taste', 'meal', 'cook'],
+    feel: ['love', 'fear', 'anger', 'sad', 'happy', 'emotion', 'lonely'],
+    fast: ['speed', 'quick', 'velocity', 'hurry'],
+    money: ['buy', 'sell', 'trade', 'work', 'price', 'market'],
+    love: ['heart', 'feeling', 'loss', 'care', 'want'],
+    sad: ['loss', 'cry', 'pain', 'alone', 'sorry'],
+    music: ['song', 'sound', 'pitch', 'melody', 'sing', 'listen', 'beats'],
+    language: ['word', 'speak', 'say', 'meaning', 'talk', 'voice'],
+    memory: ['remember', 'forget', 'past', 'recall'],
+    death: ['die', 'gone', 'loss', 'end', 'grave'],
+    beginning: ['start', 'born', 'origin', 'first', 'new'],
+    inside: ['inner', 'within', 'core', 'heart', 'secret'],
+    together: ['connect', 'link', 'join', 'bond', 'together', 'union'],
+    apart: ['separate', 'alone', 'distance', 'divide', 'split'],
+    choice: ['choose', 'decision', 'duty', 'path', 'pick'],
+    grow: ['growth', 'plant', 'tall', 'life', 'increase']
   };
 
-  var FALLBACK = {
-    responses: [
-      'no chain fired for that one yet.',
-      'that prompt doesn\u2019t connect to anything here.'
-    ]
-  };
+  var STOP = {};
+  ['what','is','why','how','do','does','did','the','a','an','of','to','me','my','your','can','i','you','it','that','this','and','or','but','for','about','will','would','could','should','please','tell','give','make','want','need','like','let','about','there','its','it\u2019s','when','where','who','are','were','was','be','has','have','too','so','very','really','just','about','on','in','at','with','from','by','up','down','out','over','under','again','then','than'].forEach(function (w) { STOP[w] = true; });
 
-  var DRIZZLE = [
-    'refraction','prism','ozone','violet','resonance','entropy','gravity','velocity','photon','orbit',
-    'couplet','sestina','iamb','trochee','anaphora','imagery','meter','cadence','ink','stanza',
-    'bhagavad','kaurava','partha','shakuni','svadharma','austerity','lotus','prayer','horizon','ritual',
-    'dendrite','axon','soma','myelin','glutamate','dopamine','cortex','hippocampus','resting','threshold',
-    'stack','heap','cache','compiler','pointer','byte','kernel','thread','parser','interpreter',
-    'indigo','static','thunder','tide','echo','quartz','velvet','mist','fracture','whisper',
-    'kuruk','ganga','samudra','vayu','agni','prana','marga','seva',
-    'cadence','tempo','attack','decay','sustain','release','pulse','breath','pause','stillness'
-  ];
-
-  // ----------------------------------------------------------- state
+  // ------------------------------------------------------- state
 
   var W = 0, H = 0, DPR = 1;
-  var neurons = [];      // cells: somas with arbors
-  var cables = [];       // directed cables {a, b, path, cum}
-  var threads = [];      // wandering neuropil fibres {path, cum, bout, timer}
-  var boutons = [];      // all nerve endings {x, y, owner, ph, flare}
-  var promptCell = null;
-  var impulses = [];     // travelling pulses {path, cum, d, speed, fire, wake, started, done, onEnd}
+  var cells = [];           // one per fact
+  var cables = [];          // spine + decorative, smooth curves
+  var assocEdges = [];      // freshly discovered paths during a cascade
+  var boutons = [];
+  var threads = [];         // long gentle arcs
   var drizzle = [];
   var motes = [];
-  var chainMeta = {};    // chain -> {x, y, r} centroid + radius for watermark
+  var chainMeta = {};       // key -> {x, y, r}
 
   var tissue = null, tctx = null, TW = 0, TH = 0;
 
-  var now = 0, frame = 0, lastT = 0;
-  var t0 = 0;
-  var state = 'idle';
+  var promptCell = null;
+  var impulses = [];
+  var synthesis = null;     // current answering run
+
+  var now = 0, frame = 0, lastT = 0, t0 = 0;
+  var state = 'idle';       // idle | running | forming | answered | settling
   var answerAt = 0, settleStart = 0;
 
-  // ----------------------------------------------------------- helpers
+  // ------------------------------------------------------- helpers
 
   function rand(a, b) { return a + Math.random() * (b - a); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
-  function lerpColor(alpha) { return 'rgba(255,166,201,' + alpha.toFixed(3) + ')'; }
+  function lerpColor(a) { return 'rgba(255,166,201,' + a.toFixed(3) + ')'; }
 
   function roundRect(c, x, y, w, h, r) {
     c.beginPath();
@@ -294,245 +317,253 @@
     return { x: a[0] + (b[0] - a[0]) * t, y: a[1] + (b[1] - a[1]) * t };
   }
 
-  // ----------------------------------------------------------- growth
-
-  // one wandering filament from (sx,sy), inching through the field
-  function growPath(sx, sy, pts, step, curl, target) {
-    var path = [[sx, sy]];
-    var x = sx, y = sy;
-    var ang = target
-      ? Math.atan2(target.y - sy, target.x - sx) + rand(-0.9, 0.9)
-      : rand(0, Math.PI * 2);
-    for (var i = 0; i < pts; i++) {
-      if (target) {
-        var ideal = Math.atan2(target.y - y, target.x - x);
-        ang += (ideal - ang) * 0.12 + rand(-curl, curl);
-      } else {
-        ang += rand(-curl, curl);
-      }
-      x += Math.cos(ang) * step;
-      y += Math.sin(ang) * step;
-      path.push([x, y]);
-    }
-    return path;
+  function catmull(p0, p1, p2, p3, t) {
+    var t2 = t * t, t3 = t2 * t;
+    return {
+      x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+      y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)
+    };
   }
 
-  // dendritic arbor for one soma: several branches, each forking
-  function growArbor(sx, sy) {
-    var out = [];
-    var branches = 3 + Math.floor(Math.random() * 3);   // 3-5
-    for (var b = 0; b < branches; b++) {
-      var ang = rand(0, Math.PI * 2);
-      var x = sx, y = sy;
-      var segs = 5 + Math.floor(Math.random() * 4);
-      var step = rand(6, 10);
-      var path = [[x, y]];
-      for (var i = 0; i < segs; i++) {
-        ang += rand(-0.5, 0.5);
-        x += Math.cos(ang) * step;
-        y += Math.sin(ang) * step;
-        path.push([x, y]);
-        // occasionally fork a twig off the main branch
-        if (i >= 2 && Math.random() < 0.42) {
-          var ca = ang + rand(-0.8, 0.8);
-          var cx = x, cy = y;
-          var twig = [[cx, cy]];
-          var tl = 2 + Math.floor(Math.random() * 3);
-          for (var j = 0; j < tl; j++) {
-            ca += rand(-0.5, 0.5);
-            cx += Math.cos(ca) * step * 0.85;
-            cy += Math.sin(ca) * step * 0.85;
-            twig.push([cx, cy]);
-          }
-          out.push(twig);
-        }
+  // smooth a polyline into a gentle curve
+  function smooth(pts) {
+    if (pts.length < 3) return pts;
+    var out = [pts[0]];
+    for (var i = 1; i < pts.length - 2; i++) {
+      var p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2];
+      for (var s = 1; s <= 5; s++) {
+        var p = catmull(p0, p1, p2, p3, s / 5);
+        out.push([p.x, p.y]);
       }
-      out.push(path);
     }
+    out.push(pts[pts.length - 1]);
     return out;
   }
+
+  // ------------------------------------------------------- growth
 
   function addBouton(x, y, owner) {
     boutons.push({ x: x, y: y, owner: owner || null, ph: rand(0, Math.PI * 2), flare: 0 });
   }
 
-  // termination trickle: a few short twigs near the end of a cable/thread
-  function terminalSpray(path, k) {
-    var n = Math.min(k, 3);
-    var end = path[path.length - 1];
-    for (var i = 1; i <= n; i++) {
-      var p = path[Math.max(0, path.length - 1 - i * 2)];
-      addBouton(p[0], p[1], null);
+  // a neuron's dendrites: smooth tapered branches with twigs and beads
+  function growArbor(sx, sy) {
+    var out = [];
+    var n = 3 + Math.floor(Math.random() * 2);
+    for (var b = 0; b < n; b++) {
+      var ang = rand(0, Math.PI * 2);
+      var ctrl = [[sx, sy]];
+      var len = rand(52, 92);
+      for (var i = 1; i <= 4; i++) {
+        ang += rand(-0.35, 0.35);
+        ctrl.push([sx + Math.cos(ang) * len * i / 4, sy + Math.sin(ang) * len * i / 4]);
+      }
+      var branch = smooth(ctrl);
+      out.push(branch);
+      var tip = branch[branch.length - 1];
+      addBouton(tip[0], tip[1], null);
+      // twigs near the tip
+      var twigs = 1 + Math.floor(Math.random() * 2);
+      for (var w2 = 0; w2 < twigs; w2++) {
+        var k0 = Math.max(1, branch.length - 4 - w2 * 2);
+        var base = branch[k0];
+        var twAng = Math.atan2(tip[1] - base[1], tip[0] - base[0]) + rand(-0.9, 0.9);
+        var twig = [base];
+        for (var t2 = 1; t2 <= 2; t2++) {
+          twAng += rand(-0.4, 0.4);
+          twig.push([base[0] + Math.cos(twAng) * 9 * t2, base[1] + Math.sin(twAng) * 9 * t2]);
+        }
+        var tpath = smooth(twig);
+        out.push(tpath);
+        var tt = tpath[tpath.length - 1];
+        addBouton(tt[0], tt[1], null);
+      }
     }
-    addBouton(end[0], end[1], null);
+    return out;
   }
 
-  // ----------------------------------------------------------- layout
+  // a cable between two cells: a gentle sagging curve
+  function growCablePath(sx, sy, tx, ty) {
+    var mx = (sx + tx) / 2, my = (sy + ty) / 2;
+    var dx = tx - sx, dy = ty - sy;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var px = -dy / len, py = dx / len;
+    var sag = Math.min(len * 0.13, 46) * rand(0.7, 1.3);
+    var c1 = { x: mx - px * sag - dx * 0.15, y: my - py * sag - dy * 0.15 };
+    var c2 = { x: mx + px * sag * 0.55 + dx * 0.12, y: my + py * sag * 0.55 + dy * 0.12 };
+    return smooth([[sx, sy], [c1.x, c1.y], [c2.x, c2.y], [tx, ty]]);
+  }
+
+  // a long shallow arc across the field
+  function growArcPath() {
+    var x0 = rand(W * 0.06, W * 0.5), y0 = rand(H * 0.2, H * 0.7);
+    var x1 = rand(W * 0.55, W * 0.94), y1 = rand(H * 0.18, H * 0.76);
+    var mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    var dx = x1 - x0, dy = y1 - y0;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var px = -dy / len, py = dx / len;
+    var sag = len * rand(0.12, 0.2);
+    var c = { x: mx + px * sag, y: my + py * sag };
+    return smooth([[x0, y0], [c.x, c.y], [x1, y1]]);
+  }
+
+  // ------------------------------------------------------- layout
 
   function measureW(text) {
     ctx.font = '12px "CMU Sans Serif", sans-serif';
-    return Math.min(320, ctx.measureText(text).width + 26);
+    return Math.min(320, ctx.measureText(text).width + 22);
   }
 
-  function buildNeurons() {
-    neurons = [];
+  function buildLayout() {
+    cells = [];
     boutons = [];
-    var rects = [];
-    var zx0 = W * 0.10, zx1 = W * 0.90, zy0 = H * 0.17, zy1 = H * 0.80;
+    var zx0 = W * 0.10, zx1 = W * 0.90, zy0 = H * 0.19, zy1 = H * 0.78;
 
     for (var c = 0; c < CHAIN_KEYS.length; c++) {
       var key = CHAIN_KEYS[c];
-      var chain = CHAINS[key];
-      var ax = (chain.anchor[0] + rand(-0.02, 0.02)) * W;
-      var ay = (chain.anchor[1] + rand(-0.02, 0.02)) * H;
+      var def = CHAINS[key];
+      var ax = (def.anchor[0] + rand(-0.015, 0.015)) * W;
+      var ay = (def.anchor[1] + rand(-0.015, 0.015)) * H;
       var pts = [];
-      var facts = chain.facts;
 
-      for (var f = 0; f < facts.length; f++) {
-        var hop = facts[f][1];
-        var ring = hop === 1 ? rand(55, 98) : hop === 2 ? rand(98, 148) : rand(140, 190);
+      for (var f = 0; f < def.facts.length; f++) {
+        var fact = def.facts[f];
+        var ring = fact[1] === 1 ? rand(50, 88) : fact[1] === 2 ? rand(85, 132) : rand(120, 165);
         var a2 = rand(0, Math.PI * 2);
-        var spread = rand(0.75, 1.25);
         var n = {
-          text: facts[f][0], chain: key, hop: hop, fired: false,
-          flashT: 0, drain: 0, charge: 0,
+          text: fact[0], ch: key, ho: fact[1], k: fact[2],
+          fired: false, flashT: 0, drain: 0, charge: 0,
           trem: rand(0, Math.PI * 2), glowph: rand(0, Math.PI * 2),
           sparkT: rand(800, 7000), sparkF: 0,
-          x: clamp(ax + Math.cos(a2) * ring * spread, W*0.10 + 40, W*0.90 - 40),
-          y: clamp(ay + Math.sin(a2) * ring * spread, zy0 + 20, zy1 - 20)
+          x: clamp(ax + Math.cos(a2) * ring, zx0 + 20, zx1 - 20),
+          y: clamp(ay + Math.sin(a2) * ring, zy0, zy1)
         };
         n.w = measureW(n.text);
-        n.h = 26;
+        n.h = 24;
         n.qx = n.x; n.qy = n.y;
         pts.push(n);
-        rects.push(n);
       }
 
-      // relaxation so cells don't stack
-      for (var it = 0; it < 90; it++) {
+      for (var it = 0; it < 80; it++) {
         for (var i = 0; i < pts.length; i++) {
           for (var j = i + 1; j < pts.length; j++) {
             var a = pts[i], b = pts[j];
             var dx = b.x - a.x, dy = b.y - a.y;
             var d = Math.sqrt(dx * dx + dy * dy) || 0.0001;
-            var minD = (a.w + b.w) / 2 * 0.62 + 16;
+            var minD = (a.w + b.w) / 2 * 0.6 + 14;
             if (d < minD) {
               var push = (minD - d) / 2;
-              var ux = dx / d, uy = dy / d;
-              a.x -= ux * push * 0.5; a.y -= uy * push * 0.5;
-              b.x += ux * push * 0.5; b.y += uy * push * 0.5;
-              a.x = clamp(a.x, W*0.10 + 20, W*0.90 - 20);
+              a.x -= (dx / d) * push; a.y -= (dy / d) * push;
+              b.x += (dx / d) * push; b.y += (dy / d) * push;
+              a.x = clamp(a.x, zx0 + 16, zx1 - 16);
               a.y = clamp(a.y, zy0, zy1);
-              b.x = clamp(b.x, W*0.10 + 20, W*0.90 - 20);
+              b.x = clamp(b.x, zx0 + 16, zx1 - 16);
               b.y = clamp(b.y, zy0, zy1);
             }
           }
         }
       }
 
-      // arbors + tips
       for (var k = 0; k < pts.length; k++) {
         pts[k].arbors = growArbor(pts[k].x, pts[k].y);
-        for (var p = 0; p < pts[k].arbors.length; p++) {
-          var tip = pts[k].arbors[p][pts[k].arbors[p].length - 1];
-          addBouton(tip[0], tip[1], pts[k]);
-        }
       }
 
       var cx = 0, cy = 0;
       for (var m = 0; m < pts.length; m++) { cx += pts[m].x; cy += pts[m].y; }
-      chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: ring };
-      neurons = neurons.concat(pts);
+      chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: 170 };
+      cells = cells.concat(pts);
     }
   }
 
-  function buildCables() {
+  function buildNerveNet() {
     cables = [];
-    // directed hop cables inside each chain: every hop1 → every hop2, every hop2 → hop3
+    threads = [];
+    assocEdges = [];
+
+    // spine cables per chain: ho1 -> ho2 -> ho3 (indices within chain order)
     for (var c = 0; c < CHAIN_KEYS.length; c++) {
       var key = CHAIN_KEYS[c];
-      var chain = CHAINS[key];
-      var h1 = neurons.filter(function (n) { return n.chain === key && n.hop === 1; });
-      var h2 = neurons.filter(function (n) { return n.chain === key && n.hop === 2; });
-      var h3 = neurons.filter(function (n) { return n.chain === key && n.hop === 3; });
-      for (var i = 0; i < h1.length; i++) {
-        for (var j = 0; j < h2.length; j++) {
-          cables.push(mkCable(h1[i], h2[j]));
-        }
+      var h1 = chainCells(key, 1);
+      var h2 = chainCells(key, 2);
+      var h3 = chainCells(key, 3);
+      if (h1.length && h2.length) {
+        cables.push(makeCable(h1[0], h2[0]));
       }
-      for (var k = 0; k < h2.length; k++) {
-        cables.push(mkCable(h2[k], h3[0]));
+      if (h2.length && h3.length) {
+        cables.push(makeCable(h2[0], h3[0]));
+      }
+      // a decorative branch for texture
+      if (h2.length > 1 && h3.length) {
+        cables.push(makeCable(h2[1 % h2.length], h3[0]));
       }
     }
-    // neuropil chords: a few long fibres stitching unrelated chains together
-    for (var m = 0; m < 10; m++) {
-      var a = neurons[Math.floor(Math.random() * neurons.length)];
-      var b = neurons[Math.floor(Math.random() * neurons.length)];
-      if (a === b || a.chain === b.chain) { m--; continue; }
-      var path = growPath(a.x, a.y, 110, 3.2, 0.32, { x: b.x, y: b.y });
-      cables.push({ a: a, b: b, path: path, cum: pathCum(path), chord: true });
-      terminalSpray(path, 2);
+
+    // one or two long connecting arcs between distant chains
+    var farPairs = 3;
+    while (farPairs-- > 0) {
+      var a = cells[Math.floor(Math.random() * cells.length)];
+      var b = cells[Math.floor(Math.random() * cells.length)];
+      if (a === b || a.ch === b.ch) { farPairs++; continue; }
+      threads.push({ path: smooth([[a.x, a.y], [rand(minX(), maxX()), rand(minY(), maxY())], [b.x, b.y]]), t0: 0 });
+    }
+
+    for (var t = 0; t < 3; t++) {
+      var arc = growArcPath();
+      var mid = arc[Math.floor(arc.length / 2)];
+      addBouton(mid[0], mid[1], null);
+      var endp = arc[arc.length - 1];
+      addBouton(endp[0], endp[1], null);
+      threads.push({ path: arc, t0: 0 });
     }
   }
 
-  function buildThreads() {
-    threads = [];
-    for (var i = 0; i < 16; i++) {
-      var path = growPath(
-        rand(W * 0.06, W * 0.94), rand(H * 0.14, H * 0.86),
-        190 + Math.floor(Math.random() * 90), 3.0, rand(0.10, 0.24), null
-      );
-      // nudge into frame
-      for (var j = 0; j < path.length; j++) {
-        path[j][0] = clamp(path[j][0], 6, W - 6);
-        path[j][1] = clamp(path[j][1], 8, H - 8);
-      }
-      var bout = [Math.floor(rand(30, 70)), Math.floor(rand(90, 140))];
-      for (var bIdx = 0; bIdx < bout.length; bIdx++) {
-        var p = path[bout[bIdx]];
-        addBouton(p[0], p[1], null);
-      }
-      terminalSpray(path, 3);
-      threads.push({ path: path, cum: pathCum(path), timer: rand(2500, 9000) });
+  function minX() { return W * 0.1; }
+  function maxX() { return W * 0.9; }
+  function minY() { return H * 0.19; }
+  function maxY() { return H * 0.78; }
+
+  function chainCells(key, ho) {
+    var out = [];
+    for (var i = 0; i < cells.length; i++) {
+      if (cells[i].ch === key && cells[i].ho === ho) out.push(cells[i]);
     }
+    return out;
   }
 
-  function mkCable(src, dst) {
-    var path = growPath(src.x, src.y, 96, 2.9, 0.24, { x: dst.x, y: dst.y });
-    path[path.length - 1][0] = dst.x;
-    path[path.length - 1][1] = dst.y;
-    terminalSpray(path, 3);
-    return { a: src, b: dst, path: path, cum: pathCum(path), chord: false };
+  function makeCable(a, b) {
+    return { a: a, b: b, path: growCablePath(a.x, a.y, b.x, b.y) };
   }
 
   function buildDrizzle() {
     drizzle = [];
     var tries = 0;
-    while (drizzle.length < 46 && tries < 900) {
+    while (drizzle.length < 40 && tries < 800) {
       tries++;
-      var x = rand(W * 0.08, W * 0.92), y = rand(H * 0.16, H * 0.82);
-      var clear = true;
-      for (var i = 0; i < neurons.length; i++) {
-        if (dist(x, y, neurons[i].x, neurons[i].y) < neurons[i].w / 2 + 46) { clear = false; break; }
+      var x = rand(W * 0.08, W * 0.92), y = rand(H * 0.16, H * 0.80);
+      var ok = true;
+      for (var i = 0; i < cells.length; i++) {
+        if (dist(x, y, cells[i].x, cells[i].y) < cells[i].w / 2 + 44) { ok = false; break; }
       }
-      if (!clear) continue;
-      drizzle.push({
-        t: DRIZZLE[Math.floor(Math.random() * DRIZZLE.length)],
-        x: x, y: y,
-        size: rand(8.5, 11), op: rand(0.05, 0.11),
-        ph: rand(0, Math.PI * 2), dp: rand(0, Math.PI * 2)
-      });
+      if (!ok) continue;
+      drizzle.push({ t: DRIZZLE[Math.floor(Math.random() * DRIZZLE.length)], x: x, y: y, size: rand(8.5, 11), op: rand(0.04, 0.09), ph: rand(0, Math.PI * 2), dp: rand(0, Math.PI * 2) });
     }
   }
 
+  var DRIZZLE = [
+    'refraction', 'prism', 'ozone', 'violet', 'resonance', 'entropy', 'gravity', 'velocity', 'photon',
+    'couplet', 'sestina', 'iamb', 'trochee', 'anaphora', 'imagery', 'meter', 'cadence', 'ink',
+    'bhagavad', 'kaurava', 'partha', 'shakuni', 'svadharma', 'austerity', 'lotus', 'prayer', 'horizon',
+    'dendrite', 'axon', 'soma', 'myelin', 'glutamate', 'dopamine', 'cortex', 'hippocampus', 'resting',
+    'stack', 'heap', 'cache', 'compiler', 'pointer', 'byte', 'kernel', 'thread', 'parser',
+    'indigo', 'static', 'thunder', 'tide', 'echo', 'quartz', 'velvet', 'mist', 'fracture',
+    'kuruk', 'ganga', 'samudra', 'vayu', 'agni', 'prana', 'marga', 'seva',
+    'cadence', 'tempo', 'attack', 'decay', 'sustain', 'release', 'pulse', 'breath', 'pause'
+  ];
+
   function buildMotes() {
     motes = [];
-    for (var i = 0; i < 40; i++) {
-      motes.push({
-        x: rand(0, W), y: rand(0, H), r: rand(0.6, 1.9),
-        ph: rand(0, Math.PI * 2), vx: rand(-0.1, 0.1), vy: rand(-0.08, 0.08),
-        pink: Math.random() < 0.3, swirl: rand(-0.006, 0.006)
-      });
+    for (var i = 0; i < 34; i++) {
+      motes.push({ x: rand(0, W), y: rand(0, H), r: rand(0.6, 1.7), ph: rand(0, Math.PI * 2), vx: rand(-0.08, 0.08), vy: rand(-0.07, 0.07), pink: Math.random() < 0.3, swirl: rand(-0.005, 0.005) });
     }
   }
 
@@ -547,172 +578,233 @@
     tctx.fillRect(0, 0, TW, TH);
   }
 
-  // ----------------------------------------------------------- firing
+  // ------------------------------------------------------- answering
 
-  function mkPromptCell(text) {
-    var n = {
-      text: text, fired: true, flashT: 1, drain: 0, charge: 1.4,
-      x: W / 2, y: H * 0.19, w: 0, h: 22, trem: 0, glowph: 0,
-      qx: W / 2, qy: H * 0.19, arbors: []
-    };
-    ctx.font = '700 13px "CMU Sans Serif", sans-serif';
-    n.w = Math.min(520, ctx.measureText(text).width + 32);
-    return n;
-  }
-
-  function cableBetween(src, dst) {
-    for (var i = 0; i < cables.length; i++) {
-      if (cables[i].a === src && cables[i].b === dst) return cables[i];
-    }
-    // live-wire a fresh cable (used for prompt → hop1)
-    return mkCable(src, dst);
-  }
-
-  function mkImpulse(cable, delay, fire, onEnd) {
-    var path = cable.path, cum = cable.cum;
-    var len = cum[cum.length - 1];
-    var dur = clamp(len * 1.05, 340, 720);
-    return {
-      cable: cable, path: path, cum: cum, len: len,
-      d: 0, speed: len / dur, fire: fire,
-      wake: new Array(18).fill(null), wi: 0,
-      started: t0 + delay, done: false, onEnd: onEnd
-    };
-  }
-
-  function runChain(chain, text) {
-    var picked = [0, 1, 2].slice().sort(function () { return Math.random() - 0.5; });
-    var H1 = [0, 1, 2].map(function (i) { return chainNeurons(chain, 1)[i]; });
-    var H2pool = [0, 1, 2].slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
-    var H2 = H2pool.map(function (i) { return chainNeurons(chain, 2)[i]; });
-    var H3 = chainNeurons(chain, 3)[0];
-
-    promptCell = mkPromptCell(text);
-    impulses = [];
-
-    var arr1 = [];
-    for (var i = 0; i < 3; i++) {
-      var c1 = cableBetween(promptCell, H1[i]);
-      var imp = mkImpulse(c1, 260 + i * 150, true, function (dst) {
-        fireNode(dst);
-      });
-      (function (dst) { imp.onEnd = fireNode.bind(null, dst); })(H1[i]);
-      impulses.push(imp);
-      arr1.push(260 + i * 150 + imbDur(c1));
-    }
-
-    var arr2 = [];
-    for (var k = 0; k < H2.length; k++) {
-      var dst = H2[k];
-      var srcIdx = picked[k] % 3;
-      var src = H1[srcIdx % 3];
-      var c2 = cableBetween(src, dst);
-      var start = arr1[srcIdx % 3] + 200;
-      var imp2 = mkImpulse(c2, start, true, fireNode.bind(null, dst));
-      impulses.push(imp2);
-      arr2.push(start + imbDur(c2));
-    }
-
-    var t3 = 0;
-    for (var h = 0; h < H2.length; h++) {
-      var c3 = cableBetween(H2[h], H3);
-      var s3 = arr2[h] + 220 + h * 150;
-      impulses.push(mkImpulse(c3, s3, true, fireNode.bind(null, H3)));
-      t3 = s3 + imbDur(c3);
-    }
-
-    replyEl.textContent = CHAINS[chain].responses[Math.floor(Math.random() * CHAINS[chain].responses.length)];
-    scheduleAnswer(t3 + 500);
-  }
-
-  function chainNeurons(chain, hop) {
+  function tokens(text) {
+    var raw = text.toLowerCase().split(/[^a-z\u2019]+/);
     var out = [];
-    for (var i = 0; i < neurons.length; i++) {
-      if (neurons[i].chain === chain && neurons[i].hop === hop) out.push(neurons[i]);
+    for (var i = 0; i < raw.length; i++) {
+      var w = raw[i].replace(/s$/, '').replace(/ing$/, '').replace(/ed$/, '').replace(/e$/, '');
+      if (!w || STOP[w]) continue;
+      out.push(w);
     }
     return out;
   }
 
-  function imbDur(cable) {
-    var cum = cable.cum;
-    return clamp(cum[cum.length - 1] * 1.05, 340, 720);
+  function expand(tok) {
+    var set = [tok];
+    for (var k in SYN) {
+      if (k === tok) { set = set.concat(SYN[k]); }
+      else if (SYN[k].indexOf(tok) >= 0) { set.push(k); set = set.concat(SYN[k]); }
+    }
+    return set;
+  }
+
+  function scoreFacts(promptText) {
+    var toks = tokens(promptText);
+    var raw = ' ' + promptText.toLowerCase() + ' ';
+    var scores = {};
+
+    for (var c = 0; c < cells.length; c++) {
+      var cell = cells[c];
+      var s = 0;
+      for (var kw = 0; kw < cell.k.length; kw++) {
+        var keyword = cell.k[kw];
+        if (raw.indexOf(keyword) >= 0) { s += 3; continue; }
+        for (var ti = 0; ti < toks.length; ti++) {
+          var pool = expand(toks[ti]);
+          for (var pi = 0; pi < pool.length; pi++) {
+            if (pool[pi] === keyword) { s += 1; break; }
+            if (keyword.length >= 4 && pool[pi].indexOf(keyword) >= 0) { s += 0.5; break; }
+          }
+          if (s > 1000) break;
+        }
+      }
+      if (s > 0) scores[cells.indexOf(cell)] = s;
+    }
+    return scores;
+  }
+
+  function pickChain(scores) {
+    var best = null, bestS = 0;
+    var byChain = {};
+    for (var c = 0; c < CHAIN_KEYS.length; c++) byChain[CHAIN_KEYS[c]] = 0;
+    for (var i in scores) {
+      var cell = cells[i];
+      if (byChain[cell.ch] === undefined) byChain[cell.ch] = 0;
+      byChain[cell.ch] += scores[i];
+    }
+    for (var k = 0; k < CHAIN_KEYS.length; k++) {
+      if (byChain[CHAIN_KEYS[k]] > bestS) { bestS = byChain[CHAIN_KEYS[k]]; best = CHAIN_KEYS[k]; }
+    }
+    return best;
+  }
+
+  function compose(selected) {
+    var parts = [];
+    for (var i = 0; i < selected.length; i++) {
+      var t = selected[i].text.trim();
+      t = t.charAt(0).toUpperCase() + t.slice(1);
+      if (!t.match(/[.!?]$/)) t += '.';
+      parts.push(t);
+    }
+    return parts.join('  ');
+  }
+
+  function run(text) {
+    if (state !== 'idle') return;
+    setBox(true);
+    t0 = performance.now();
+    _deliveryCache = {};
+    document.querySelector('.reply').classList.remove('show');
+    replyEl.textContent = '';
+    for (var i = 0; i < cells.length; i++) {
+      cells[i].fired = false; cells[i].flashT = 0; cells[i].drain = 0; cells[i].charge = 0;
+    }
+    for (var j = 0; j < boutons.length; j++) boutons[j].flare = 0;
+    assocEdges = [];
+
+    var scores = scoreFacts(text);
+    var chain = pickChain(scores);
+
+    // pick the chain's best facts
+    var sel = [];
+    if (chain) {
+      var pool = cells.filter(function (c) {
+        return c.ch === chain && scores[cells.indexOf(c)] > 0;
+      });
+      sel = pool.sort(function (a, b) { return scores[cells.indexOf(b)] - scores[cells.indexOf(a)]; })
+        .slice(0, 4);
+    }
+
+    if (sel.length < 3 && chain) {
+      // pad with more facts from the winning chain so the answer is richer
+      var rest = chainCells(chain, 1).concat(chainCells(chain, 2), chainCells(chain, 3));
+      for (var r = 0; r < rest.length && sel.length < 3; r++) {
+        if (sel.indexOf(rest[r]) < 0) sel.push(rest[r]);
+      }
+    }
+
+    if (sel.length < 3) {
+      // nothing scored: assemble from the ground-truth facts so every prompt answers
+      var gt = chainCells('everything', 1).concat(chainCells('everything', 2), chainCells('everything', 3));
+      for (var g = 0; g < gt.length && sel.length < 3; g++) {
+        if (sel.indexOf(gt[g]) < 0) sel.push(gt[g]);
+      }
+    }
+
+    // stable order: spine first (if in set), then by score
+    var spine0 = chainCells(chain, 1)[0];
+    var ordered = sel.slice().sort(function (a, b) { return a.ho - b.ho || (scores[cells.indexOf(b)] || 0) - (scores[cells.indexOf(a)] || 0); });
+    if (spine0 && sel.indexOf(spine0) >= 0) {
+      ordered = [spine0].concat(ordered.filter(function (x) { return x !== spine0; }));
+    }
+
+    promptCell = mkPromptCell(text);
+    impulses = [];
+
+    var chainFired = {};
+
+    var pre = 0;
+    for (var o = 0; o < ordered.length; o++) {
+      var cur = ordered[o];
+      var delay = 240 + pre * 190;
+      var from = o === 0 ? promptCell : ordered[o - 1];
+      var cbl = cableBetween(from, cur);
+      if (!cbl) cbl = { path: growCablePath(from.qx || from.x, from.qy || from.y, cur.x, cur.y), a: from, b: cur };
+      impulses.push(mkImpulse(cbl, delay, fireNode.bind(null, cur)));
+      if (o > 0 && !cableExists(from, cur)) {
+        assocEdges.push({ a: from, b: cur, path: cbl.path, t0: performance.now() });
+      }
+      pre++;
+    }
+
+    t0 = performance.now();
+
+    // the sentence that will form
+    synthesis = {
+      chain: chain,
+      ordered: ordered,
+      text: compose(ordered),
+      flowStart: 0,
+      perFact: 1050,
+      typeHold: 0,
+      typeIdx: 0
+    };
+
+    // border of the answer card, for delivery threads
+    var lastDur = 0;
+    for (var e2 = 0; e2 < impulses.length; e2++) {
+      var imp = impulses[e2];
+      var dur = imp.cum[imp.cum.length - 1] / imp.speed;
+      if (imp.started - t0 + dur > lastDur) lastDur = imp.started - t0 + dur;
+    }
+
+    setTimeout(function () {
+      state = 'forming';
+      synthesis.flowStart = performance.now();
+      document.querySelector('.reply').classList.add('show');
+    }, lastDur + 340);
+
+    inputEl.value = '';
+    state = 'running';
+  }
+
+  function cableExists(a, b) {
+    for (var i = 0; i < cables.length; i++) {
+      if (cables[i].a === a && cables[i].b === b) return true;
+    }
+    return false;
+  }
+
+  function cableBetween(a, b) {
+    for (var i = 0; i < cables.length; i++) {
+      if (cables[i].a === a && cables[i].b === b) return cables[i];
+      if (cables[i].a === b && cables[i].b === a) return cables[i]; // allow either direction
+    }
+    return null;
+  }
+
+  function mkPromptCell(text) {
+    var n = {
+      text: text, fired: true, flashT: 1, drain: 0, charge: 1.4,
+      x: W / 2, y: H * 0.17, w: 0, h: 22, trem: 0, glowph: 0,
+      qx: W / 2, qy: H * 0.17, arbors: []
+    };
+    ctx.font = '700 13px "CMU Sans Serif", sans-serif';
+    n.w = Math.min(560, ctx.measureText(text).width + 30);
+    return n;
+  }
+
+  function mkImpulse(cbl, delay, onEnd) {
+    var cum = pathCum(cbl.path);
+    var len = cum[cum.length - 1];
+    var dur = clamp(len * 1.15, 300, 760);
+    return {
+      cum: cum, path: cbl.path, len: len,
+      d: 0, speed: len / dur,
+      wake: new Array(14).fill(null), wi: 0,
+      started: t0 + delay, done: false, onEnd: onEnd
+    };
   }
 
   function fireNode(node) {
     if (!node.fired) { node.fired = true; node.flashT = 1; node.sparkF = 0; }
     node.charge = Math.min(2.4, node.charge + 1.5);
-    // the cell's own endings flare as the impulse lands
     for (var i = 0; i < boutons.length; i++) {
       if (boutons[i].owner === node) boutons[i].flare = 1;
     }
   }
 
-  function runFallback(text) {
-    promptCell = mkPromptCell(text);
-    promptCell.fired = false;
-    promptCell.charge = 0.6;
-    impulses = [];
-
-    var targets = neurons.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 5);
-    for (var i = 0; i < targets.length; i++) {
-      impulses.push(mkImpulse(cableBetween(promptCell, targets[i]), 260 + i * 210, false, null));
-    }
-    var thr = threads.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
-    for (var j = 0; j < thr.length; j++) {
-      impulses.push(mkImpulse(thr[j], 300 + j * 260, false, null));
-    }
-    var lastEnd = 300 + (targets.length - 1) * 210;
-    replyEl.textContent = FALLBACK.responses[Math.floor(Math.random() * FALLBACK.responses.length)];
-    scheduleAnswer(lastEnd + 700);
-  }
-
-  function scheduleAnswer(delay) {
-    setTimeout(function () {
-      answerAt = performance.now();
-      state = 'answered';
-      setTimeout(function () { document.querySelector('.reply').classList.add('show'); }, 200);
-    }, delay);
-  }
-
-  function detect(text) {
-    var t = ' ' + text.toLowerCase() + ' ';
-    for (var c = 0; c < CHAIN_KEYS.length; c++) {
-      var kws = CHAINS[CHAIN_KEYS[c]].keywords;
-      for (var j = 0; j < kws.length; j++) {
-        if (t.indexOf(kws[j]) >= 0) return CHAIN_KEYS[c];
-      }
-    }
-    return null;
-  }
-
-  function run() {
-    if (state !== 'idle') return;
-    var text = inputEl.value.trim();
-    if (!text) return;
-    setBox(true);
-    document.querySelector('.reply').classList.remove('show');
-    for (var i = 0; i < neurons.length; i++) {
-      neurons[i].fired = false; neurons[i].flashT = 0; neurons[i].drain = 0; neurons[i].charge = 0;
-    }
-    for (var j = 0; j < boutons.length; j++) boutons[j].flare = 0;
-    var chain = detect(text);
-    t0 = performance.now();
-    if (chain) runChain(chain, text);
-    else runFallback(text);
-    inputEl.value = '';
-    state = 'running';
-  }
-
-  // ----------------------------------------------------------- update
+  // ------------------------------------------------------- update
 
   function update(dt) {
-    // cells
-    for (var i = 0; i < neurons.length; i++) {
-      var n = neurons[i];
+    for (var i = 0; i < cells.length; i++) {
+      var n = cells[i];
       n.charge *= 0.972;
       if (n.sparkF > 0) n.sparkF -= 0.025;
       if (n.sparkT > 0) {
-        n.sparkT -= 16.7;
+        n.sparkT -= dt;
         if (n.sparkT <= 0) {
           n.sparkT = rand(2400, 7600);
           if (n.sparkF <= 0) n.sparkF = 1;
@@ -720,16 +812,11 @@
       }
     }
     if (promptCell) promptCell.charge *= 0.992;
-    for (var b = 0; b < boutons.length; b++) boutons[b].flare *= 0.955;
+    for (var b = 0; b < boutons.length; b++) boutons[b].flare = Math.max(0, boutons[b].flare - 0.006);
 
-    // idle sparks crawling the neuropil
-    for (var t = 0; t < threads.length; t++) {
-      var th = threads[t];
-      if (th.timer > 0) th.timer -= dt;
-      else {
-        th.timer = rand(4200, 11000);
-        impulses.push(mkImpulse(th, 0, false, null));
-      }
+    // assoc edges cool down
+    for (var ae = assocEdges.length - 1; ae >= 0; ae--) {
+      if (now - assocEdges[ae].t0 > 4200) assocEdges.splice(ae, 1);
     }
 
     // pulses
@@ -739,64 +826,65 @@
       if (now < imp.started) continue;
       imp.d += imp.speed * dt;
       if (imp.d >= imp.len) {
-        if (imp.fire && imp.onEnd) imp.onEnd();
+        if (imp.onEnd) imp.onEnd();
         imp.done = true;
         continue;
       }
       var pos = pointAt(imp.path, imp.cum, imp.d);
       imp.wake[imp.wi] = { x: pos.x, y: pos.y, a: 1 };
       imp.wi = (imp.wi + 1) % imp.wake.length;
-      // endings near the passing signal light up
       for (var bb = 0; bb < boutons.length; bb++) {
         var bo = boutons[bb];
-        var dd = (pos.x - bo.x) * (pos.x - bo.x) + (pos.y - bo.y) * (pos.y - bo.y);
-        if (dd < 36) bo.flare = Math.min(1, bo.flare + 0.5);
-      }
-    }
-    // age wakes
-    for (var w = 0; w < impulses.length; w++) {
-      var ww = impulses[w].wake;
-      for (var q = 0; q < ww.length; q++) {
-        if (ww[q] && ww[q].a < 0.99) ww[q].a *= 0.88;
+        var d2 = (pos.x - bo.x) * (pos.x - bo.x) + (pos.y - bo.y) * (pos.y - bo.y);
+        if (d2 < 30) bo.flare = Math.min(1, bo.flare + 0.5);
       }
     }
 
-    if (state === 'running') {
-      var any = false;
-      for (var s = 0; s < impulses.length; s++) if (!impulses[s].done) { any = true; break; }
-      if (!any && !impulses.length) { /* waiting for scheduled answer */ }
+    // typing the formed sentence
+    if (state === 'forming' && synthesis) {
+      if (synthesis.typeIdx < synthesis.text.length) {
+        synthesis.typeHold += dt;
+        while (synthesis.typeHold >= 21 && synthesis.typeIdx < synthesis.text.length) {
+          synthesis.typeHold -= 21;
+          synthesis.typeIdx++;
+          replyEl.textContent = synthesis.text.slice(0, synthesis.typeIdx) + (synthesis.typeIdx < synthesis.text.length ? '\u2009\u258b' : '');
+        }
+      } else {
+        replyEl.textContent = synthesis.text;
+        state = 'answered';
+        answerAt = now;
+      }
     } else if (state === 'answered') {
-      if (now - answerAt > 4000) {
+      if (now - answerAt > 4300) {
         state = 'settling';
         settleStart = now;
-        document.querySelector('.reply').classList.remove('show');
-        for (var z = 0; z < neurons.length; z++) neurons[z].drain = 1;
+        for (var z = 0; z < cells.length; z++) cells[z].drain = 1;
         if (promptCell) promptCell.drain = 1;
       }
     } else if (state === 'settling') {
-      var decay = (now - settleStart) / 900;
+      var decay = (now - settleStart) / 850;
       var done = true;
-      for (var u = 0; u < neurons.length; u++) {
-        if (neurons[u].drain > 0) {
-          neurons[u].drain = Math.max(0, 1 - decay);
-          if (neurons[u].drain !== 0) done = false;
+      for (var u = 0; u < cells.length; u++) {
+        if (cells[u].drain > 0) {
+          cells[u].drain = Math.max(0, 1 - decay);
+          if (cells[u].drain !== 0) done = false;
         }
       }
       if (done) {
         state = 'idle';
-        for (var v = 0; v < neurons.length; v++) {
-          neurons[v].fired = false; neurons[v].drain = 0; neurons[v].flashT = 0; neurons[v].charge = 0;
+        for (var v = 0; v < cells.length; v++) {
+          cells[v].fired = false; cells[v].drain = 0; cells[v].flashT = 0; cells[v].charge = 0;
         }
-        promptCell = null; impulses = [];
+        promptCell = null; impulses = []; assocEdges = [];
         setBox(false);
       }
     }
   }
 
-  // ----------------------------------------------------------- draw
+  // ------------------------------------------------------- draw
 
-  function drawFibre(c, path, alpha, width, color) {
-    c.strokeStyle = color;
+  function drawFibre(c, path, alpha, width) {
+    c.strokeStyle = ACCENT;
     c.lineWidth = width;
     c.lineCap = 'round';
     c.lineJoin = 'round';
@@ -812,18 +900,44 @@
     c.globalAlpha = 1;
   }
 
+  function drawFlow(c, path, alpha, width, off) {
+    c.globalAlpha = alpha;
+    c.strokeStyle = ACCENT;
+    c.lineWidth = width;
+    c.lineCap = 'round';
+    c.setLineDash([2, 6]);
+    c.lineDashOffset = off;
+    c.beginPath();
+    var p0 = path[0];
+    c.moveTo(p0[0], p0[1]);
+    for (var i = 1; i < path.length; i++) {
+      var p = path[i];
+      c.lineTo(p[0], p[1]);
+    }
+    c.stroke();
+    c.setLineDash([]);
+    c.globalAlpha = 1;
+  }
+
+  function deliveryPath(cell, ry) {
+    var start = { x: cell.qx, y: cell.qy };
+    var mx = (start.x + W / 2) / 2;
+    var ctrl = { x: mx + rand(-30, 30), y: (start.y + ry) / 2 };
+    return smooth([[start.x, start.y], [ctrl.x, ctrl.y], [W / 2 + rand(-30, 30), ry]]);
+  }
+
+  var _deliveryCache = {};
+
   function draw() {
     var breath = now * 0.0012;
 
-    // flash decay
-    for (var di = 0; di < neurons.length; di++) if (neurons[di].flashT > 0) neurons[di].flashT -= 0.035;
+    for (var di = 0; di < cells.length; di++) if (cells[di].flashT > 0) cells[di].flashT -= 0.035;
     if (promptCell && promptCell.flashT > 0) promptCell.flashT -= 0.035;
 
-    // live positions
     var firedList = [];
-    for (var qi = 0; qi < neurons.length; qi++) {
-      var qn = neurons[qi];
-      var ampv = qn.fired ? 1.6 : 0.6;
+    for (var qi = 0; qi < cells.length; qi++) {
+      var qn = cells[qi];
+      var ampv = qn.fired ? 1.3 : 0.5;
       qn.qx = qn.x + Math.sin(frame * 0.005 + qn.trem) * ampv;
       qn.qy = qn.y + Math.cos(frame * 0.006 + qn.trem * 1.7) * ampv;
       if (qn.fired) firedList.push(qn);
@@ -834,95 +948,108 @@
     }
 
     var dmax = 0;
-    for (var dd = 0; dd < neurons.length; dd++) if (neurons[dd].drain > dmax) dmax = neurons[dd].drain;
+    for (var dd = 0; dd < cells.length; dd++) if (cells[dd].drain > dmax) dmax = cells[dd].drain;
     var drainAll = 1 - dmax * 0.92;
+    var interact = state === 'running' || state === 'forming' || state === 'answered' ? 1 : 0;
 
-    // ---- background wash + breathing core
+    // ---- background wash + faint breathing core
     var throb = 0.5 + 0.5 * Math.sin(breath);
-    var bg = ctx.createRadialGradient(W / 2, H * 0.60, 0, W / 2, H * 0.60, H * 0.95);
-    bg.addColorStop(0, lerpColor(0.012 + 0.014 * throb));
-    bg.addColorStop(0.6, lerpColor(0.004 + 0.003 * throb));
+    var bg = ctx.createRadialGradient(W / 2, H * 0.58, 0, W / 2, H * 0.58, H * 0.95);
+    bg.addColorStop(0, lerpColor(0.008 + 0.010 * throb));
+    bg.addColorStop(0.6, lerpColor(0.003 + 0.002 * throb));
     bg.addColorStop(1, 'rgba(255,166,201,0)');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // ---- drizzle: everything it has absorbed, faint behind the web
+    // ---- drizzle
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (var dz = 0; dz < drizzle.length; dz++) {
       var dzz = drizzle[dz];
-      var dzx = dzz.x + Math.sin(frame * 0.003 + dzz.dp) * 2;
-      var dzy = dzz.y + Math.cos(frame * 0.0025 + dzz.dp * 1.4) * 2;
       ctx.font = dzz.size + 'px "CMU Typewriter Text", monospace';
       ctx.fillStyle = 'rgba(228,228,234,' + (dzz.op * (0.7 + 0.3 * Math.sin(now * 0.001 + dzz.ph))).toFixed(3) + ')';
-      ctx.fillText(dzz.t, dzx, dzy);
+      ctx.fillText(dzz.t, dzz.x + Math.sin(frame * 0.003 + dzz.dp) * 2, dzz.y + Math.cos(frame * 0.0025 + dzz.dp * 1.4) * 2);
     }
 
-    // ---- tissue pass: the mess grows here
+    // ---- tissue: stable under-layer, decays toward equilibrium
     tctx.globalAlpha = 1;
-    tctx.fillStyle = 'rgba(9,3,11,0.055)';
+    tctx.fillStyle = 'rgba(9,3,11,0.05)';
     tctx.fillRect(0, 0, TW, TH);
     tctx.setTransform(0.5, 0, 0, 0.5, 0, 0);
 
-    // resting web: arbors, cables, threads — constant faint strokes (decay cancels them = stable tangle)
-    for (var cn = 0; cn < neurons.length; cn++) {
-      var cell = neurons[cn];
-      var arbA = 0.012 + cell.charge * 0.05 * drainAll;
+    for (var cn = 0; cn < cells.length; cn++) {
+      var cell = cells[cn];
+      var arbA = 0.009 + Math.min(0.06, cell.charge * 0.028) * drainAll;
       for (var ap = 0; ap < cell.arbors.length; ap++) {
-        drawFibre(tctx, cell.arbors[ap], Math.min(0.09, arbA), 1.1, ACCENT);
+        drawFibre(tctx, cell.arbors[ap], arbA, 1.2);
       }
     }
     for (var cb = 0; cb < cables.length; cb++) {
-      drawFibre(tctx, cables[cb].path, 0.008, 1.0, ACCENT);
+      drawFibre(tctx, cables[cb].path, 0.006, 1.0);
     }
-    for (var th2 = 0; th2 < threads.length; th2++) {
-      drawFibre(tctx, threads[th2].path, 0.006, 0.9, ACCENT);
+    for (var th = 0; th < threads.length; th++) {
+      drawFibre(tctx, threads[th].path, 0.005, 0.9);
+    }
+    for (var ae = 0; ae < assocEdges.length; ae++) {
+      var eA = Math.min(0.05, (1 - (now - assocEdges[ae].t0) / 4200) * 0.05);
+      if (eA > 0.001) drawFibre(tctx, assocEdges[ae].path, eA, 1.1);
     }
 
-    // impulse wakes — the actual travelling signal, bright and short-lived
+    // impulse wakes — soft comet trails
     for (var im = 0; im < impulses.length; im++) {
       var imp = impulses[im];
       if (imp.done || now < imp.started) continue;
-      var wAmp = imp.fire ? 1 : 0.34;
       var wak = imp.wake;
-      var prev = null;
-      for (var wq = 0; wq < wak.length; wq++) {
-        var e = wak[(imp.wi + wak.length - 1 - wq) % wak.length];
+      var nw = wak.length;
+      for (var wq = 0; wq < nw; wq++) {
+        var e = wak[(imp.wi + nw - 1 - wq) % nw];
         if (!e) continue;
-        var fade = wAmp * 0.85 * Math.pow(1 - wq / wak.length, 1.6);
-        if (fade <= 0.01) continue;
-        if (prev) {
-          tctx.globalAlpha = 1;
-          tctx.strokeStyle = ACCENT;
-          tctx.lineWidth = 2.6;
-          tctx.lineCap = 'round';
+        var fade = 0.5 * Math.pow(1 - wq / nw, 2);
+        if (fade <= 0.012) continue;
+        tctx.globalAlpha = 1;
+        tctx.strokeStyle = ACCENT;
+        tctx.lineWidth = 1.8;
+        tctx.lineCap = 'round';
+        var nxp = wak[(imp.wi + nw - 2 - wq) % nw];
+        if (nxp) {
           tctx.beginPath();
-          tctx.moveTo(prev.x, prev.y);
+          tctx.moveTo(nxp.x, nxp.y);
           tctx.lineTo(e.x, e.y);
           tctx.stroke();
         }
-        prev = e;
       }
     }
 
-    // nerve endings: boutons shimmer, flare when their owner (or a passing pulse) lights them
-    var flareGain = 0;
+    // boutons
     for (var bt = 0; bt < boutons.length; bt++) {
       var bo = boutons[bt];
-      var ownerA = bo.owner && bo.owner.charge > 0.05
-        ? Math.min(0.6, bo.owner.charge * 0.28) * drainAll
-        : 0;
-      var a = 0.055 + bo.flare * 0.8 + ownerA;
+      var a = 0.05 + bo.flare * 0.7;
+      if (bo.owner && bo.owner.charge > 0.05) a = Math.max(a, Math.min(0.5, bo.owner.charge * 0.22));
       if (a < 0.02) continue;
       tctx.globalAlpha = 1;
       tctx.fillStyle = ACCENT;
       tctx.beginPath();
-      tctx.arc(bo.x, bo.y, 1.5, 0, Math.PI * 2);
+      tctx.arc(bo.x, bo.y, 1.4, 0, Math.PI * 2);
       tctx.fill();
     }
     tctx.globalAlpha = 1;
 
-    // bloom the tissue onto the main canvas
+    // delivery threads — facts streaming their meaning down to the forming sentence
+    if (synthesis && (state === 'forming' || state === 'answered')) {
+      var base = synthesis.flowStart;
+      for (var fI = 0; fI < synthesis.ordered.length; fI++) {
+        var t0f = base + fI * synthesis.perFact;
+        var t1f = t0f + 900;
+        if (now < t0f - 400) continue;
+        if (now > t1f) continue;
+        var phased = clamp((now - t0f) / 700, 0, 1);
+        var keyf = fI;
+        var dpth = _deliveryCache.hasOwnProperty(keyf) ? _deliveryCache[keyf] : (_deliveryCache[keyf] = deliveryPath(synthesis.ordered[fI], H * 0.82));
+        drawFlow(tctx, dpth, (0.05 + 0.05 * phased) * drainAll, 1.1, -now * 0.03);
+      }
+    }
+
+    // bloom
     ctx.filter = 'blur(2.5px)';
     ctx.globalAlpha = 0.5;
     ctx.drawImage(tissue, 0, 0, W, H);
@@ -933,6 +1060,7 @@
     ctx.globalAlpha = 1;
 
     // ---- motes
+    var motA = 0.02 + interact * 0.01;
     for (var mo = 0; mo < motes.length; mo++) {
       var mm = motes[mo];
       var sc = Math.cos(mm.swirl), ss = Math.sin(mm.swirl);
@@ -943,15 +1071,15 @@
         var nrst = nearestOf(firedList, mm.x, mm.y);
         var pdx = nrst.qx - mm.x, pdy = nrst.qy - mm.y;
         var dl = Math.sqrt(pdx * pdx + pdy * pdy) || 1;
-        var pull = 2600 / (dl * dl + 5000);
-        mm.vx += (pdx / dl) * pull * 0.5;
-        mm.vy += (pdy / dl) * pull * 0.5;
+        var pull = 2200 / (dl * dl + 5200);
+        mm.vx += (pdx / dl) * pull * 0.4;
+        mm.vy += (pdy / dl) * pull * 0.4;
       }
       mm.x += mm.vx; mm.y += mm.vy;
       if (mm.x < -4) mm.x = W + 4; else if (mm.x > W + 4) mm.x = -4;
       if (mm.y < -4) mm.y = H + 4; else if (mm.y > H + 4) mm.y = -4;
       var tw = 0.5 + 0.5 * Math.sin(now * 0.001 + mm.ph);
-      ctx.globalAlpha = 0.03 + 0.05 * tw;
+      ctx.globalAlpha = motA * (0.5 + tw);
       ctx.fillStyle = mm.pink ? ACCENT : GREY;
       ctx.beginPath();
       ctx.arc(mm.x, mm.y, mm.r, 0, Math.PI * 2);
@@ -959,51 +1087,49 @@
     }
     ctx.globalAlpha = 1;
 
-    // ---- crisp web definition: thin sharp lines on top of the bloom
+    // ---- crisp definition: cables + arcs, thin and calm
     for (var c2 = 0; c2 < cables.length; c2++) {
-      drawFibre(ctx, cables[c2].path, 0.022 * drainAll, 0.6, ACCENT);
+      drawFibre(ctx, cables[c2].path, 0.016 * drainAll, 0.6);
     }
     for (var c3 = 0; c3 < threads.length; c3++) {
-      drawFibre(ctx, threads[c3].path, 0.014 * drainAll, 0.5, ACCENT);
+      drawFibre(ctx, threads[c3].path, 0.012 * drainAll, 0.5);
     }
 
     // crisp pulse heads
     for (var ph = 0; ph < impulses.length; ph++) {
       var imp2 = impulses[ph];
       if (imp2.done || now < imp2.started) continue;
-      var pos = pointAt2(imp2);
-      ctx.fillStyle = ACCENT;
-      ctx.globalAlpha = (imp2.fire ? 1 : 0.4) * drainAll;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, imp2.fire ? 2.4 : 1.4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      // soft head halo
-      var hg = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 9);
-      hg.addColorStop(0, lerpColor(0.5 * (imp2.fire ? 1 : 0.3) * drainAll));
+      var pos = pointAt(imp2.path, imp2.cum, imp2.d);
+      var hg = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 8);
+      hg.addColorStop(0, lerpColor(0.55 * drainAll));
       hg.addColorStop(1, 'rgba(255,166,201,0)');
       ctx.fillStyle = hg;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 9, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = ACCENT;
+      ctx.globalAlpha = 0.9 * drainAll;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 1.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
     }
 
-    // crisp boutons
+    // crisp bouton beads
     ctx.fillStyle = ACCENT;
     for (var bt2 = 0; bt2 < boutons.length; bt2++) {
       var bo2 = boutons[bt2];
-      var ownerA2 = bo2.owner && bo2.owner.charge > 0.05
-        ? Math.min(0.9, bo2.owner.charge * 0.4) : 0;
-      var a2 = 0.06 + bo2.flare * 0.5 + ownerA2;
-      if (a2 < 0.03) continue;
+      var a2 = 0.05 + bo2.flare * 0.55;
+      if (bo2.owner && bo2.owner.charge > 0.05) a2 = Math.max(a2, Math.min(0.8, bo2.owner.charge * 0.3));
+      if (a2 < 0.02) continue;
       ctx.globalAlpha = a2 * drainAll;
       ctx.beginPath();
-      ctx.arc(bo2.x, bo2.y, 1.1, 0, Math.PI * 2);
+      ctx.arc(bo2.x, bo2.y, 1.0, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // ---- chain watermarks (faint territory names; light when their chain fires)
+    // ---- chain watermarks
     ctx.font = '500 8px "CMU Sans Serif", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -1011,56 +1137,54 @@
       var ck = CHAIN_KEYS[lk];
       var meta = chainMeta[ck];
       if (!meta) continue;
-      var firedChain = chainFired(ck);
-      var la = firedChain ? 0.5 + 0.2 * Math.sin(now * 0.005) : 0.1;
+      var hot = synthesis && synthesis.chain === ck && (state === 'forming' || state === 'answered' || state === 'running');
+      var la = hot ? 0.5 + 0.2 * Math.sin(now * 0.005) : 0.09;
       ctx.fillStyle = lerpColor(la * drainAll);
-      ctx.fillText(CHAINS[ck].label.toUpperCase(), meta.x, clamp(meta.y - meta.r - 24, 30, H - 12));
+      ctx.fillText(CHAINS[ck].label.toUpperCase(), meta.x, clamp(meta.y - meta.r - 22, 26, H - 10));
     }
 
-    // ---- neurons (somas)
+    // ---- cells
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    for (var n2 = 0; n2 < neurons.length; n2++) {
-      var nd2 = neurons[n2];
+    for (var n2 = 0; n2 < cells.length; n2++) {
+      var nd2 = cells[n2];
       var ndr = ndrain(nd2);
       var ch2 = Math.min(1, nd2.charge);
 
       if (nd2.fired) {
         var ripple = nd2.flashT;
         if (ripple > 0) {
-          ctx.strokeStyle = lerpColor(ripple * 0.55 * ndr);
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = lerpColor(ripple * 0.5 * ndr);
+          ctx.lineWidth = 1.4;
           ctx.beginPath();
-          ctx.arc(nd2.qx, nd2.qy, (1 - ripple) * 32, 0, Math.PI * 2);
+          ctx.arc(nd2.qx, nd2.qy, (1 - ripple) * 30, 0, Math.PI * 2);
           ctx.stroke();
         }
-        var breathScale = 1 + 0.06 * ch2 * (0.5 + 0.5 * Math.sin(now * 0.005 + nd2.glowph));
         ctx.save();
         ctx.translate(nd2.qx, nd2.qy);
-        ctx.scale(breathScale, breathScale);
-        ctx.fillStyle = 'rgba(10,10,15,0.92)';
+        ctx.fillStyle = 'rgba(10,10,15,0.78)';
         roundRect(ctx, -nd2.w / 2, -nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
         ctx.fill();
-        ctx.strokeStyle = lerpColor((0.5 + 0.35 * ch2) * ndr);
+        ctx.strokeStyle = lerpColor((0.45 + 0.35 * ch2) * ndr);
         ctx.lineWidth = 1.2;
         ctx.stroke();
         ctx.font = '12px "CMU Sans Serif", sans-serif';
         ctx.fillStyle = ACCENT;
-        ctx.globalAlpha = ndr * (0.65 + 0.35 * ch2);
+        ctx.globalAlpha = ndr * (0.6 + 0.4 * ch2);
         ctx.fillText(nd2.text, 0, 0);
         ctx.restore();
         ctx.globalAlpha = 1;
       } else {
         var rest = 0.5 + 0.5 * Math.sin(now * 0.002 + nd2.glowph);
         var spark = nd2.sparkF > 0 ? nd2.sparkF : 0;
-        ctx.fillStyle = 'rgba(10,10,15,0.9)';
+        ctx.fillStyle = 'rgba(10,10,15,0.72)';
         roundRect(ctx, nd2.qx - nd2.w / 2, nd2.qy - nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(228,228,234,' + (0.07 + rest * 0.02 + spark * 0.12).toFixed(3) + ')';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(228,228,234,' + (0.06 + rest * 0.015 + spark * 0.1).toFixed(3) + ')';
+        ctx.lineWidth = 0.8;
         ctx.stroke();
         ctx.font = '12px "CMU Sans Serif", sans-serif';
-        ctx.fillStyle = 'rgba(228,228,234,' + (0.3 + rest * 0.06 + spark * 0.4).toFixed(3) + ')';
+        ctx.fillStyle = 'rgba(228,228,234,' + (0.27 + rest * 0.05 + spark * 0.35).toFixed(3) + ')';
         ctx.fillText(nd2.text, nd2.qx, nd2.qy);
       }
     }
@@ -1071,11 +1195,11 @@
       var pdd = pn.drain > 0 ? (1 - pn.drain) : 1;
       ctx.save();
       ctx.translate(pn.qx, pn.qy);
-      ctx.fillStyle = 'rgba(10,10,15,0.94)';
+      ctx.fillStyle = 'rgba(10,10,15,0.9)';
       roundRect(ctx, -pn.w / 2, -pn.h / 2, pn.w, pn.h, pn.h / 2);
       ctx.fill();
-      ctx.strokeStyle = lerpColor(0.8 * pdd);
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = lerpColor(0.75 * pdd);
+      ctx.lineWidth = 1.3;
       ctx.stroke();
       ctx.font = '700 13px "CMU Sans Serif", sans-serif';
       ctx.fillStyle = ACCENT;
@@ -1084,17 +1208,6 @@
       ctx.restore();
       ctx.globalAlpha = 1;
     }
-  }
-
-  function pointAt2(imp) {
-    return pointAt(imp.path, imp.cum, imp.d);
-  }
-
-  function chainFired(chain) {
-    for (var i = 0; i < neurons.length; i++) {
-      if (neurons[i].chain === chain && neurons[i].fired) return true;
-    }
-    return false;
   }
 
   function ndrain(n) {
@@ -1110,7 +1223,7 @@
     return best;
   }
 
-  // ----------------------------------------------------------- boot
+  // ------------------------------------------------------- boot
 
   function setBox(off) {
     inputEl.disabled = off;
@@ -1118,8 +1231,8 @@
     if (off) inputEl.blur();
   }
 
-  submitEl.addEventListener('click', function () { run(); inputEl.focus(); });
-  inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { run(); inputEl.focus(); } });
+  submitEl.addEventListener('click', function () { run(inputEl.value); inputEl.focus(); });
+  inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { run(inputEl.value); inputEl.focus(); } });
 
   function tick(ts) {
     var dt = lastT ? Math.min(ts - lastT, 50) : 16;
@@ -1138,14 +1251,14 @@
     canvas.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     buildTissue();
-    buildNeurons();
-    buildCables();
-    buildThreads();
+    buildLayout();
+    buildNerveNet();
     buildDrizzle();
     buildMotes();
-    for (var c = 0; c < CHAIN_KEYS.length; c++) chainMeta[CHAIN_KEYS[c]].r = 150;
-    state = 'idle'; impulses = []; promptCell = null;
+    state = 'idle'; impulses = []; promptCell = null; synthesis = null; assocEdges = [];
+    _deliveryCache = {};
     document.querySelector('.reply').classList.remove('show');
+    replyEl.textContent = '';
     setBox(false);
   }
 
@@ -1153,7 +1266,6 @@
   resize();
   requestAnimationFrame(tick);
 
-  // web fonts arrive async — re-measure so cell pills use real glyph metrics
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { resize(); });
   }
