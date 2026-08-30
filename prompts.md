@@ -869,3 +869,31 @@ dropped the warm-honey editorial look for a "midnight aurora" theme:
 deleted `index.html` (git rm). added `vercel.json` rewriting `/` -> `/graph.html`
 so the single-file site serves at the root. installed vercel cli 59.10.0.
 depoloyment is READY but needs `vercel login` (only the account owner can auth).
+
+## 23 — obsidian-style graph, more info on the front, everything lowercase, coherent facts
+
+"add more information on the front and make the graph render like that of
+obsidian's graph view and then make everything look prettier and everything
+should be lowercase and once youre done auto deploy"
+
+- obsidian graph view: every knowledge family (chain) is now its own hue — a
+  chain→colour map colours the dots, so the whole web reads as a field of
+  coloured clusters exactly like obsidian's tag-colouring, even before you ask.
+  links are now straight, thin, dim lines and the network is denser: each fact
+  links to its two nearest same-family neighbours instead of a sparse
+  h1→h2→h3 spine. fired nodes bloom in their own hue with a bright core and a
+  numbered badge; idle facts stay as tinted constellation dots.
+- more information on the front: the landing now has a real pitch ("a graph
+  that answers."), a feature pill strip, five how-it-works cards, three
+  clickable "try asking…" suggestion buttons that actually fire a prompt, and a
+  brand line. "graphic.ai" appears in the kicker, title, graph tag and brand line.
+- everything lowercase: converted the kicker/tag/stagehint from uppercase to
+  lowercase, and lowercased the generated answer and every fact row text.
+- coherent facts: `buildSentence` no longer stitches random conjunctions into
+  run-on rambles — it now joins facts as clean, separate sentences. repeated
+  facts are deduplicated both in `generateBlock` and at the `ordered` stage in
+  `run()`, so answers stop stuttering the same line.
+- verified in real chrome: two consecutive prompts, both per-keyword panels
+  (sky/blue, moon/bright), all-lowercase coherent answers, graph renders ~4000
+  lit pixels across 3 distinct hues, suggestion button works, zero exceptions.
+- auto-deployed to vercel.

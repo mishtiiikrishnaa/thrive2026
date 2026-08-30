@@ -54,7 +54,7 @@
 
   .kicker {
     display: inline-block; font-family: "CMU Typewriter Text", monospace;
-    font-size: 9px; letter-spacing: 0.45em; text-transform: uppercase;
+    font-size: 9px; letter-spacing: 0.45em; text-transform: lowercase;
     color: var(--honey); opacity: 0.9; margin-bottom: 24px;
   }
 
@@ -116,6 +116,38 @@
   }
   .legend .sage { color: var(--sage); }
 
+  .pills {
+    margin: 22px auto 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  }
+  .pills span {
+    font-family: "CMU Typewriter Text", monospace; font-size: 10px; letter-spacing: 0.16em;
+    text-transform: lowercase; color: var(--faint);
+    padding: 6px 13px; border-radius: 999px; border: 1px solid var(--line);
+    background: rgba(167,139,250,0.04);
+  }
+
+  .try {
+    margin: 30px auto 0 auto; display: flex; flex-wrap: wrap; justify-content: center;
+    align-items: center; gap: 9px; max-width: 640px;
+  }
+  .try .trytag {
+    font-family: "CMU Typewriter Text", monospace; font-size: 10px;
+    letter-spacing: 0.25em; text-transform: lowercase; color: var(--dim); margin-right: 4px;
+  }
+  .try .tq {
+    font-family: "CMU Typewriter Text", "Courier New", monospace; font-size: 12.5px;
+    color: var(--honey); background: rgba(167,139,250,0.06);
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 15px;
+    cursor: pointer; outline: none; transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+  }
+  .try .tq:hover { border-color: var(--honey-soft); background: rgba(167,139,250,0.14); transform: translateY(-1px); }
+
+  .brandline {
+    margin-top: 26px; font-family: "CMU Typewriter Text", monospace; font-size: 10px;
+    letter-spacing: 0.22em; text-transform: lowercase; color: var(--dim); text-align: center;
+    opacity: 0.9;
+  }
+
   /* ================================================================ */
   /* the transient working area — keywords, fact panels, graph        */
   /* ================================================================ */
@@ -133,7 +165,7 @@
   }
   .tag {
     display: block; font-family: "CMU Typewriter Text", monospace;
-    font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase;
+    font-size: 9px; letter-spacing: 0.4em; text-transform: lowercase;
     color: var(--dim); margin-bottom: 14px;
     transition: color 0.5s ease, text-shadow 0.5s ease;
   }
@@ -146,9 +178,13 @@
     background: var(--glass); padding: 15px 17px; backdrop-filter: blur(6px);
   }
   .fcol .fkey {
+    display: flex; align-items: center; gap: 8px;
     font-family: "CMU Typewriter Text", monospace; font-size: 12px;
-    letter-spacing: 0.18em; text-transform: lowercase; color: var(--sage);
+    letter-spacing: 0.18em; text-transform: lowercase;
     margin-bottom: 11px; padding-bottom: 8px; border-bottom: 1px dashed var(--line);
+  }
+  .fcol .fkey .kdot {
+    flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%;
   }
   .fkg { display: flex; align-items: baseline; gap: 10px; padding: 3px 0; opacity: 0; transition: opacity 0.5s ease; }
   .fkg .fdot {
@@ -176,8 +212,8 @@
   .graphbox .stagehint {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     flex-direction: column; gap: 8px;
-    font-family: "CMU Typewriter Text", monospace; font-size: 10.5px;
-    letter-spacing: 0.32em; text-transform: uppercase; color: var(--faint);
+    font-family: "CMU Typewriter Text", monospace;     font-size: 10.5px;
+    letter-spacing: 0.32em; text-transform: lowercase; color: var(--faint);
   }
   .graphbox .stagehint .sub { font-size: 9px; color: var(--dim); letter-spacing: 0.2em; }
 
@@ -258,23 +294,38 @@
       <!-- landing essay -->
       <div class="about" id="about">
         <div class="kicker">graphic.ai</div>
-        <div class="title">ask anything.</div>
-        <div class="subtitle">one question becomes a web — each word finds the facts it knows, each fact lights a point in a growing graph, and when the graph is finished it folds itself into an answer that streams out, one token at a time.</div>
+        <div class="title">a graph that answers.</div>
+        <div class="subtitle">ask anything and graphic.ai turns it into a growing web of facts. each word is a hook, each fact is a point of light, and the web itself becomes the answer — streamed out one token at a time. nothing here is half-remembered: every answer is assembled, live, from the knowledge it has already gathered.</div>
+
+        <div class="pills">
+          <span>persistent memory</span>
+          <span>per-word panels</span>
+          <span>live graph</span>
+          <span>token streaming</span>
+        </div>
 
         <div class="how">
-          <div class="step"><span class="no">01</span><h4>you ask</h4><p>your question is cut into its real words — the keywords — and nothing is repeated.</p></div>
-          <div class="step"><span class="no">02</span><h4>each keyword grows its own facts</h4><p>every keyword finds the stored facts nearest to it. <span class="hot">each keyword gets its own panel,</span> and its facts appear inside, one by one.</p></div>
-          <div class="step"><span class="no">03</span><h4>every fact drops a dot</h4><p>as a fact is generated it lights a <span class="hot">small numbered dot</span> in the graph below — the same order you saw it appear.</p></div>
-          <div class="step"><span class="no">04</span><h4>the graph connects</h4><p>nerves grow between the lit dots like <span class="sage">synapses</span> — from your question, down through the chain of facts.</p></div>
-          <div class="step"><span class="no">05</span><h4>the graph speaks</h4><p>once every connection is made the web <span class="rose">dissolves and the answer streams out of it</span> — a block of sentences, in the order the dots lit.</p></div>
+          <div class="step"><span class="no">01</span><h4>you ask</h4><p>a question enters. it is cut into its real words — the keywords — and nothing is repeated.</p></div>
+          <div class="step"><span class="no">02</span><h4>each word grows its own facts</h4><p>every keyword pulls the stored facts nearest to it. <span class="hot">each keyword gets its own panel,</span> and its own facts appear inside, one by one.</p></div>
+          <div class="step"><span class="no">03</span><h4>every fact drops a dot</h4><p>as a fact is generated it lights a <span class="hot">numbered dot</span> in the graph below — in the same order you saw it appear.</p></div>
+          <div class="step"><span class="no">04</span><h4>the graph connects</h4><p>links grow between the lit dots like <span class="sage">neurons</span> — from your question, down through the chain of facts.</p></div>
+          <div class="step"><span class="no">05</span><h4>the graph speaks</h4><p>once the web is connected the answer <span class="rose">streams out of it</span> — a block of sentences, in the order the dots lit.</p></div>
+        </div>
+
+        <div class="try">
+          <span class="trytag">try asking…</span>
+          <button class="tq">why is the sky blue?</button>
+          <button class="tq">what makes the sea salty?</button>
+          <button class="tq">how does a plant grow?</button>
         </div>
 
         <div class="legend">
           <span class="lg"><span class="dot"></span>one fired fact</span>
           <span class="lg"><span class="thr"></span>a connection it just learned</span>
-          <span class="lg sage">every keyword a separate panel</span>
+          <span class="lg sage">each colour = one field of knowledge</span>
         </div>
       </div>
+      <div class="brandline">graphic.ai — the graph remembers what you ask.</div>
 
       <!-- the transient staging animation for the current question -->
       <div class="working" id="working">
@@ -334,6 +385,26 @@
   var GREY = '#e7e6ee';
   var CHIP_MS = 28;
   var KW_STAGGER = 150;
+
+  // obsidian-style: each chain family is a distinct hue, so the web reads as
+  // a field of coloured clusters (like obsidian's per-tag colouring).
+  var CHAIN_HUES = {
+    cosmos:   { rgb: '167,139,250', hex: '#a78bfa' },
+    earth:    { rgb: '134,215,196', hex: '#86d7c4' },
+    sea:      { rgb: '96,190,231',  hex: '#60bee7' },
+    life:     { rgb: '242,163,184', hex: '#f2a3b8' },
+    body:     { rgb: '233,168,124', hex: '#e9a87c' },
+    mind:     { rgb: '157,196,171', hex: '#9dc4ab' },
+    craft:    { rgb: '214,180,119', hex: '#d6b477' },
+    story:    { rgb: '232,158,152', hex: '#e89e98' },
+    machine:  { rgb: '172,168,222', hex: '#aca8de' },
+    code:     { rgb: '122,214,194', hex: '#7ad6c2' },
+    math:     { rgb: '191,154,216', hex: '#bf9ad8' },
+    language: { rgb: '141,206,150', hex: '#8dce96' },
+    society:  { rgb: '228,140,168', hex: '#e48ca8' },
+    everything: { rgb: '167,139,250', hex: '#a78bfa' }
+  };
+  function chRgb(ch) { var c = CHAIN_HUES[ch]; return c ? c.rgb : CHAIN_HUES.everything.rgb; }
 
   // ------------------------------------------------------- the domain
 
@@ -618,6 +689,7 @@
   function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
   function lerpColor(a) { return 'rgba(167,139,250,' + a.toFixed(3) + ')'; }
   function lerpColorA(a, al) { return 'rgba(167,139,250,' + (a * al).toFixed(3) + ')'; }
+  function nodeColor(node, a) { return 'rgba(' + chRgb(node.ch) + ',' + Math.max(0, Math.min(1, a)).toFixed(3) + ')'; }
 
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
@@ -822,24 +894,38 @@
 
   function buildNerveNet() {
     allCables = []; threads = [];
+    // dense web: every fact links to its 2 nearest same-chain neighbours, so
+    // the graph reads as a connected field of clusters (obsidian-like).
     for (var c = 0; c < CHAIN_KEYS.length; c++) {
       var key = CHAIN_KEYS[c];
-      var h1 = chainCells(key, 1), h2 = chainCells(key, 2), h3 = chainCells(key, 3);
-      if (h1.length && h2.length) allCables.push(makeCable(h1[0], h2[0]));
-      if (h2.length && h3.length) allCables.push(makeCable(h2[0], h3[0]));
-      if (h2.length > 1 && h3.length) allCables.push(makeCable(h2[1 % h2.length], h3[0]));
+      var fam = chainCells(key);
+      for (var i = 0; i < fam.length; i++) {
+        var a = fam[i];
+        var nearest = [];
+        for (var j = 0; j < fam.length; j++) {
+          if (i === j) continue;
+          var b = fam[j];
+          var dd = dist(a.x, a.y, b.x, b.y);
+          nearest.push([dd, b]);
+        }
+        nearest.sort(function (x, y) { return x[0] - y[0]; });
+        for (var k = 0; k < Math.min(2, nearest.length); k++) {
+          allCables.push({ a: a, b: nearest[k][1], path: straightPath(a, nearest[k][1]) });
+        }
+      }
     }
     for (var t = 0; t < 5; t++) {
       var arc = growArcPath();
       threads.push(arc);
     }
   }
+  // straight, clean link — obsidian draws its edges as plain lines
+  function straightPath(a, b) { return [[a.x, a.y], [b.x, b.y]]; }
   function chainCells(key, ho) {
     var out = [];
     for (var i = 0; i < memory.length; i++) if (memory[i].ch === key && (ho === undefined || memory[i].ho === ho)) out.push(memory[i]);
     return out;
   }
-  function makeCable(a, b) { return { a: a, b: b, path: growCablePath(a.x, a.y, b.x, b.y) }; }
   function growArcPath() {
     var x0 = rand(GW * 0.05, GW * 0.5), y0 = rand(GH * 0.12, GH * 0.5);
     var x1 = rand(GW * 0.5, GW * 0.95), y1 = rand(GH * 0.12, GH * 0.7);
@@ -914,10 +1000,6 @@
 
   // ------------------------------------------------------- the voice — a collection of sentences
 
-  var COMBINERS = [
-    ', because ', ', which is why ', '; in fact, ', '; that is, ',
-    ', and so ', ', and in turn ', '; from there, ', ', after all, '
-  ];
   var FOLLOW_UPS = [
     'that is the whole of it.',
     'and that is the shape of it.',
@@ -931,18 +1013,20 @@
     var cleaned = parts.map(function (p) { return p.replace(/[.!?]+$/, ''); });
     var s;
     if (cleaned.length === 1) {
-      s = cleaned[0];
+      s = cleaned[0] + '.';
     } else {
-      s = cleaned[0];
+      s = cleaned[0] + '.';
       for (var i = 1; i < cleaned.length; i++) {
-        s += COMBINERS[rInt(COMBINERS.length)] + lowerFirst(cleaned[i]);
+        s += ' ' + lowerFirst(cleaned[i]) + '.';
       }
     }
-    return s.charAt(0).toUpperCase() + s.slice(1) + '.';
+    return lowerFirst(s);
   }
 
   function generateBlock(group, chips) {
-    var facts = group.slice(0, 6).map(function (f) { return f.text.replace(/[.!?]+$/, ''); });
+    var seen = {};
+    var facts = group.slice(0, 6).map(function (f) { return f.text.replace(/[.!?]+$/, ''); })
+      .filter(function (t) { var k = t.trim().toLowerCase(); if (seen[k]) return false; seen[k] = true; return true; });
     var chip = chips[rInt(chips.length)];
     var roll = Math.random();
 
@@ -986,10 +1070,9 @@
     }
     if (text.length < 60 && text.indexOf('\n') < 0 && Math.random() < 0.5) {
       var fu = FOLLOW_UPS[rInt(FOLLOW_UPS.length)];
-      text += '\n\n' + fu.charAt(0).toUpperCase() + fu.slice(1);
+      text += '\n\n' + fu.toLowerCase();
     }
-    text = text.charAt(0).toUpperCase() + text.slice(1);
-    return text;
+    return text.toLowerCase();
   }
 
   // the graph grows: keywords give birth to brand-new fact-neurons each prompt.
@@ -1236,6 +1319,14 @@
 
     var spine0 = chainCells(chain, 1).filter(function (x) { return sel.indexOf(x) >= 0; })[0];
     var ordered = sel.slice().sort(function (a, b) { return a.ho - b.ho || (Math.random() < 0.5 ? -1 : 1); });
+    // drop repeated facts so the answer never stutters the same line
+    var oseen = {};
+    ordered = ordered.filter(function (x) {
+      var k = (x.text || '').trim().toLowerCase();
+      if (oseen[k]) return false;
+      oseen[k] = true;
+      return true;
+    });
     if (spine0) {
       ordered = [spine0].concat(ordered.filter(function (x) { return x !== spine0; }));
     }
@@ -1297,9 +1388,16 @@
       var kw = gorder[gk];
       var col = document.createElement('div');
       col.className = 'fcol';
-      var kEl = document.createElement('div');
-      kEl.className = 'fkey';
-      kEl.textContent = kw;
+    var kch = (group[kw][0] && group[kw][0].ch) || 'everything';
+    var khue = (CHAIN_HUES[kch] && CHAIN_HUES[kch].hex) || CHAIN_HUES.everything.hex;
+    var kEl = document.createElement('div');
+    kEl.className = 'fkey';
+    kEl.style.color = khue;
+    var dot = document.createElement('span');
+    dot.className = 'kdot';
+    dot.style.background = khue; dot.style.boxShadow = '0 0 8px ' + khue;
+    kEl.appendChild(dot);
+    kEl.appendChild(document.createTextNode(kw));
       var lst = document.createElement('div');
       lst.className = 'flist';
       col.appendChild(kEl);
@@ -1313,7 +1411,7 @@
         dEl.textContent = String(c2.litIdx);
         var tEl = document.createElement('span');
         tEl.className = 'fl';
-        var txt = c2.text;
+        var txt = c2.text.toLowerCase();
         for (var hi = 0; hi < hl.length; hi++) {
           if (!hl[hi]) continue;
           var rx = new RegExp('(' + hl[hi].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
@@ -1400,36 +1498,37 @@
       if (nd2.fired) {
         var g = 8 + Math.min(2, nd2.charge) * 14;
         var rad = grCtx.createRadialGradient(nd2.qx, nd2.qy, 0, nd2.qx, nd2.qy, g);
-        rad.addColorStop(0, lerpColor(0.55 * fade));
-        rad.addColorStop(0.35, lerpColor(0.16 * fade));
-        rad.addColorStop(1, 'rgba(167,139,250,0)');
+        rad.addColorStop(0, nodeColor(nd2, 0.55 * fade));
+        rad.addColorStop(0.35, nodeColor(nd2, 0.16 * fade));
+        rad.addColorStop(1, nodeColor(nd2, 0));
         grCtx.fillStyle = rad;
         grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, g, 0, Math.PI * 2); grCtx.fill();
-        // bright honey core
-        grCtx.fillStyle = lerpColor(0.95 * fade);
+        // bright core in the node's own hue
+        grCtx.fillStyle = nodeColor(nd2, 0.95 * fade);
         grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, 2 + Math.min(3, nd2.charge), 0, Math.PI * 2); grCtx.fill();
         if (nd2.flashT > 0) {
-          grCtx.strokeStyle = lerpColor(nd2.flashT * 0.6 * fade);
+          grCtx.strokeStyle = nodeColor(nd2, nd2.flashT * 0.6 * fade);
           grCtx.lineWidth = 1.1;
           grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, (1 - nd2.flashT) * 22 + 8, 0, Math.PI * 2); grCtx.stroke();
         }
         if (nd2.litIdx > 0) {
           grCtx.fillStyle = 'rgba(8,9,15,0.95)';
           grCtx.beginPath(); grCtx.arc(nd2.qx + 11, nd2.qy - 6, 7, 0, Math.PI * 2); grCtx.fill();
-          grCtx.strokeStyle = lerpColor(0.8 * fade);
+          grCtx.strokeStyle = nodeColor(nd2, 0.8 * fade);
           grCtx.lineWidth = 1;
           grCtx.stroke();
-          grCtx.fillStyle = ACCENT;
+          grCtx.fillStyle = nodeColor(nd2, 1);
           grCtx.font = '700 9px "CMU Typewriter Text", "Courier New", monospace';
           grCtx.textAlign = 'center'; grCtx.textBaseline = 'middle';
           grCtx.fillText(String(nd2.litIdx), nd2.qx + 11, nd2.qy - 6);
         }
       } else {
-        // dim idle constellation dot — the whole web is readable, like obsidian
+        // dim idle constellation dot, tinted by its family — the whole web is
+        // readable up front, exactly like obsidian's graph view
         var rst = 0.5 + 0.5 * Math.sin(now * 0.0016 + n2);
-        grCtx.globalAlpha = (0.11 + rst * 0.08) * fade;
-        grCtx.fillStyle = GREY;
-        grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, 1.3, 0, Math.PI * 2); grCtx.fill();
+        grCtx.globalAlpha = (0.16 + rst * 0.10) * fade;
+        grCtx.fillStyle = nodeColor(nd2, 1);
+        grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, 1.4, 0, Math.PI * 2); grCtx.fill();
         grCtx.globalAlpha = 1;
       }
     }
@@ -1672,6 +1771,10 @@
 
   submitEl.addEventListener('click', function () { if (inputEl.value.trim()) run(inputEl.value.trim()); });
   inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inputEl.value.trim()) { e.preventDefault(); run(inputEl.value.trim()); inputEl.focus(); } });
+  var tqEls = document.querySelectorAll('.tq');
+  for (var tqi = 0; tqi < tqEls.length; tqi++) {
+    tqEls[tqi].addEventListener('click', function () { run(this.textContent.replace(/\s+/g, ' ').trim()); });
+  }
 
   function tick(ts) {
     var dt = lastT ? Math.min(ts - lastT, 50) : 16;
