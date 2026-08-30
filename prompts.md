@@ -670,3 +670,54 @@ user is prompted for their next sentence.
   by forcing the roll through a seeded override (0.05 → one folded
   line, 0.45 → short paragraph, 0.9 → longer block) with the real
   RNG restored afterwards.
+
+## 16 — fresh build in a NEW file (graph.html), landing page finally empty
+
+create a new html file in this very directory — don't touch the old
+one at all. the landing page should have nothing on it, just the
+prompt box (the old page renders the whole plexus/neurons behind the
+ask box at idle; that's the "why does the landing page already have
+stuff" complaint). flow: land on a blank page with only the prompt
+box → type and hit enter → the prompt goes above → keywords are chosen
+→ the page splits into parts where facts are generated fast with a
+little dot next to each → another part of the page is a graph that
+grows slowly and forms connections like a brain's synapses as the
+facts are generated → once the graph is fully formed it disappears →
+only then the prompt comes back to centre → the answer (a collection
+of sentences, like the finished graph in sentence form, non-
+deterministic every time) is shown → and below it the user is prompted
+for their next sentence.
+
+- brand-new self-contained file `graph.html`; `index.html` is byte-for-
+  byte untouched. same 14-chain domain / SYN map / stopwords as before,
+  same broad keyword→fact→sentence pipeline, so any prompt still
+  answers from stored facts.
+- THE LANDING IS EMPTY. at idle the background canvas draws only a
+  barely-there radial wash (alpha ~0.01) — no plexus, no neurons, no
+  drizzle, no motes, no labels. just the centred ask line. the graph
+  lives in its own panel and is only revealed during a run.
+- staged flow, single centred column: submit → column rises to top →
+  "keywords" zone types the chosen chips under it → the column splits
+  into two side-by-side panels: the left shows the facts (each with a
+  numbered little dot, revealed fast one by one) and the right is a
+  dedicated graph panel whose canvas grows the plexus and lays the
+  question→fact→fact… cables with travelling impulses, then the whole
+  plexus dissolves (fade in `forming`/`answered`) and both panels
+  collapse (`split.on` removed) — the graph visibly "disappears once
+  fully formed".
+- prompt returns to centre (`col.raised` removed) and the answer —
+  always a collection of sentences (one folded line, a short paragraph,
+  or a full block), rolled differently every run — types out below it;
+  an "ask anything else…" cue pulses beneath it and the input is
+  handed back, refocused for the next sentence.
+- fixes caught by the drive harness before commit: `scoreFacts` keyed
+  its result by the cell *object* while the selector read `scores[idx]`
+  (index) — the two disagreed so scoring silently never populated and
+  selection fell through to filler; and the `rest`/`everything` filler
+  loops pushed `rest[r].c` on raw cells (undefined) instead of the cell
+  itself. both fixed: scoring keys by index, filler pushes the raw
+  cell — selection is correct for every path. a stub-dom harness boots
+  the real IIFE, drives `run()` + the tick loop and confirms
+  keywords → facts → connections → forming → answered on seven prompts
+  incl. gibberish, 4-6 facts each, panels dissolve, column centres,
+  answer shows, next-prompt cue appears.

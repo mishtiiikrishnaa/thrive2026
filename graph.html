@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ask anything</title>
+<link rel="preconnect" href="https://fonts.cdnfonts.com">
+<link href="https://fonts.cdnfonts.com/css/cmu-serif" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/cmu-sans-serif" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/cmu-typewriter-text" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --ink: #e9e9ee;
+    --dim: #40404a;
+    --faint: #565662;
+    --accent: #ffa6c9;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; background: var(--bg); overflow: hidden; }
+
+  body {
+    font-family: "CMU Sans Serif", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+
+  .scene { position: relative; height: 100vh; }
+  #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* the single centred column */
+  .col {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    top: 46%; width: min(92vw, 680px); text-align: center;
+    transition: top 0.95s cubic-bezier(0.22, 0.9, 0.24, 1);
+    z-index: 3;
+  }
+  .col.raised { top: 3.5%; }
+
+  /* ---- the landing: nothing but the ask line ---- */
+  .askline { display: flex; justify-content: center; gap: 10px; }
+  .askline input {
+    flex: 0 1 480px;
+    font-size: 17px; letter-spacing: 0.02em; color: var(--ink);
+    background: rgba(18,18,28,0.72);
+    border: 1px solid var(--dim); border-radius: 999px;
+    padding: 15px 26px; outline: none;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease;
+  }
+  .askline input::placeholder { color: var(--faint); font-style: italic; }
+  .askline input:focus {
+    border-color: rgba(255,166,201,0.55);
+    box-shadow: 0 0 0 1px rgba(255,166,201,0.22), 0 0 34px rgba(255,166,201,0.12);
+  }
+  .askline input:disabled { opacity: 0.5; }
+  .askline button {
+    font-size: 14px; letter-spacing: 0.06em; color: var(--ink);
+    background: rgba(255,166,201,0.12);
+    border: 1px solid rgba(255,166,201,0.4); border-radius: 999px;
+    padding: 0 28px; cursor: pointer; outline: none;
+    transition: background 0.3s ease, opacity 0.4s ease;
+  }
+  .askline button:hover:not([disabled]) { background: rgba(255,166,201,0.24); }
+  .askline button[disabled] { opacity: 0.35; cursor: default; }
+
+  /* ---- the two half-panels: facts (left) and the growing graph ---- */
+  .split {
+    display: flex; gap: 28px; margin-top: 26px; text-align: left;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.7s ease, transform 0.7s ease, max-height 0.8s ease;
+    max-height: 0; overflow: hidden;
+  }
+  .split.on { opacity: 1; transform: translateY(0); max-height: 640px; }
+
+  .side { flex: 1 1 50%; min-width: 0; }
+  .tag {
+    display: block; font-family: "CMU Typewriter Text", monospace;
+    font-size: 9px; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--dim); margin-bottom: 14px;
+    transition: color 0.5s ease, text-shadow 0.5s ease;
+  }
+  .tag.hot { color: var(--accent); text-shadow: 0 0 14px rgba(255,166,201,0.4); }
+
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 18px; }
+  .chip {
+    font-size: 12px; letter-spacing: 0.04em; color: var(--accent);
+    background: rgba(255,166,201,0.07);
+    border: 1px solid rgba(255,166,201,0.32); border-radius: 999px;
+    padding: 6px 14px;
+  }
+
+  /* the fact list — each fact is generated fast, with a little dot */
+  .flist { display: flex; flex-direction: column; gap: 9px; }
+  .fkg {
+    display: flex; align-items: baseline; gap: 10px;
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  .fkg .fdot {
+    flex: 0 0 auto;
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1px solid rgba(255,166,201,0.7);
+    color: var(--accent);
+    font-family: "CMU Sans Serif", sans-serif;
+    font-size: 8.5px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    transform: translateY(2px);
+  }
+  .fkg .fl {
+    font-family: "CMU Serif", Georgia, serif; font-size: 14px;
+    color: rgba(233,233,238,0.9); letter-spacing: 0.01em; line-height: 1.5;
+  }
+  .fkg .fl .hl { color: var(--accent); }
+
+  /* the graph region holds the canvas where nerves grow */
+  .graphbox { position: relative; height: 300px; border-radius: 14px; }
+  #graph { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .graphbox .stagehint {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: "CMU Typewriter Text", monospace; font-size: 10px;
+    letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim);
+  }
+
+  /* ---- the answer ---- */
+  .answer {
+    margin-top: 40px; max-width: 100%;
+    opacity: 0; transition: opacity 1.1s ease;
+    user-select: none;
+    text-align: left;
+  }
+  .answer.show { opacity: 1; }
+  .answer .ans {
+    font-family: "CMU Serif", Georgia, serif;
+    font-size: 16px; line-height: 1.85;
+    color: rgba(233,233,238,0.95);
+    letter-spacing: 0.01em;
+    text-shadow: 0 0 18px rgba(255,166,201,0.12);
+    white-space: pre-wrap;
+  }
+
+  .again {
+    margin-top: 26px; text-align: center;
+    font-family: "CMU Typewriter Text", monospace;
+    font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--faint);
+    transition: color 0.5s ease, opacity 0.6s ease;
+    opacity: 0;
+  }
+  .again.show { opacity: 1; }
+  .again.bright { color: var(--accent); }
+</style>
+</head>
+<body>
+
+  <div class="scene">
+    <canvas id="stage"></canvas>
+
+    <div class="col" id="col">
+      <div class="askline">
+        <input id="input" type="text" placeholder="ask anything…" autocomplete="off" spellcheck="false">
+        <button id="submit">ask</button>
+      </div>
+
+      <div class="split" id="split">
+        <div class="side">
+          <span class="tag" id="kwtag">keywords</span>
+          <div class="chips" id="chips"></div>
+          <span class="tag" id="facttag">where each keyword leads</span>
+          <div class="flist" id="flist"></div>
+        </div>
+        <div class="side">
+          <span class="tag" id="graphtag">the graph learning</span>
+          <div class="graphbox" id="graphbox">
+            <div class="stagehint">growing…</div>
+            <canvas id="graph"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="answer" id="answerzone">
+        <p class="ans" id="ans"></p>
+      </div>
+
+      <div class="again" id="again">ask anything else…</div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  var bgCanvas = document.getElementById('stage');
+  var bgCtx = bgCanvas.getContext('2d');
+  var grCanvas = document.getElementById('graph');
+  var grCtx = grCanvas.getContext('2d');
+  var inputEl = document.getElementById('input');
+  var submitEl = document.getElementById('submit');
+  var colEl = document.getElementById('col');
+  var splitEl = document.getElementById('split');
+  var chipsEl = document.getElementById('chips');
+  var flistEl = document.getElementById('flist');
+  var ansEl = document.getElementById('ans');
+  var answerEl = document.getElementById('answerzone');
+  var againEl = document.getElementById('again');
+  var kwtagEl = document.getElementById('kwtag');
+  var facttagEl = document.getElementById('facttag');
+  var graphtagEl = document.getElementById('graphtag');
+
+  var ACCENT = '#ffa6c9';
+  var GREY = '#e9e9ee';
+  var CHIP_MS = 28;
+  var KW_STAGGER = 150;
+  var GRAPH_H = 300;
+
+  // ------------------------------------------------------- the domain
+
+  var CHAINS = {};
+  var CHAIN_KEYS = ['cosmos', 'earth', 'sea', 'life', 'body', 'mind', 'craft', 'story', 'machine', 'code', 'math', 'language', 'society', 'everything'];
+
+  function chain(key, label, anchor, facts) {
+    CHAINS[key] = { label: label, anchor: anchor, facts: facts };
+  }
+
+  chain('cosmos', 'cosmos', [0.30, 0.30], [
+    ['the sky looks blue because short wavelengths scatter most.', 1, ['sky', 'blue', 'scatter', 'wavelength']],
+    ['the sun is a star.', 1, ['sun', 'star']],
+    ['sunlight is a mixture of every visible color.', 2, ['sunlight', 'light', 'color']],
+    ['gravity bends light and time.', 3, ['gravity', 'bend', 'light', 'time']],
+    ['more mass means more gravity.', 2, ['gravity', 'mass', 'heavy', 'pull']],
+    ['light takes time to cross a distance.', 2, ['light', 'time', 'distance', 'travel', 'space']],
+    ['stars are suns seen from very far away.', 3, ['star', 'sun', 'distance', 'galaxy', 'space']],
+    ['the moon reflects the light of the sun.', 2, ['moon', 'reflect', 'sun', 'light', 'night']],
+    ['a planet is a world circling a star.', 2, ['planet', 'orbit', 'world', 'mars']],
+    ['orbits are falling carried by sideways motion.', 2, ['orbit', 'fall', 'gravity', 'moon', 'speed']],
+    ['the sun holds the planets with its pull.', 3, ['gravity', 'sun', 'planet', 'pull', 'hold']],
+    ['heavier and lighter things fall together.', 2, ['gravity', 'fall', 'weight', 'heavy', 'feather']],
+    ['the deeper you look, the further back in time you see.', 3, ['telescope', 'past', 'time', 'far', 'space']],
+    ['ice is water slowed into a crystal lattice.', 2, ['ice', 'freeze', 'cold', 'crystal', 'winter']],
+    ['fire is light and heat released from fuel.', 2, ['fire', 'heat', 'flame', 'burn', 'fuel', 'warm']]
+  ]);
+
+  chain('earth', 'earth', [0.62, 0.28], [
+    ['rain is water returning from the sky.', 1, ['rain', 'water', 'sky', 'cloud', 'wet']],
+    ['clouds are droplets of water.', 2, ['cloud', 'water', 'sky', 'drop']],
+    ['air higher up is thinner and colder.', 2, ['air', 'atmosphere', 'cold', 'height', 'thin']],
+    ['wind is air moving toward lower pressure.', 2, ['wind', 'air', 'pressure', 'move', 'weather']],
+    ['a river ends where it meets the ocean.', 1, ['river', 'ocean', 'end', 'flow', 'water']],
+    ['mountains wear down grain by grain.', 2, ['mountain', 'erosion', 'sand', 'rock', 'wear']],
+    ['soil is weathered rock and old life.', 3, ['soil', 'earth', 'root', 'dead', 'rock']],
+    ['water flows downhill along the gentlest path.', 2, ['water', 'flow', 'valley', 'downhill', 'river']],
+    ['winter happens when the axis leans away from the sun.', 3, ['winter', 'season', 'cold', 'axis', 'sun']],
+    ['thunder is the noise of air torn by lightning.', 2, ['thunder', 'lightning', 'storm', 'noise', 'air']],
+    ['rocks record the order of the earth\u2019s changes.', 3, ['rock', 'layer', 'fossil', 'history', 'earth']],
+    ['volcanoes carry the ground\u2019s old fire upward.', 3, ['volcano', 'lava', 'magma', 'fire', 'mountain']]
+  ]);
+
+  chain('sea', 'sea', [0.82, 0.46], [
+    ['the sea keeps its own unhurried time.', 1, ['sea', 'ocean', 'wave', 'tide']],
+    ['tides rise with the pull of the moon.', 1, ['tide', 'moon', 'pull', 'sea', 'ocean']],
+    ['waves move energy, not the water.', 2, ['wave', 'energy', 'move', 'sea', 'water']],
+    ['salt enters the sea from the land.', 2, ['salt', 'sea', 'land', 'river', 'taste']],
+    ['most life under water never sees the sun.', 3, ['deep', 'sea', 'life', 'fish', 'dark']],
+    ['a river\u2019s mouth mixes fresh and salt water.', 2, ['river', 'mouth', 'fresh', 'salt', 'delta']],
+    ['the sea is water that has not stopped moving.', 2, ['water', 'sea', 'move', 'motion']],
+    ['sailors read the sea\u2019s surfaces.', 3, ['sailor', 'boat', 'map', 'surface', 'sea']],
+    ['an island is a mountain with the sea around it.', 2, ['island', 'mountain', 'land', 'sea']],
+    ['foam is air trapped by salt and motion.', 3, ['foam', 'air', 'wave', 'bubble', 'salt']]
+  ]);
+
+  chain('life', 'life', [0.46, 0.40], [
+    ['plants turn sunlight into food.', 1, ['plant', 'sun', 'food', 'grow', 'leaf']],
+    ['a seed carries everything it needs to begin.', 2, ['seed', 'grow', 'begin', 'plant', 'new']],
+    ['animals breathe what plants make.', 1, ['animal', 'breathe', 'air', 'plant', 'oxygen']],
+    ['every living thing is built of cells.', 2, ['cell', 'life', 'body', 'tiny']],
+    ['species change slowly in response to their world.', 3, ['evolve', 'change', 'species', 'adapt', 'survival']],
+    ['animals sleep to repair and sort.', 2, ['animal', 'sleep', 'rest', 'repair', 'night']],
+    ['a tree is a slow forest of its own branches.', 2, ['tree', 'branch', 'wood', 'grow', 'trunk']],
+    ['plants keep reaching for water.', 3, ['water', 'plant', 'root', 'dry', 'thirst']],
+    ['flowers trade beauty for a little pollen travel.', 3, ['flower', 'pollen', 'bee', 'beauty', 'seed']],
+    ['growth needs food, warmth and time.', 2, ['growth', 'grow', 'food', 'need', 'warm', 'time']]
+  ]);
+
+  chain('body', 'body', [0.62, 0.58], [
+    ['the heart is a muscle that never rests.', 1, ['heart', 'muscle', 'pulse', 'beat']],
+    ['blood carries oxygen through every part.', 2, ['blood', 'oxygen', 'carry', 'body', 'heart']],
+    ['bones anchor the body and protect its soft parts.', 2, ['bone', 'body', 'strength', 'protect', 'skeleton']],
+    ['the skin is the oldest sense.', 1, ['skin', 'touch', 'hand', 'feel', 'sense']],
+    ['lungs exchange the air you own with the air beyond.', 2, ['lung', 'air', 'breathe', 'breath']],
+    ['sleep lets the brain file the day.', 2, ['sleep', 'brain', 'rest', 'remember', 'night']],
+    ['pain is a signal tuning toward healing.', 2, ['pain', 'signal', 'heal', 'hurt', 'warning']],
+    ['the brain uses more energy than its weight.', 3, ['brain', 'energy', 'mind', 'fuel']],
+    ['the body cools by sweating into the air.', 2, ['sweat', 'cool', 'heat', 'skin', 'body']],
+    ['hunger is the body checking its stores.', 2, ['hunger', 'food', 'energy', 'need', 'eat']],
+    ['cells repair during the quiet of sleep.', 3, ['cell', 'repair', 'night', 'rest', 'grow']]
+  ]);
+
+  chain('mind', 'mind', [0.28, 0.50], [
+    ['the brain is a network of cells signalling each other.', 1, ['brain', 'network', 'cell', 'signal', 'neuron']],
+    ['a thought is a pattern of firing.', 2, ['thought', 'idea', 'brain', 'pattern', 'fire']],
+    ['repeated firing makes a path easier to use.', 1, ['practice', 'memory', 'repeat', 'path', 'habit', 'learn']],
+    ['memory builds by association, not by filing.', 3, ['memory', 'associate', 'recall', 'forget', 'past']],
+    ['sleep is where the day\u2019s work gets filed.', 2, ['sleep', 'memory', 'file', 'day', 'process']],
+    ['attention is a narrow, strong beam.', 2, ['attention', 'focus', 'distraction', 'notice']],
+    ['fear rehearses what could go wrong.', 2, ['fear', 'anxiety', 'worry', 'safety', 'predict']],
+    ['emotion directs what gets remembered.', 3, ['emotion', 'feel', 'memory', 'strong', 'remember']],
+    ['awareness is the part that watches.', 3, ['awareness', 'mindful', 'watch', 'present', 'consciousness']],
+    ['habit is thought worn smooth by use.', 2, ['habit', 'repeat', 'routine', 'change', 'use']],
+    ['questions keep the mind open and ready.', 2, ['question', 'curiosity', 'learning', 'ask', 'mind']]
+  ]);
+
+  chain('craft', 'craft', [0.16, 0.36], [
+    ['a poem is language arranged in lines.', 1, ['poem', 'line', 'write', 'verse']],
+    ['a haiku is three short lines.', 1, ['haiku', 'line', 'short', 'japan']],
+    ['meter is the heartbeat of a line.', 2, ['meter', 'rhythm', 'beat', 'line', 'poem']],
+    ['rhyme is a meeting at a distance.', 2, ['rhyme', 'sound', 'echo', 'poem']],
+    ['a story is attention carried along a thread.', 1, ['story', 'plot', 'tale', 'narrative']],
+    ['metaphor is one thing standing for another.', 2, ['metaphor', 'symbol', 'meaning', 'image']],
+    ['an image shows instead of telling.', 2, ['image', 'show', 'art', 'detail', 'tell']],
+    ['paint is pigment\u2019s endurance across time.', 3, ['paint', 'art', 'color', 'canvas', 'pigment']],
+    ['music is time made audible.', 2, ['music', 'time', 'sound', 'beat', 'rhythm']],
+    ['a song joins words to a tune.', 2, ['song', 'words', 'tune', 'lyric', 'melody']],
+    ['practice is where roughness becomes craft.', 2, ['practice', 'craft', 'skill', 'repeat', 'rough']],
+    ['the empty part is where form is seen.', 3, ['space', 'design', 'negative', 'silence', 'form']]
+  ]);
+
+  chain('story', 'story', [0.20, 0.64], [
+    ['every story begins with someone wanting.', 1, ['story', 'want', 'desire', 'begin', 'plot']],
+    ['a hero is called and does not ask twice.', 2, ['hero', 'call', 'adventure', 'quest']],
+    ['myth is a culture dreaming out loud.', 1, ['myth', 'culture', 'legend', 'dream', 'tale']],
+    ['epic is a story as large as a world.', 2, ['epic', 'poem', 'legend', 'world', 'tale']],
+    ['arjuna hesitates before the war of kurukshetra.', 1, ['arjuna', 'hesitate', 'war', 'kurukshetra']],
+    ['krishna points arjuna to duty beyond consequence.', 2, ['krishna', 'duty', 'arjuna', 'teach', 'dharma']],
+    ['sita walks through fire and comes out whole.', 3, ['sita', 'fire', 'trial', 'rama', 'purity']],
+    ['icarus flies too near the sun and falls.', 2, ['icarus', 'fly', 'sun', 'wax', 'ambition']],
+    ['orpheus turns back and loses what he loved.', 2, ['orpheus', 'love', 'look', 'loss', 'grief']],
+    ['odysseus is a man of many turnings.', 3, ['odysseus', 'journey', 'home', 'wander', 'greek']],
+    ['a flood cleans and starts the story again.', 3, ['flood', 'myth', 'begin', 'water', 'world']],
+    ['every folktale is a handled gem.', 3, ['folktale', 'fable', 'told', 'moral', 'tale']]
+  ]);
+
+  chain('machine', 'machine', [0.74, 0.70], [
+    ['a lever trades distance for force.', 1, ['lever', 'force', 'distance', 'simple', 'machine']],
+    ['a wheel repeats its stillness as it rolls.', 1, ['wheel', 'motion', 'circle', 'axle', 'roll']],
+    ['engines burn fuel to spin their load.', 2, ['engine', 'fuel', 'energy', 'motor', 'power']],
+    ['gears change speed by changing size.', 2, ['gear', 'speed', 'size', 'teeth', 'machine']],
+    ['steam carries heat into motion.', 3, ['steam', 'heat', 'motion', 'boiler', 'power']],
+    ['friction turns effort into warmth.', 2, ['friction', 'heat', 'rub', 'force', 'warm']],
+    ['a machine does work with structure instead of strain.', 2, ['machine', 'work', 'structure', 'simple', 'design']],
+    ['cold shrinks and heat expands.', 2, ['cold', 'shrink', 'heat', 'expand', 'metal']],
+    ['a piston is a car\u2019s heartbeat.', 3, ['piston', 'car', 'engine', 'cylinder', 'motor']],
+    ['material is chosen by how it holds.', 3, ['material', 'steel', 'wood', 'strong', 'choose']]
+  ]);
+
+  chain('code', 'code', [0.46, 0.70], [
+    ['a program is a list of steps for a machine.', 1, ['program', 'code', 'computer', 'step', 'software']],
+    ['loops repeat until the condition turns.', 1, ['loop', 'repeat', 'condition', 'code']],
+    ['a function is a named block you can call.', 2, ['function', 'call', 'block', 'name', 'code']],
+    ['recursion is a function calling itself.', 2, ['recursion', 'function', 'self', 'depth']],
+    ['the deepest call returns last.', 3, ['deep', 'return', 'stack', 'order', 'call']],
+    ['data is recorded fact arranged for use.', 2, ['data', 'record', 'store', 'database', 'fact']],
+    ['a network is packages of messages finding routes.', 2, ['network', 'message', 'route', 'internet', 'packet']],
+    ['encryption keeps a secret travelling in public.', 3, ['secret', 'encryption', 'password', 'lock', 'private']],
+    ['a bug is a gap between plan and behaviour.', 2, ['bug', 'error', 'mistake', 'fault', 'behaviour']],
+    ['ai learns patterns from examples.', 2, ['ai', 'pattern', 'learn', 'example', 'model', 'intelligence']],
+    ['a compiler translates intent into machine.', 3, ['compiler', 'translate', 'machine', 'language', 'code']]
+  ]);
+
+  chain('math', 'math', [0.55, 0.44], [
+    ['numbers are names for how many.', 1, ['number', 'count', 'many', 'math']],
+    ['zero is the space that makes counting possible.', 2, ['zero', 'count', 'empty', 'digit', 'nothing']],
+    ['a circle has no corners and no end.', 1, ['circle', 'shape', 'round', 'geometry']],
+    ['pi is the shadow of a circle\u2019s edge.', 3, ['circle', 'pi', 'ratio', 'edge', 'round']],
+    ['division shares fairly or keeps the rest.', 2, ['divide', 'share', 'rest', 'fraction']],
+    ['a pattern repeats to make order from none.', 1, ['pattern', 'repeat', 'order', 'predict']],
+    ['probability shrinks surprise into a number.', 2, ['probability', 'chance', 'odds', 'random', 'predict']],
+    ['a proof is a path that cannot slip.', 2, ['proof', 'logic', 'reason', 'truth', 'math']],
+    ['the same shape hides in larger and larger rooms.', 3, ['pattern', 'scale', 'shape', 'similarity']],
+    ['prime numbers are the atoms of counting.', 3, ['prime', 'number', 'multiply', 'factor']],
+    ['symmetry is change that leaves the picture whole.', 2, ['symmetry', 'mirror', 'balance', 'shape', 'pattern']]
+  ]);
+
+  chain('language', 'language', [0.26, 0.74], [
+    ['a word means what its neighbours give it.', 1, ['word', 'meaning', 'context', 'sentence', 'language']],
+    ['grammar is a habit of arrangement.', 2, ['grammar', 'sentence', 'order', 'rule', 'structure']],
+    ['a sentence is a thought wearing a shape.', 2, ['sentence', 'thought', 'clause', 'shape']],
+    ['translation is carrying sense across a river.', 2, ['translation', 'language', 'meaning', 'cross', 'foreign']],
+    ['names give power over what is named.', 2, ['name', 'title', 'word', 'power', 'call']],
+    ['tone gives the same word two different lives.', 2, ['tone', 'voice', 'meaning', 'mood', 'speak']],
+    ['every language is a way of carving the world.', 3, ['language', 'world', 'see', 'speak', 'differ']],
+    ['silence is a word the ear knows.', 3, ['silence', 'pause', 'word', 'speak', 'listen']],
+    ['metaphor lets one language borrow another\u2019s light.', 3, ['metaphor', 'borrow', 'image', 'language', 'light']],
+    ['a question marks where understanding waits.', 2, ['question', 'ask', 'understand', 'mark', 'answer']]
+  ]);
+
+  chain('society', 'society', [0.66, 0.82], [
+    ['money is a promise that travels.', 1, ['money', 'trade', 'value', 'promise', 'market']],
+    ['a city is a forest of agreements.', 2, ['city', 'agreement', 'town', 'live', 'rule']],
+    ['law is a people\u2019s memory of dealing fairly.', 2, ['law', 'rule', 'judge', 'fair', 'justice']],
+    ['war is the failure of words.', 3, ['war', 'words', 'conflict', 'peace', 'failure']],
+    ['a family is the first society.', 1, ['family', 'home', 'belong', 'raise', 'child']],
+    ['borders are agreements drawn across the land.', 2, ['border', 'country', 'land', 'map', 'line']],
+    ['a market is many private needs made public.', 2, ['market', 'need', 'trade', 'money', 'price']],
+    ['history is the story we tell about the evidence.', 2, ['history', 'evidence', 'past', 'tell', 'record']],
+    ['culture is a pattern of shared attention.', 2, ['culture', 'share', 'tradition', 'ritual', 'habit']],
+    ['work is value arranged into time.', 2, ['work', 'value', 'time', 'labour', 'effort']],
+    ['books carry conversation across centuries.', 3, ['book', 'library', 'learn', 'scholar', 'read']]
+  ]);
+
+  chain('everything', 'everything', [0.88, 0.44], [
+    ['every answer here is assembled from stored facts.', 1, ['answer', 'store', 'fact', 'assemble', 'system']],
+    ['nothing arrives without a cause.', 1, ['cause', 'reason', 'origin', 'why', 'source']],
+    ['the closest fact is usually the truest one.', 2, ['true', 'close', 'fact', 'usually', 'answer']],
+    ['associations are how the web grows.', 2, ['associate', 'link', 'web', 'connect', 'grow']],
+    ['keywords are the hooks a question offers.', 2, ['keyword', 'question', 'hook', 'match', 'term']],
+    ['a question is already a small theory.', 3, ['question', 'theory', 'ask', 'think', 'hypothesis']],
+    ['facts stay quiet until a question wakes them.', 2, ['wake', 'fact', 'question', 'light', 'fire']],
+    ['connections make the answer more than its parts.', 3, ['connect', 'answer', 'part', 'whole', 'web']]
+  ]);
+
+  var SYN = {
+    weather: ['rain', 'storm', 'cloud', 'wind', 'sky', 'sun', 'cold', 'hot', 'sunny'],
+    water: ['rain', 'river', 'sea', 'ocean', 'ice', 'drink', 'swim', 'liquid'],
+    cold: ['ice', 'winter', 'freeze', 'snow', 'chill'],
+    hot: ['fire', 'heat', 'sun', 'burn', 'warm', 'summer'],
+    sun: ['light', 'heat', 'star', 'sky', 'warm', 'day'],
+    night: ['moon', 'star', 'sleep', 'dark', 'dream'],
+    animal: ['bird', 'cat', 'dog', 'fish', 'snake', 'beast'],
+    eat: ['food', 'hunger', 'taste', 'meal', 'cook'],
+    feel: ['love', 'fear', 'anger', 'sad', 'happy', 'emotion', 'lonely'],
+    fast: ['speed', 'quick', 'quickly', 'velocity', 'hurry'],
+    money: ['buy', 'sell', 'trade', 'work', 'price', 'market'],
+    love: ['heart', 'feeling', 'loss', 'care', 'want'],
+    sad: ['loss', 'cry', 'pain', 'alone', 'sorry'],
+    music: ['song', 'sound', 'pitch', 'melody', 'sing', 'listen', 'beats'],
+    language: ['word', 'speak', 'say', 'meaning', 'talk', 'voice'],
+    memory: ['remember', 'forget', 'past', 'recall'],
+    death: ['die', 'gone', 'loss', 'end', 'grave'],
+    beginning: ['start', 'born', 'origin', 'first', 'new'],
+    inside: ['inner', 'within', 'core', 'heart', 'secret'],
+    together: ['connect', 'link', 'join', 'bond', 'union'],
+    apart: ['separate', 'alone', 'distance', 'divide', 'split'],
+    choice: ['choose', 'decision', 'duty', 'path', 'pick'],
+    grow: ['growth', 'growing', 'plant', 'tall', 'life', 'increase'],
+    sleep: ['rest', 'night', 'dream', 'tired'],
+    fight: ['war', 'conflict', 'struggle', 'battle', 'combat'],
+    read: ['book', 'literature', 'story', 'learn', 'page', 'writing'],
+    write: ['writing', 'words', 'poem', 'book', 'story', 'letter'],
+    learn: ['study', 'practice', 'skill', 'memory', 'teach', 'understand'],
+    become: ['turn', 'grow', 'change', 'enter'],
+    different: ['differ', 'change', 'vary', 'other'],
+    question: ['ask', 'wonder', 'doubt', 'curiosity']
+  };
+
+  var STOP = {};
+  ['what','is','why','how','do','does','did','the','a','an','of','to','me','my','your','can','i','you','it','that','this','and','or','but','for','about','will','would','could','should','please','tell','give','make','want','need','like','let','there','its','it','when','where','who','are','were','was','be','has','have','too','so','very','really','just','on','in','at','with','from','by','up','down','out','over','under','again','then','than','all','any','some','much','more','most','nothing','list','explain','describe'].forEach(function (w) { STOP[w] = true; });
+
+  // ------------------------------------------------------- state
+
+  var BW = 0, BH = 0, GW = 0, GH = 0;
+  var cells = [];
+  var allCables = [];
+  var runEdges = [];
+  var boutons = [];
+  var threads = [];
+  var motes = [];
+  var chainMeta = {};
+
+  var GR = null;             // graph renderer
+  var impulses = [];
+  var synthesis = null;
+
+  var now = 0, frame = 0, lastT = 0, t0 = 0;
+  var state = 'idle';        // idle | keywords | facts | connections | forming | answered | settling
+
+  // ------------------------------------------------------- helpers
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function dist(x1, y1, x2, y2) { var dx = x1 - x2, dy = y1 - y2; return Math.sqrt(dx * dx + dy * dy); }
+  function lerpColor(a) { return 'rgba(255,166,201,' + a.toFixed(3) + ')'; }
+  function lerpColorA(a, al) { return 'rgba(255,166,201,' + (a * al).toFixed(3) + ')'; }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function rInt(n) { return Math.floor(Math.random() * n); }
+  function lowerFirst(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+
+  function pathCum(path) {
+    var cum = [0];
+    for (var i = 1; i < path.length; i++) {
+      cum.push(cum[i - 1] + dist(path[i][0], path[i][1], path[i - 1][0], path[i - 1][1]));
+    }
+    return cum;
+  }
+  function pointAt(path, cum, d) {
+    var lo = 0, hi = cum.length - 1;
+    while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (cum[mid] <= d) lo = mid; else hi = mid; }
+    var a = path[lo], b = path[Math.min(hi, path.length - 1)];
+    var seg = cum[hi] - cum[lo] || 0.0001;
+    var t = clamp((d - cum[lo]) / seg, 0, 1);
+    return { x: a[0] + (b[0] - a[0]) * t, y: a[1] + (b[1] - a[1]) * t };
+  }
+  function catmull(p0, p1, p2, p3, t) {
+    var t2 = t * t, t3 = t2 * t;
+    return {
+      x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+      y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)
+    };
+  }
+  function smooth(pts) {
+    if (pts.length < 3) return pts;
+    var out = [pts[0]];
+    for (var i = 1; i < pts.length - 2; i++) {
+      var p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2];
+      for (var s = 1; s <= 5; s++) {
+        var p = catmull(p0, p1, p2, p3, s / 5);
+        out.push([p.x, p.y]);
+      }
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+
+  // ------------------------------------------------------- graph growth
+
+  function growArbor(sx, sy) {
+    var out = [];
+    for (var b = 0; b < 3; b++) {
+      var ang = rand(0, Math.PI * 2);
+      var ctrl = [[sx, sy]];
+      var len = rand(22, 40);
+      for (var i = 1; i <= 4; i++) {
+        ang += rand(-0.35, 0.35);
+        ctrl.push([sx + Math.cos(ang) * len * i / 4, sy + Math.sin(ang) * len * i / 4]);
+      }
+      var branch = smooth(ctrl);
+      out.push(branch);
+      var tip = branch[branch.length - 1];
+      addBouton(tip[0], tip[1], null);
+      if (Math.random() < 0.5) {
+        var k0 = Math.max(1, branch.length - 4);
+        var base = branch[k0];
+        var twAng = Math.atan2(tip[1] - base[1], tip[0] - base[0]) + rand(-0.9, 0.9);
+        var twig = [base];
+        for (var t2 = 1; t2 <= 2; t2++) { twAng += rand(-0.4, 0.4); twig.push([base[0] + Math.cos(twAng) * 5 * t2, base[1] + Math.sin(twAng) * 5 * t2]); }
+        var tpath = smooth(twig);
+        out.push(tpath);
+        var tt = tpath[tpath.length - 1];
+        addBouton(tt[0], tt[1], null);
+      }
+    }
+    return out;
+  }
+  function addBouton(x, y, owner) {
+    boutons.push({ x: x, y: y, owner: owner || null, flare: 0 });
+  }
+  function growCablePath(sx, sy, tx, ty) {
+    var mx = (sx + tx) / 2, my = (sy + ty) / 2;
+    var dx = tx - sx, dy = ty - sy;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var px = -dy / len, py = dx / len;
+    var sag = Math.min(len * 0.13, 24) * rand(0.7, 1.3);
+    var c1 = { x: mx - px * sag - dx * 0.15, y: my - py * sag - dy * 0.15 };
+    var c2 = { x: mx + px * sag * 0.55 + dx * 0.12, y: my + py * sag * 0.55 + dy * 0.12 };
+    return smooth([[sx, sy], [c1.x, c1.y], [c2.x, c2.y], [tx, ty]]);
+  }
+
+  // ------------------------------------------------------- layout (graph panel coords)
+
+  function buildGraphLayout() {
+    cells = []; boutons = [];
+    var zx0 = GW * 0.08, zx1 = GW * 0.92, zy0 = GH * 0.10, zy1 = GH * 0.86;
+
+    for (var c = 0; c < CHAIN_KEYS.length; c++) {
+      var key = CHAIN_KEYS[c];
+      var def = CHAINS[key];
+      var ax = (def.anchor[0] + rand(-0.01, 0.01)) * GW;
+      var ay = (def.anchor[1] + rand(-0.01, 0.01)) * GH;
+      var pts = [];
+
+      for (var f = 0; f < def.facts.length; f++) {
+        var fact = def.facts[f];
+        var ring = fact[1] === 1 ? rand(26, 46) : fact[1] === 2 ? rand(42, 66) : rand(58, 84);
+        var a2 = rand(0, Math.PI * 2);
+        pts.push({
+          text: fact[0], ch: key, ho: fact[1], k: fact[2],
+          fired: false, litIdx: 0, flashT: 0, drain: 0, charge: 0,
+          x: clamp(ax + Math.cos(a2) * ring, zx0, zx1),
+          y: clamp(ay + Math.sin(a2) * ring, zy0, zy1),
+          qx: 0, qy: 0
+        });
+      }
+
+      for (var it = 0; it < 20; it++) {
+        for (var i = 0; i < pts.length; i++) {
+          for (var j = i + 1; j < pts.length; j++) {
+            var a = pts[i], b = pts[j];
+            var dx = b.x - a.x, dy = b.y - a.y;
+            var d = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+            if (d < 10) {
+              var push = (10 - d) / 2;
+              a.x = clamp(a.x - (dx / d) * push, zx0, zx1);
+              a.y = clamp(a.y - (dy / d) * push, zy0, zy1);
+              b.x = clamp(b.x + (dx / d) * push, zx0, zx1);
+              b.y = clamp(b.y + (dy / d) * push, zy0, zy1);
+            }
+          }
+        }
+      }
+
+      for (var k = 0; k < pts.length; k++) {
+        pts[k].qx = pts[k].x; pts[k].qy = pts[k].y;
+        pts[k].arbors = growArbor(pts[k].x, pts[k].y);
+      }
+      var cx = 0, cy = 0;
+      for (var m = 0; m < pts.length; m++) { cx += pts[m].x; cy += pts[m].y; }
+      chainMeta[key] = { x: cx / pts.length, y: cy / pts.length, r: 90 };
+      cells = cells.concat(pts);
+    }
+
+    buildNerveNet();
+    buildMotes();
+  }
+
+  function buildNerveNet() {
+    allCables = []; threads = [];
+    for (var c = 0; c < CHAIN_KEYS.length; c++) {
+      var key = CHAIN_KEYS[c];
+      var h1 = chainCells(key, 1), h2 = chainCells(key, 2), h3 = chainCells(key, 3);
+      if (h1.length && h2.length) allCables.push(makeCable(h1[0], h2[0]));
+      if (h2.length && h3.length) allCables.push(makeCable(h2[0], h3[0]));
+      if (h2.length > 1 && h3.length) allCables.push(makeCable(h2[1 % h2.length], h3[0]));
+    }
+    for (var t = 0; t < 5; t++) {
+      var arc = growArcPath();
+      threads.push(arc);
+    }
+  }
+  function chainCells(key, ho) {
+    var out = [];
+    for (var i = 0; i < cells.length; i++) if (cells[i].ch === key && cells[i].ho === ho) out.push(cells[i]);
+    return out;
+  }
+  function makeCable(a, b) { return { a: a, b: b, path: growCablePath(a.x, a.y, b.x, b.y) }; }
+  function growArcPath() {
+    var x0 = rand(GW * 0.05, GW * 0.5), y0 = rand(GH * 0.12, GH * 0.5);
+    var x1 = rand(GW * 0.5, GW * 0.95), y1 = rand(GH * 0.12, GH * 0.7);
+    var mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    var dx = x1 - x0, dy = y1 - y0;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var px = -dy / len, py = dx / len;
+    var sag = len * rand(0.1, 0.18);
+    var c = { x: mx + px * sag, y: my + py * sag };
+    return smooth([[x0, y0], [c.x, c.y], [x1, y1]]);
+  }
+  function buildMotes() {
+    motes = [];
+    for (var i = 0; i < 26; i++) {
+      motes.push({ x: rand(0, GW), y: rand(0, GH), r: rand(0.5, 1.4), ph: rand(0, Math.PI * 2), vx: rand(-0.05, 0.05), vy: rand(-0.05, 0.05), pink: Math.random() < 0.3 });
+    }
+  }
+
+  // ------------------------------------------------------- matching
+
+  function tokens(text) {
+    var raw = text.toLowerCase().split(/[^a-z\u2019]+/);
+    var out = [];
+    for (var i = 0; i < raw.length; i++) {
+      var w = raw[i];
+      if (w.length > 4 && /ing$/.test(w)) w = w.slice(0, -3);
+      if (w.length > 5 && /ed$/.test(w)) w = w.slice(0, -2);
+      if (w.length > 4 && /s$/.test(w)) w = w.slice(0, -1);
+      if (!w || w.length < 2 || STOP[w]) continue;
+      if (out.indexOf(w) < 0) out.push(w);
+    }
+    return out;
+  }
+  function expand(tok) {
+    var set = [tok];
+    for (var k in SYN) {
+      if (k === tok) { set = set.concat(SYN[k]); }
+      else if (SYN[k].indexOf(tok) >= 0) { set.push(k); set = set.concat(SYN[k]); }
+    }
+    return set;
+  }
+  function scoreFacts(promptText) {
+    var toks = tokens(promptText);
+    var raw = ' ' + promptText.toLowerCase() + ' ';
+    var scores = {};
+    for (var c = 0; c < cells.length; c++) {
+      var cell = cells[c];
+      var s = 0;
+      for (var kw = 0; kw < cell.k.length; kw++) {
+        var keyword = cell.k[kw];
+        if (raw.indexOf(keyword) >= 0) { s += 3; continue; }
+        for (var ti = 0; ti < toks.length; ti++) {
+          var pool = expand(toks[ti]);
+          for (var pi = 0; pi < pool.length; pi++) {
+            if (pool[pi] === keyword) { s += 1; break; }
+            if (keyword.length >= 4 && pool[pi].indexOf(keyword) >= 0) { s += 0.5; break; }
+          }
+        }
+      }
+      if (s > 0) scores[cells.indexOf(cell)] = s;
+    }
+    return scores;
+  }
+  function pickChain(scores) {
+    var byChain = {};
+    for (var c = 0; c < CHAIN_KEYS.length; c++) byChain[CHAIN_KEYS[c]] = 0;
+    for (var i in scores) { var cell = cells[i]; if (byChain[cell.ch] === undefined) byChain[cell.ch] = 0; byChain[cell.ch] += scores[i]; }
+    var best = null, bestS = 0;
+    for (var k = 0; k < CHAIN_KEYS.length; k++) if (byChain[CHAIN_KEYS[k]] > bestS) { bestS = byChain[CHAIN_KEYS[k]]; best = CHAIN_KEYS[k]; }
+    return best;
+  }
+
+  // ------------------------------------------------------- the voice — a collection of sentences
+
+  var COMBINERS = [
+    ', because ', ', which is why ', '; in fact, ', '; that is, ',
+    ', and so ', ', and in turn ', '; from there, ', ', after all, '
+  ];
+  var FOLLOW_UPS = [
+    'that is the whole of it.',
+    'and that is the shape of it.',
+    'which is to say the graph already knew.',
+    'and the nerves hold it together.',
+    'so there it is, in one breath.',
+    'and that, roughly, is the answer.'
+  ];
+
+  function buildSentence(parts) {
+    var cleaned = parts.map(function (p) { return p.replace(/[.!?]+$/, ''); });
+    var s;
+    if (cleaned.length === 1) {
+      s = cleaned[0];
+    } else {
+      s = cleaned[0];
+      for (var i = 1; i < cleaned.length; i++) {
+        s += COMBINERS[rInt(COMBINERS.length)] + lowerFirst(cleaned[i]);
+      }
+    }
+    return s.charAt(0).toUpperCase() + s.slice(1) + '.';
+  }
+
+  // the answer: always a collection of sentences, randomised shape each run
+  function generateBlock(group, chips) {
+    var facts = group.slice(0, 6).map(function (f) { return f.text.replace(/[.!?]+$/, ''); });
+    var chip = chips[rInt(chips.length)];
+    var roll = Math.random();
+
+    var order = shuffle(facts.slice());
+    var units = [];
+    var i = 0;
+    while (i < order.length) {
+      if (i + 1 < order.length && Math.random() < 0.5) {
+        units.push(buildSentence([order[i], order[i + 1]]));
+        i += 2;
+      } else {
+        units.push(buildSentence([order[i]]));
+        i += 1;
+      }
+    }
+
+    var text;
+    if (roll < 0.18) {
+      var one = shuffle(facts.slice()).slice(0, 2 + rInt(2));
+      text = buildSentence(one);
+    } else if (roll < 0.55) {
+      while (units.length > 2 + rInt(2)) {
+        var a = units.shift(), b = units.shift();
+        units.unshift(buildSentence([a, b]));
+      }
+      text = units.join('\n');
+    } else {
+      text = units.join('\n');
+    }
+
+    if (Math.random() < 0.3) {
+      var lead = [
+        'here\u2019s how the graph answers: ',
+        'the short version: ',
+        'in plain terms, ',
+        'so, about \u201c' + chip + '\u201d: ',
+        'look, ',
+        'honestly it comes down to this: '
+      ][rInt(6)];
+      text = lead + lowerFirst(text);
+    }
+    if (text.length < 60 && Math.random() < 0.6) {
+      var fu = FOLLOW_UPS[rInt(FOLLOW_UPS.length)];
+      text += '\n' + fu.charAt(0).toUpperCase() + fu.slice(1);
+    }
+    text = text.charAt(0).toUpperCase() + text.slice(1);
+    return text;
+  }
+
+  // ------------------------------------------------------- answering
+
+  function setBox(off) {
+    inputEl.disabled = off;
+    submitEl.disabled = off;
+    if (off) inputEl.blur();
+  }
+
+  function resetPanels() {
+    chipsEl.textContent = '';
+    flistEl.textContent = '';
+    splitEl.classList.remove('on');
+  }
+
+  function run(text) {
+    if (state === 'keywords' || state === 'facts' || state === 'connections' || state === 'forming') return;
+    setBox(true);
+    t0 = performance.now();
+    resetPanels();
+    for (var i = 0; i < cells.length; i++) {
+      cells[i].fired = false; cells[i].litIdx = 0; cells[i].flashT = 0; cells[i].drain = 0; cells[i].charge = 0;
+    }
+    for (var j = 0; j < boutons.length; j++) boutons[j].flare = 0;
+    runEdges = [];
+    impulses = [];
+
+    colEl.classList.add('raised');
+
+    var chips = tokens(text).slice(0, 6);
+    if (!chips.length) chips = ['answer'];
+
+    var scores = scoreFacts(text);
+    var chain = pickChain(scores);
+
+    var scoredAll = cells.map(function (c, idx) { return { c: c, s: scores[idx] || 0 }; })
+      .filter(function (x) { return x.s > 0; })
+      .sort(function (a, b) { return b.s - a.s; });
+    var chainBest = scoredAll.filter(function (x) { return x.c.ch === chain; });
+
+    var nTarget = 4 + Math.floor(Math.random() * 3);
+    var sel = [];
+    if (chainBest.length) sel.push(chainBest[0].c);
+    var wander = shuffle(chainBest.slice(1, 8));
+    for (var wi = 0; wi < wander.length && sel.length < nTarget; wi++) {
+      if (sel.indexOf(wander[wi].c) < 0) sel.push(wander[wi].c);
+    }
+    if (sel.length < nTarget) {
+      var cross = shuffle(scoredAll.filter(function (x) { return x.c.ch !== chain; }));
+      for (var cs = 0; cs < cross.length && sel.length < nTarget; cs++) {
+        if (sel.indexOf(cross[cs].c) < 0) sel.push(cross[cs].c);
+      }
+    }
+    if (sel.length < nTarget && chain) {
+      var rest = shuffle(chainCells(chain, 1).concat(chainCells(chain, 2), chainCells(chain, 3)));
+      for (var r = 0; r < rest.length && sel.length < nTarget; r++) {
+        if (sel.indexOf(rest[r]) < 0) sel.push(rest[r]);
+      }
+    }
+    if (sel.length < nTarget) {
+      var gt = shuffle(chainCells('everything', 1).concat(chainCells('everything', 2), chainCells('everything', 3)));
+      for (var g = 0; g < gt.length && sel.length < nTarget; g++) {
+        if (sel.indexOf(gt[g]) < 0) sel.push(gt[g]);
+      }
+    }
+    sel = sel.slice(0, 6);
+
+    var spine0 = chainCells(chain, 1)[0];
+    var ordered = sel.slice().sort(function (a, b) { return a.ho - b.ho || (Math.random() < 0.5 ? -1 : 1); });
+    if (spine0 && sel.indexOf(spine0) >= 0) {
+      ordered = [spine0].concat(ordered.filter(function (x) { return x !== spine0; }));
+    }
+    for (var oi = 0; oi < ordered.length; oi++) ordered[oi].litIdx = oi + 1;
+
+    var answerText = generateBlock(ordered, chips);
+    var sentences = answerText.split('\n').length;
+    var avgLen = Math.max(30, Math.round(answerText.length / (sentences || 1)));
+
+    synthesis = {
+      chain: chain, ordered: ordered, chips: chips, text: answerText,
+      kwStart: t0 + 240, kwStagger: KW_STAGGER, kwEnd: 0,
+      factStart: 0, factEach: 210, factEnd: 0,
+      conStart: 0, conEach: 150, conEnd: 0,
+      answerStart: 0,
+      perFact: 620 + 16 * avgLen, flowStart: 0,
+      typeHold: 0, typeIdx: 0, typeRate: 14, fade: 1,
+      builtEdges: [], flowStart: 0,
+      typeHold: 0, typeIdx: 0, typeRate: 14, fade: 1,
+    };
+    synthesis.kwEnd = synthesis.kwStart + chips.length * synthesis.kwStagger + 220;
+    synthesis.factStart = synthesis.kwEnd + 240;
+    synthesis.factEnd = synthesis.factStart + (ordered.length - 1) * synthesis.factEach + 260;
+    synthesis.conStart = synthesis.factEnd + 200;
+    synthesis.conEnd = synthesis.conStart + ordered.length * synthesis.conEach;
+    synthesis.answerStart = synthesis.conEnd + 260;
+
+    var from = { x: GW / 2, y: 14 };
+    for (var o = 0; o < ordered.length; o++) {
+      var to = ordered[o];
+      var path = growCablePath(from.x, from.y, to.x, to.y);
+      var cum = pathCum(path);
+      runEdges.push({
+        a: null, b: to, path: path, cum: cum,
+        buildT: synthesis.conStart + o * synthesis.conEach,
+        launched: false, done: false
+      });
+      from = { x: to.x, y: to.y };
+    }
+    if (ordered.length >= 3) {
+      var la = ordered[0], lb = ordered[2];
+      var lpath = growCablePath(la.x, la.y, lb.x, lb.y);
+      runEdges.push({
+        a: la, b: lb, path: lpath, cum: pathCum(lpath),
+        buildT: synthesis.answerStart - 140, launched: false, done: false
+      });
+    }
+
+    // fact list with little dots, generated fast
+    flistEl.textContent = '';
+    var hl = chips.slice(0, 3);
+    for (var fx = 0; fx < ordered.length; fx++) {
+      var cell = ordered[fx];
+      var row = document.createElement('div');
+      row.className = 'fkg';
+      var dEl = document.createElement('span');
+      dEl.className = 'fdot';
+      dEl.textContent = String(cell.litIdx);
+      var tEl = document.createElement('span');
+      tEl.className = 'fl';
+      var txt = cell.text;
+      for (var hi = 0; hi < hl.length; hi++) {
+        if (!hl[hi]) continue;
+        var rx = new RegExp('(' + hl[hi].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+        txt = txt.replace(rx, function (m) { return '<span class="hl">' + m + '</span>'; });
+      }
+      tEl.innerHTML = txt;
+      row.appendChild(dEl);
+      row.appendChild(tEl);
+      flistEl.appendChild(row);
+    }
+
+    readGraphSize();
+    splitEl.classList.add('on');
+    kwtagEl.classList.add('hot');
+    inputEl.value = '';
+    ansEl.textContent = '';
+    answerEl.classList.remove('show');
+    againEl.classList.remove('show');
+    againEl.classList.remove('bright');
+
+    state = 'keywords';
+  }
+
+  // ------------------------------------------------------- graph renderer
+
+  function readGraphSize() {
+    gw = grCanvas.clientWidth; gh = grCanvas.clientHeight;
+    var dpr = Math.max(1, window.devicePixelRatio || 1);
+    grCanvas.width = gw * dpr;
+    grCanvas.height = gh * dpr;
+    grCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (gw > 4 && gh > 4 && (gw !== GW || gh !== GH)) {
+      GW = gw; GH = gh;
+      buildGraphLayout();
+    }
+    return { gw: gw, gh: gh };
+  }
+
+  // cached graph size for drawing
+  var gw = 0, gh = 0;
+
+  function drawGraph() {
+    var hide = state === 'forming' || state === 'answered';
+    var fade = (synthesis && hide) ? synthesis.fade : 1;
+    if (fade <= 0.01) return;
+
+    grCtx.clearRect(0, 0, gw, gh);
+
+    for (var b = 0; b < boutons.length; b++) boutons[b].flare = Math.max(0, boutons[b].flare - 0.006);
+    for (var i = 0; i < cells.length; i++) {
+      var n = cells[i];
+      n.charge *= 0.972;
+      n.qx = n.x + Math.sin(frame * 0.005 + i) * (n.fired ? 1.3 : 0.5);
+      n.qy = n.y + Math.cos(frame * 0.006 + i * 1.7) * (n.fired ? 1.3 : 0.5);
+      if (n.flashT > 0) n.flashT -= 0.035;
+    }
+
+    // the plexus (arbors + base cables + threads) as light
+    for (var cn = 0; cn < cells.length; cn++) {
+      var cell = cells[cn];
+      var arbA = (0.03 + Math.min(0.5, cell.charge * 0.25)) * fade;
+      for (var ap = 0; ap < cell.arbors.length; ap++) drawFibre(grCtx, cell.arbors[ap], arbA, 1.0);
+    }
+    for (var cb = 0; cb < allCables.length; cb++) drawFibre(grCtx, allCables[cb].path, 0.03 * fade, 0.8);
+    for (var th = 0; th < threads.length; th++) drawFibre(grCtx, threads[th], 0.025 * fade, 0.7);
+
+    // freshly grown run-edges
+    for (var re = 0; re < runEdges.length; re++) {
+      var eg = runEdges[re];
+      if (!eg.launched) continue;
+      var frac = clamp((now - eg.buildT) / 520, 0, 1);
+      if (frac < 1) drawPathT(grCtx, eg.path, eg.cum, frac, 0.5 * fade, 1.2);
+      else drawFibre(grCtx, eg.path, 0.12 * fade, 1.0);
+    }
+
+    // impulse wakes
+    for (var im = 0; im < impulses.length; im++) {
+      var imp = impulses[im];
+      if (imp.done || now < imp.started) continue;
+      var pos = pointAt(imp.path, imp.cum, imp.d);
+      var grad = grCtx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 7);
+      grad.addColorStop(0, lerpColorA(0.8, fade));
+      grad.addColorStop(1, 'rgba(255,166,201,0)');
+      grCtx.fillStyle = grad;
+      grCtx.beginPath(); grCtx.arc(pos.x, pos.y, 7, 0, Math.PI * 2); grCtx.fill();
+    }
+
+    // neurons: bright rings for the chosen facts, faint motes otherwise
+    for (var n2 = 0; n2 < cells.length; n2++) {
+      var nd2 = cells[n2];
+      if (nd2.fired) {
+        var g = Math.min(30, 6 + Math.min(1, nd2.charge) * 20);
+        var rad = grCtx.createRadialGradient(nd2.qx, nd2.qy, 0, nd2.qx, nd2.qy, g);
+        rad.addColorStop(0, lerpColor((0.25 + Math.min(1, nd2.charge) * 0.2) * fade));
+        rad.addColorStop(1, 'rgba(255,166,201,0)');
+        grCtx.fillStyle = rad;
+        grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, g, 0, Math.PI * 2); grCtx.fill();
+        if (nd2.flashT > 0) {
+          grCtx.strokeStyle = lerpColor(nd2.flashT * 0.5 * fade);
+          grCtx.lineWidth = 1.3;
+          grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, (1 - nd2.flashT) * 26 + 7, 0, Math.PI * 2); grCtx.stroke();
+        }
+        if (nd2.litIdx > 0) {
+          grCtx.fillStyle = 'rgba(10,10,15,0.9)';
+          grCtx.beginPath(); grCtx.arc(nd2.qx + 10, nd2.qy - 5, 6, 0, Math.PI * 2); grCtx.fill();
+          grCtx.strokeStyle = lerpColor(0.8 * fade);
+          grCtx.lineWidth = 1;
+          grCtx.stroke();
+          grCtx.fillStyle = ACCENT;
+          grCtx.font = '700 8px "CMU Sans Serif", sans-serif';
+          grCtx.textAlign = 'center'; grCtx.textBaseline = 'middle';
+          grCtx.fillText(String(nd2.litIdx), nd2.qx + 10, nd2.qy - 5);
+        }
+      } else {
+        var rst = 0.5 + 0.5 * Math.sin(now * 0.002 + nd2.litIdx * 99 + n2);
+        grCtx.globalAlpha = 0.08 * fade + rst * 0.05 * fade;
+        grCtx.fillStyle = GREY;
+        grCtx.beginPath(); grCtx.arc(nd2.qx, nd2.qy, 1.4, 0, Math.PI * 2); grCtx.fill();
+        grCtx.globalAlpha = 1;
+      }
+    }
+
+    // motes drift through the graph
+    for (var mo = 0; mo < motes.length; mo++) {
+      var mm = motes[mo];
+      mm.x += mm.vx; mm.y += mm.vy;
+      if (mm.x < -4) mm.x = gw + 4; else if (mm.x > gw + 4) mm.x = -4;
+      if (mm.y < -4) mm.y = gh + 4; else if (mm.y > gh + 4) mm.y = -4;
+      var tw = 0.5 + 0.5 * Math.sin(now * 0.001 + mm.ph);
+      grCtx.globalAlpha = (0.10 + tw * 0.08) * fade;
+      grCtx.fillStyle = mm.pink ? ACCENT : GREY;
+      grCtx.beginPath(); grCtx.arc(mm.x, mm.y, mm.r, 0, Math.PI * 2); grCtx.fill();
+      grCtx.globalAlpha = 1;
+    }
+  }
+
+  function drawFibre(c, path, alpha, width) {
+    c.strokeStyle = ACCENT;
+    c.lineWidth = width;
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    c.globalAlpha = alpha;
+    c.beginPath();
+    c.moveTo(path[0][0], path[0][1]);
+    for (var i = 1; i < path.length; i++) c.lineTo(path[i][0], path[i][1]);
+    c.stroke();
+    c.globalAlpha = 1;
+  }
+  function drawPathT(c, path, cum, frac, alpha, width) {
+    if (frac <= 0) return;
+    var total = cum[cum.length - 1];
+    var d = total * Math.min(1, frac);
+    var lo = 0, hi = cum.length - 1;
+    while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (cum[mid] <= d) lo = mid; else hi = mid; }
+    c.globalAlpha = alpha;
+    c.strokeStyle = ACCENT;
+    c.lineWidth = width;
+    c.lineCap = 'round';
+    c.lineJoin = 'round';
+    c.beginPath();
+    c.moveTo(path[0][0], path[0][1]);
+    for (var i = 1; i <= lo; i++) c.lineTo(path[i][0], path[i][1]);
+    if (lo < path.length - 1) { var p = pointAt(path, cum, d); c.lineTo(p.x, p.y); }
+    c.stroke();
+    c.globalAlpha = 1;
+  }
+
+  // ------------------------------------------------------- update
+
+  function renderChips() {
+    if (!synthesis) return;
+    var frags = [];
+    for (var i = 0; i < synthesis.chips.length; i++) {
+      var t0c = synthesis.kwStart + i * synthesis.kwStagger;
+      if (now < t0c) break;
+      var spent = now - t0c;
+      var full = synthesis.chips[i];
+      var shown = Math.min(full.length, Math.floor(spent / CHIP_MS));
+      var s = document.createElement('span');
+      s.className = 'chip';
+      s.textContent = shown < full.length ? full.slice(0, shown) + '\u258b' : full;
+      frags.push(s);
+    }
+    chipsEl.textContent = '';
+    for (var fi = 0; fi < frags.length; fi++) chipsEl.appendChild(frags[fi]);
+  }
+  function revealFactsAt(start, each) {
+    var rows = flistEl.querySelectorAll('.fkg');
+    for (var i = 0; i < rows.length; i++) {
+      if (now >= start + i * each) rows[i].style.opacity = '1';
+    }
+  }
+
+  function update(dt) {
+    if (synthesis) {
+      var skd = synthesis;
+
+      if (state === 'keywords') {
+        renderChips();
+        if (now >= skd.factStart) {
+          state = 'facts';
+          kwtagEl.classList.remove('hot');
+          facttagEl.classList.add('hot');
+          graphtagEl.classList.add('hot');
+        }
+      }
+
+      if (state === 'facts') {
+        revealFactsAt(skd.factStart, skd.factEach);
+        for (var fo = 0; fo < skd.ordered.length; fo++) {
+          var ft = skd.factStart + fo * skd.factEach;
+          if (now >= ft && !skd.ordered[fo].fired) fireNode(skd.ordered[fo]);
+        }
+        if (now >= skd.conStart) {
+          state = 'connections';
+          facttagEl.classList.remove('hot');
+        }
+      }
+
+      if (state === 'connections') {
+        var allLaunched = true;
+        for (var be = 0; be < runEdges.length; be++) {
+          var edge = runEdges[be];
+          if (!edge.launched) {
+            if (now >= edge.buildT) {
+              edge.launched = true;
+              impulses.push(mkImpulse(edge, now, fireNode.bind(null, edge.b)));
+            } else {
+              allLaunched = false;
+            }
+          }
+          if (edge.launched && now >= edge.buildT + 520) edge.done = true;
+        }
+        if (allLaunched && now >= skd.answerStart) {
+          state = 'forming';
+          splitEl.classList.remove('on');
+          colEl.classList.remove('raised');
+          skd.fade = 1;
+          skd.typeRate = Math.max(6, Math.min(16, Math.round(3400 / skd.text.length)));
+          skd.flowStart = now;
+          answerEl.classList.add('show');
+        }
+      }
+
+      if (state === 'forming') {
+        skd.typeHold += dt;
+        while (skd.typeIdx < skd.text.length && skd.typeHold >= skd.typeRate) {
+          skd.typeHold -= skd.typeRate;
+          skd.typeIdx++;
+          ansEl.textContent = skd.text.slice(0, skd.typeIdx) + (skd.typeIdx < skd.text.length ? '\u2009\u258b' : '');
+        }
+        skd.fade = Math.max(0, skd.fade - dt / 900);
+      }
+      if (state === 'forming' && skd.typeIdx >= skd.text.length) {
+        ansEl.textContent = skd.text;
+        state = 'answered';
+        againEl.classList.add('show');
+        againEl.classList.add('bright');
+        setBox(false);
+        inputEl.focus();
+        inputEl.placeholder = 'ask anything else\u2026';
+      } else if (state === 'answered') {
+        skd.fade = Math.max(0, skd.fade - dt / 420);
+        for (var zz = 0; zz < cells.length; zz++) cells[zz].charge *= 0.985;
+      } else if (state === 'settling') {
+        if (synthesis && now - skd.flowStart > 2000) {
+          state = 'idle';
+          for (var v = 0; v < cells.length; v++) {
+            cells[v].fired = false; cells[v].litIdx = 0; cells[v].drain = 0; cells[v].charge = 0;
+          }
+          impulses = []; runEdges = []; synthesis = null;
+          againEl.classList.remove('bright');
+          setBox(false);
+        }
+      }
+    }
+
+    for (var k = 0; k < impulses.length; k++) {
+      var imp = impulses[k];
+      if (imp.done || now < imp.started) continue;
+      imp.d += imp.speed * dt;
+      if (imp.d >= imp.len) {
+        if (imp.onEnd) imp.onEnd();
+        imp.done = true;
+        continue;
+      }
+    }
+  }
+
+  function fireNode(node) {
+    if (!node) return;
+    if (!node.fired) { node.fired = true; node.flashT = 1; }
+    node.charge = Math.min(2.4, node.charge + 1.5);
+  }
+  function mkImpulse(edge, started, onEnd) {
+    var len = edge.cum[edge.cum.length - 1];
+    var dur = clamp(len * 3.5, 300, 700);
+    return { path: edge.path, cum: edge.cum, d: 0, speed: len / dur, started: started, done: false, onEnd: onEnd };
+  }
+
+  // ------------------------------------------------------- background canvas (the quiet page)
+
+  function drawBackground() {
+    var breath = now * 0.0015;
+    bgCtx.clearRect(0, 0, BW, BH);
+    var throb = 0.5 + 0.5 * Math.sin(breath);
+    var bg = bgCtx.createRadialGradient(BW / 2, BH * 0.5, 0, BW / 2, BH * 0.5, BH * 0.95);
+    bg.addColorStop(0, lerpColor(0.006 + 0.008 * throb));
+    bg.addColorStop(1, 'rgba(255,166,201,0)');
+    bgCtx.fillStyle = bg;
+    bgCtx.fillRect(0, 0, BW, BH);
+  }
+
+  // ------------------------------------------------------- boot
+
+  function sizeBackground() {
+    var dpr = Math.max(1, window.devicePixelRatio || 1);
+    BW = bgCanvas.clientWidth; BH = bgCanvas.clientHeight;
+    bgCanvas.width = BW * dpr;
+    bgCanvas.height = BH * dpr;
+    bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  submitEl.addEventListener('click', function () { if (inputEl.value.trim()) run(inputEl.value.trim()); });
+  inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter' && inputEl.value.trim()) { e.preventDefault(); run(inputEl.value.trim()); inputEl.focus(); } });
+
+  function tick(ts) {
+    var dt = lastT ? Math.min(ts - lastT, 50) : 16;
+    lastT = ts;
+    now = ts; frame = ts;
+    update(dt);
+    drawBackground();
+    if (synthesis && (state === 'facts' || state === 'connections' || state === 'forming' || state === 'answered')) {
+      drawGraph();
+    } else {
+      grCtx.clearRect(0, 0, gw, gh);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function resize() {
+    sizeBackground();
+    readGraphSize();
+    colEl.classList.remove('raised');
+    resetPanels();
+    setBox(false);
+    state = 'idle';
+    synthesis = null; runEdges = []; impulses = [];
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(tick);
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { readGraphSize(); });
+  }
+})();
+</script>
+</body>
+</html>
