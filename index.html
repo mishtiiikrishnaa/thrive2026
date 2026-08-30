@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>type something and watch what connects</title>
+<link rel="preconnect" href="https://fonts.cdnfonts.com">
+<link href="https://fonts.cdnfonts.com/css/cmu-serif" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/cmu-sans-serif" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/cmu-typewriter-text" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0a0f;
@@ -18,7 +22,7 @@
   html, body { height: 100%; background: var(--bg); overflow: hidden; }
 
   body {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "CMU Sans Serif", "Helvetica Neue", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     color: var(--ink);
   }
@@ -27,27 +31,29 @@
   #stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   .title {
-    position: absolute; top: 6%; left: 0; right: 0;
+    position: absolute; top: 4.5%; left: 0; right: 0;
     text-align: center; pointer-events: none; user-select: none;
   }
   .title h1 {
-    font-weight: 500; font-size: clamp(18px, 2.6vw, 30px);
-    letter-spacing: 0.04em; line-height: 1.4; color: var(--ink);
+    font-family: "CMU Serif", Georgia, "Times New Roman", serif;
+    font-weight: 500; font-size: clamp(18px, 2.5vw, 30px);
+    letter-spacing: 0.02em; line-height: 1.4; color: var(--ink);
   }
   .hint {
-    margin-top: 12px; font-size: 11px; letter-spacing: 0.28em;
+    margin-top: 8px; font-size: 10px; letter-spacing: 0.28em;
     text-transform: uppercase; color: var(--dim);
+    font-family: "CMU Typewriter Text", monospace;
   }
 
   .promptbox {
-    position: absolute; bottom: 6%; left: 0; right: 0;
+    position: absolute; bottom: 4%; left: 0; right: 0;
     display: flex; justify-content: center; gap: 10px; padding: 0 20px;
     user-select: none;
   }
   .promptbox input {
     flex: 0 1 420px;
     font-size: 15px; letter-spacing: 0.02em; color: var(--ink);
-    background: rgba(20,20,30,0.6);
+    background: rgba(18,18,28,0.75);
     border: 1px solid var(--dim); border-radius: 999px;
     padding: 13px 22px; outline: none;
     transition: border-color 0.4s ease, box-shadow 0.4s ease, opacity 0.4s ease;
@@ -69,18 +75,20 @@
   .promptbox button[disabled] { opacity: 0.35; cursor: default; }
 
   .reply {
-    position: absolute; left: 0; right: 0; bottom: 19%;
+    position: absolute; left: 0; right: 0; bottom: 13%;
     text-align: center; pointer-events: none; user-select: none;
     opacity: 0; transform: translateY(8px);
     transition: opacity 1.2s ease, transform 1.2s ease;
   }
   .reply.show { opacity: 1; transform: translateY(0); }
   .reply p {
-    display: inline-block; max-width: 660px; margin: 0 auto;
-    padding: 14px 26px; font-size: 15px; line-height: 1.75; color: var(--ink);
-    background: rgba(10,10,15,0.82);
-    box-shadow: 0 0 0 1px rgba(255,166,201,0.08), 0 0 60px rgba(255,166,201,0.05);
-    border-radius: 6px;
+    display: inline-block; max-width: 680px; margin: 0 auto;
+    padding: 14px 28px; font-family: "CMU Serif", Georgia, serif;
+    font-size: 16px; line-height: 1.75; color: var(--ink);
+    background: rgba(10,10,15,0.88);
+    border: 1px solid rgba(255,166,201,0.12);
+    box-shadow: 0 0 60px rgba(255,166,201,0.06);
+    border-radius: 8px;
   }
 </style>
 </head>
@@ -112,57 +120,96 @@
 
   var ACCENT = '#ffa6c9';
   var GREY = '#e4e4ea';
-  var PULSE_DUR = 430;
+  var PULSE_DUR = 420;
 
   // ----------------------------------------------------------- chains
 
+  var CHAIN_KEYS = ['science', 'craft', 'myth', 'mind', 'machine'];
+
   var CHAINS = {
     science: {
-      keywords: ['sky', 'blue', 'light', 'colour', 'color'],
+      label: 'science',
+      keywords: ['sky', 'blue', 'light', 'colour', 'color', 'sunlight', 'wavelength', 'scatter', 'atmosphere'],
       facts: [
         ['the sky looks blue during the day.', 1],
-        ['sunlight is made of many colors mixed together.', 1],
-        ['each color of light travels at a different wavelength.', 1],
-        ['blue light has a shorter wavelength than red light.', 2],
-        ['short wavelengths scatter more off small particles.', 2],
-        ['the atmosphere is full of tiny gas molecules.', 2],
-        ['this scattering effect is called rayleigh scattering.', 3]
+        ['sunlight is many colors mixed.', 1],
+        ['each color of light has its own wavelength.', 1],
+        ['blue light\u2019s wavelength is short.', 2],
+        ['short wavelengths scatter off small particles.', 2],
+        ['the air is full of tiny gas molecules.', 2],
+        ['that scattering is rayleigh scattering.', 3]
       ],
       responses: [
-        "blue light has the shortest wavelength, so it scatters the most off gas molecules in the atmosphere — that's called rayleigh scattering, and it's why the sky looks blue.",
-        "the sky looks blue because short wavelengths of light scatter more than the rest when they hit the atmosphere — this is rayleigh scattering."
+        "blue light's wavelength is short, so gas molecules in the air scatter it hardest — that's rayleigh scattering, the reason the sky reads blue.",
+        "sunlight is many colors; short wavelengths like blue scatter off air molecules more than the rest, and rayleigh scattering is what you end up seeing."
       ]
     },
     craft: {
-      keywords: ['poem', 'verse', 'haiku', 'rhyme', 'line', 'write me'],
+      label: 'craft',
+      keywords: ['poem', 'verse', 'haiku', 'rhyme', 'line', 'write me', 'poetry', 'sonnet', 'stanza'],
       facts: [
         ['a poem is writing arranged in lines.', 1],
-        ['many poems use rhythm or rhyme to shape their lines.', 1],
-        ['a haiku is a short poem with a fixed structure.', 1],
+        ['lines use rhythm and sometimes rhyme.', 1],
+        ['a haiku is a short fixed-shape poem.', 1],
         ['a haiku has three lines.', 2],
-        ['the first line of a haiku usually has five syllables.', 2],
-        ["free verse doesn't follow a fixed rhyme or rhythm.", 2],
-        ['line breaks control how a reader pauses while reading.', 3]
+        ['its first line has five syllables.', 2],
+        ['free verse skips fixed rhyme.', 2],
+        ['line breaks control the reader\u2019s pause.', 3]
       ],
       responses: [
-        'a poem is shaped by its line breaks — a haiku fixes that into three lines, free verse uses it more loosely to control pacing instead of rhyme.',
-        'poems are built from lines, not just words — some forms like haiku fix the structure tightly, others let it stay loose.'
+        "a poem is arranged in lines; a haiku fixes that into three, while free verse uses line breaks alone — the pause is the craft.",
+        "the line is the poet's unit; some forms like haiku lock the rhythm in, others shape it by where the lines break."
       ]
     },
     myth: {
-      keywords: ['arjuna', 'dharma', 'krishna', 'duty', 'hesitate'],
+      label: 'myth',
+      keywords: ['arjuna', 'dharma', 'krishna', 'duty', 'hesitate', 'karma', 'mahabharata', 'battlefield', 'warrior'],
       facts: [
-        ['arjuna is a warrior in the mahabharata.', 1],
-        ['arjuna hesitates before the battle of kurukshetra.', 1],
-        ['he sees his own relatives on the enemy side.', 1],
-        ["krishna is arjuna's charioteer and guide.", 2],
-        ['krishna tells arjuna that fighting is his duty as a warrior.', 2],
+        ['arjuna is a warrior of the mahabharata.', 1],
+        ['arjuna hesitates before kurukshetra.', 1],
+        ['his relatives stand on the enemy side.', 1],
+        ['krishna drives arjuna\u2019s chariot.', 2],
+        ['krishna says fighting is his duty.', 2],
         ['this idea of duty is called dharma.', 2],
-        ['avoiding a duty can cause more harm than doing it.', 3]
+        ['skipping that duty would cause more harm.', 3]
       ],
       responses: [
-        "arjuna hesitates to fight his own relatives, so krishna tells him fighting is his dharma as a warrior, and avoiding it would cause more harm than doing it.",
-        'before the battle, arjuna doubts fighting his own family — krishna\'s answer is that skipping his duty would do more harm than fulfilling it.'
+        "arjuna hesitates to fight his own relatives, and krishna answers that the duty of a warrior is dharma — skipping it would do more harm than the battle.",
+        "the enemy side holds his own family, so arjuna doubts; krishna's reply is that his warrior's duty — dharma — outweighs the cost."
+      ]
+    },
+    mind: {
+      label: 'mind',
+      keywords: ['nerve', 'neuron', 'brain', 'signal', 'synapse', 'memory', 'think', 'thought', 'mind', 'threshold', 'how does memory'],
+      facts: [
+        ['signals travel along nerves as pulses.', 1],
+        ['a cell fires when inputs cross a threshold.', 1],
+        ['stronger signals make it fire more.', 1],
+        ['cells pass the signal on at a synapse.', 2],
+        ['repeated firing strengthens the connection.', 2],
+        ['that is how patterns become memory.', 2],
+        ['the whole network settles into a response.', 3]
+      ],
+      responses: [
+        "a signal crosses a threshold, a cell fires, and repeated firing strengthens the path until the network settles into a response — that is a thought taking shape.",
+        "nerves pass pulses across synapses; what fires often gets stronger, and out of that wiring a settled answer emerges."
+      ]
+    },
+    machine: {
+      label: 'machine',
+      keywords: ['program', 'code', 'loop', 'function', 'recursion', 'algorithm', 'computer', 'software', 'bug', 'compile'],
+      facts: [
+        ['a program runs steps one after another.', 1],
+        ['some steps only run if a condition holds.', 1],
+        ['a loop repeats until a condition stops it.', 1],
+        ['a function is a named, callable block.', 2],
+        ['recursion is a function calling itself.', 2],
+        ['the deepest call returns last.', 2],
+        ['answers assemble from the deepest call up.', 3]
+      ],
+      responses: [
+        "a loop repeats until a condition stops it, and recursion returns from its base case outward — both of them assemble an answer from pieces.",
+        "branches pick a path, loops repeat until a condition ends them, and recursion builds the result from the deepest call upward."
       ]
     }
   };
@@ -174,9 +221,23 @@
     ]
   };
 
+  // domain drizzle — faint words that make the field feel vast
+  var DRIZZLE = [
+    'refraction','prism','ozone','violet','resonance','entropy','gravity','velocity','photon','orbit',
+    'couplet','sestina','iamb','trochee','anaphora','imagery','meter','cadence','ink','stanza',
+    'bhagavad','kaurava','partha','shakuni','svadharma','austerity','lotus','prayer','horizon','ritual',
+    'dendrite','axon','soma','myelin','glutamate','dopamine','cortex','hippocampus','resting','threshold',
+    'stack','heap','cache','compiler','pointer','byte','kernel','thread','parser','interpreter',
+    'indigo','static','thunder','tide','echo','quartz','velvet','mist','fracture','whisper',
+    'kuruk','ganga','samudra','vayu','agni','prana','dharma','karma','marga','seva',
+    'cadence','tempo','attack','decay','sustain','release','pulse','breath','pause','stillness'
+  ];
+
   // ----------------------------------------------------------- nodes
 
   var nodes = [];
+  var drizzle = [];
+  var lanes = {};            // chain -> { x, fired }
   var W, H, DPR;
   var W2, H2, glowCanvas, gctx;
   var now = 0, frame = 0;
@@ -196,7 +257,7 @@
     var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
     var dx = b.x - a.x, dy = b.y - a.y;
     var len = Math.sqrt(dx * dx + dy * dy) || 1;
-    var amt = Math.min(len * 0.14, 40);
+    var amt = Math.min(len * 0.16, 34);
     var side = (a.x + b.y > W / 2) ? 1 : -1;
     return { x: mx + (-dy / len) * amt * side, y: my + (dx / len) * amt * side };
   }
@@ -217,22 +278,36 @@
     c.lineWidth = width;
     c.strokeStyle = color;
     c.stroke();
+    c.strokeStyle = null;
   }
 
   function lerpColor(alpha) {
     return 'rgba(255,166,201,' + alpha.toFixed(3) + ')';
   }
 
-  // ----------------------------------------------------------- build
+  // ----------------------------------------------------------- layout
+
+  function laneCenters() {
+    var margin = 34;
+    var laneW = (W - margin * 2) / CHAIN_KEYS.length;
+    var out = {};
+    for (var i = 0; i < CHAIN_KEYS.length; i++) {
+      out[CHAIN_KEYS[i]] = { x: margin + laneW * (i + 0.5), w: laneW };
+    }
+    return out;
+  }
 
   function buildNodes() {
     nodes = [];
-    var keys = Object.keys(CHAINS);
-    var pocket = { science: [W * 0.27, H * 0.44], craft: [W * 0.72, H * 0.52], myth: [W * 0.5, H * 0.78] };
+    lanes = laneCenters();
     var rects = [];
-    for (var c = 0; c < keys.length; c++) {
-      var chain = keys[c];
+
+    for (var c = 0; c < CHAIN_KEYS.length; c++) {
+      var chain = CHAIN_KEYS[c];
       var facts = CHAINS[chain].facts;
+      var lx = lanes[chain].x;
+      var lw = lanes[chain].w;
+
       for (var f = 0; f < facts.length; f++) {
         var text = facts[f][0];
         var hop = facts[f][1];
@@ -246,26 +321,40 @@
           sparkT: rand(800, 6000),
           sparkF: 0
         };
-        ctx.font = '12px "Helvetica Neue", sans-serif';
-        node.w = ctx.measureText(text).width + 24;
-        node.h = 24;
-        var px = pocket[chain][0] + (gauss() * 170) * 0.6;
-        var py = pocket[chain][1] + (gauss() * 150) * (hop === 3 ? 1.1 : 0.5);
-        var ok = false;
-        for (var att = 0; att < 700 && !ok; att++) {
-          if (att > 0) {
-            px = pocket[chain][0] + (gauss() * 170) * 0.6;
-            py = pocket[chain][1] + (gauss() * 150) * (hop === 3 ? 1.1 : 0.5);
-          }
-          px = clamp(px, node.w / 2 + 14, W - node.w / 2 - 14);
-          py = clamp(py, node.h / 2 + 52, H - node.h / 2 - 40);
-          ok = true;
+        ctx.font = '12px "CMU Sans Serif", sans-serif';
+        node.w = Math.min(340, ctx.measureText(text).width + 26);
+        node.h = 26;
+
+        // three rows per hop, staggered across the lane
+        var rowY, rowX;
+        if (hop === 1) {
+          rowY = 0.30 + 0.085 * f;
+          rowX = [-0.30, 0, 0.30][f] * lw * 0.85;
+        } else if (hop === 2) {
+          rowY = 0.545 + 0.08 * (f - 3);
+          rowX = [-0.30, 0, 0.30][f - 3] * lw * 0.85;
+        } else {
+          rowY = 0.78;
+          rowX = 0;
+        }
+        var px = clamp(lx + rowX, node.w / 2 + 10, W - node.w / 2 - 10);
+        var py = clamp(rowY * H, node.h / 2 + 60, H - node.h / 2 - 56);
+
+        // safety: nudge away from anything too close
+        var tries = 0;
+        var collides = true;
+        while (collides && tries < 400) {
+          collides = false;
           for (var q = 0; q < rects.length; q++) {
             var rr = rects[q];
-            if (px + node.w / 2 > rr.x - rr.w / 2 - 10 &&
-                px - node.w / 2 < rr.x + rr.w / 2 + 10 &&
-                py + node.h / 2 > rr.y - rr.h / 2 - 10 &&
-                py - node.h / 2 < rr.y + rr.h / 2 + 10) { ok = false; break; }
+            if (Math.abs(px - rr.x) < (node.w + rr.w) / 2 + 14 &&
+                Math.abs(py - rr.y) < (node.h + rr.h) / 2 + 8) {
+              collides = true;
+              py += 8;
+              tries++;
+              if (tries % 40 === 0) { px += (Math.random() - 0.5) * 20; py = rowY * H; }
+              break;
+            }
           }
         }
         node.x = px; node.y = py;
@@ -273,7 +362,31 @@
         nodes.push(node);
       }
     }
+
     buildFilaments();
+    buildDrizzle();
+  }
+
+  function buildDrizzle() {
+    drizzle = [];
+    var col = 0;
+    for (var y = 0.20; y <= 0.88; y += 0.045) {
+      for (var x = 40; x <= W - 40; x += 72) {
+        if (col % 3 === 0) {
+          var w = DRIZZLE[Math.floor(Math.random() * DRIZZLE.length)];
+          drizzle.push({
+            t: w,
+            x: x + rand(-9, 9),
+            y: y * H + rand(-5, 5),
+            size: rand(9, 11.5),
+            op: rand(0.09, 0.16),
+            ph: rand(0, Math.PI * 2),
+            dp: rand(0, Math.PI * 2)
+          });
+        }
+        col++;
+      }
+    }
   }
 
   function buildFilaments() {
@@ -284,7 +397,7 @@
       var near = nodes.map(function (n, idx) {
         return { n: n, d: dist(a.x, a.y, n.x, n.y), idx: idx };
       }).filter(function (o) { return o.idx !== i; })
-        .sort(function (p, q) { return p.d - q.d; }).slice(0, 3);
+        .sort(function (p, q) { return p.d - q.d; }).slice(0, 2);
       for (var j = 0; j < near.length; j++) {
         var keyi = Math.min(i, near[j].idx), keyj = Math.max(i, near[j].idx);
         var key = keyi + '_' + keyj;
@@ -297,13 +410,13 @@
 
   function buildMotes() {
     motes = [];
-    for (var i = 0; i < 60; i++) {
+    for (var i = 0; i < 44; i++) {
       motes.push({
         x: rand(0, W), y: rand(0, H),
-        r: rand(0.6, 2.0),
+        r: rand(0.6, 1.9),
         ph: rand(0, Math.PI * 2),
-        vx: rand(-0.1, 0.1),
-        vy: rand(-0.08, 0.08),
+        vx: rand(-0.09, 0.09),
+        vy: rand(-0.07, 0.07),
         pink: Math.random() < 0.3,
         swirl: rand(-0.006, 0.006)
       });
@@ -329,11 +442,11 @@
   // ----------------------------------------------------------- submit
 
   function detect(text) {
-    var t = text.toLowerCase();
-    var keys = ['science', 'craft', 'myth'];
-    for (var i = 0; i < keys.length; i++) {
-      for (var j = 0; j < CHAINS[keys[i]].keywords.length; j++) {
-        if (t.indexOf(CHAINS[keys[i]].keywords[j]) >= 0) return keys[i];
+    var t = ' ' + text.toLowerCase() + ' ';
+    for (var c = 0; c < CHAIN_KEYS.length; c++) {
+      var kws = CHAINS[CHAIN_KEYS[c]].keywords;
+      for (var j = 0; j < kws.length; j++) {
+        if (t.indexOf(kws[j]) >= 0) return CHAIN_KEYS[c];
       }
     }
     return null;
@@ -342,16 +455,15 @@
   function nodeByChain(chain, i) {
     var res = [];
     for (var j = 0; j < nodes.length; j++) {
-      var n = nodes[j];
-      if (n.chain === chain) res.push(n);
+      if (nodes[j].chain === chain) res.push(nodes[j]);
     }
     return res[i];
   }
 
   function mkPromptNode(text) {
-    var n = { text: text, x: W / 2, y: H * 0.16, w: 0, h: 22, fired: true, flashT: 1, drain: 0, charge: 1.4, trem: 0, glowph: 0, sparkT: 0, sparkF: 0 };
-    ctx.font = '700 13px "Helvetica Neue", sans-serif';
-    n.w = ctx.measureText(text).width + 30;
+    var n = { text: text, x: W / 2, y: H * 0.185, w: 0, h: 22, fired: true, flashT: 1, drain: 0, charge: 1.4, trem: 0, glowph: 0, sparkT: 0, sparkF: 0 };
+    ctx.font = '700 13px "CMU Sans Serif", sans-serif';
+    n.w = Math.min(520, ctx.measureText(text).width + 32);
     return n;
   }
 
@@ -360,24 +472,29 @@
     var hop2Pool = [3, 4, 5].slice().sort(function () { return Math.random() - 0.5; }).slice(0, 2);
     var H2 = hop2Pool.map(function (i) { return nodeByChain(chain, i); });
     var H3 = nodeByChain(chain, 6);
+    var h1Order = [0, 1, 2].slice().sort(function () { return Math.random() - 0.5; });
+    var srcFor = {};                        // hop2 node -> its hop1 source
+    for (var k = 0; k < H2.length; k++) srcFor[H2[k].chain + ':' + H2[k].hop + ':' + H2[k].text] = H1[h1Order[k]];
 
     promptNode = mkPromptNode(text);
     edges = []; litEdges = [];
 
     for (var i = 0; i < 3; i++) {
-      edges.push({ a: promptNode, b: H1[i], cp: linkCP(promptNode, H1[i]), start: t0 + 260 + i * 150, dur: PULSE_DUR, fire: true });
+      edges.push({ a: promptNode, b: H1[i], cp: linkCP(promptNode, H1[i]), start: t0 + 240 + i * 150, dur: PULSE_DUR, fire: true });
     }
-    var t1 = t0 + 260 + 2 * 150 + PULSE_DUR + 600;
-    for (var k = 0; k < H2.length; k++) {
-      for (var j = 0; j < 3; j++) {
-        edges.push({ a: H1[j], b: H2[k], cp: linkCP(H1[j], H2[k]), start: t1 + k * 160, dur: PULSE_DUR, fire: true });
-      }
+    var t1 = t0 + 240 + 2 * 150 + PULSE_DUR + 500;
+    var h2done = t1;
+    for (var k2 = 0; k2 < H2.length; k2++) {
+      var src = srcFor[H2[k2].chain + ':' + H2[k2].hop + ':' + H2[k2].text];
+      edges.push({ a: src, b: H2[k2], cp: linkCP(src, H2[k2]), start: t1 + k2 * 150, dur: PULSE_DUR, fire: true });
+      h2done = t1 + k2 * 150 + PULSE_DUR;
     }
-    var t2 = t1 + (H2.length - 1) * 160 + PULSE_DUR + 600;
+    var t2 = h2done + 500;
     for (var h = 0; h < H2.length; h++) {
       edges.push({ a: H2[h], b: H3, cp: linkCP(H2[h], H3), start: t2 + h * 120, dur: PULSE_DUR, fire: true });
     }
     var t3 = t2 + (H2.length - 1) * 120 + PULSE_DUR;
+
     replyEl.textContent = CHAINS[chain].responses[Math.floor(Math.random() * CHAINS[chain].responses.length)];
     setTimeout(function () {
       answerAt = performance.now();
@@ -393,14 +510,14 @@
 
     edges = []; litEdges = [];
     var fizz = [];
-    for (var i = 0; i < 7; i++) {
+    for (var i = 0; i < 6; i++) {
       var n = nodes[Math.floor(Math.random() * nodes.length)];
       if (fizz.indexOf(n) < 0) fizz.push(n);
     }
     for (var j = 0; j < fizz.length; j++) {
-      edges.push({ a: promptNode, b: fizz[j], cp: linkCP(promptNode, fizz[j]), start: t0 + 300 + j * 240, dur: PULSE_DUR * 0.9, fire: false });
+      edges.push({ a: promptNode, b: fizz[j], cp: linkCP(promptNode, fizz[j]), start: t0 + 300 + j * 220, dur: PULSE_DUR * 0.9, fire: false });
     }
-    var lastEnd = t0 + 300 + (fizz.length - 1) * 240 + PULSE_DUR * 0.9;
+    var lastEnd = t0 + 300 + (fizz.length - 1) * 220 + PULSE_DUR * 0.9;
     replyEl.textContent = FALLBACK.responses[Math.floor(Math.random() * FALLBACK.responses.length)];
     setTimeout(function () {
       answerAt = performance.now();
@@ -416,10 +533,15 @@
     setBox(true);
     document.querySelector('.reply').classList.remove('show');
     for (var i = 0; i < nodes.length; i++) { nodes[i].fired = false; nodes[i].flashT = 0; nodes[i].drain = 0; nodes[i].charge = 0; }
+    for (var lc in lanes) lanes[lc].fired = false;
     var chain = detect(text);
     t0 = performance.now();
-    if (chain) runChain(chain, text);
-    else runFallback(text);
+    if (chain) {
+      runChain(chain, text);
+      if (lanes[chain]) lanes[chain].fired = true;
+    } else {
+      runFallback(text);
+    }
     inputEl.value = '';
     state = 'running';
   }
@@ -427,7 +549,6 @@
   // ----------------------------------------------------------- update
 
   function update() {
-    // the organism is always alive: charge leaks away, sparks fire
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
       n.charge *= 0.972;
@@ -441,7 +562,6 @@
       }
     }
     if (promptNode) promptNode.charge *= 0.992;
-    // lit energy cools toward a resting hum
     for (var e = 0; e < litEdges.length; e++) {
       litEdges[e].energy = Math.max((litEdges[e].energy || 1) - 0.0022, litEdges[e].fire ? 0.4 : 0.1);
     }
@@ -454,10 +574,11 @@
         document.querySelector('.reply').classList.remove('show');
         for (var j = 0; j < nodes.length; j++) nodes[j].drain = 1;
         if (promptNode) promptNode.drain = 1;
+        for (var l2 in lanes) lanes[l2].fired = false;
       }
     } else if (state === 'settling') {
       var done = true;
-      var decay = (now - settleStart) / 950;
+      var decay = (now - settleStart) / 900;
       for (var k = 0; k < nodes.length; k++) {
         if (nodes[k].drain > 0) {
           nodes[k].drain = Math.max(0, 1 - decay);
@@ -504,94 +625,96 @@
     ctx.clearRect(0, 0, W, H);
     var breath = now * 0.0012;
 
-    // decay flashes
-    for (var di = 0; di < nodes.length; di++) if (nodes[di].flashT > 0) nodes[di].flashT -= 0.03;
-    if (promptNode && promptNode.flashT > 0) promptNode.flashT -= 0.03;
+    for (var di = 0; di < nodes.length; di++) if (nodes[di].flashT > 0) nodes[di].flashT -= 0.035;
+    if (promptNode && promptNode.flashT > 0) promptNode.flashT -= 0.035;
 
-    // update live positions: quiver
+    // live positions
+    firedList.length = 0;
     for (var qi = 0; qi < nodes.length; qi++) {
       var qn = nodes[qi];
-      var ampv = qn.fired ? 2.8 : 1.2;
+      var ampv = qn.fired ? 1.5 : 0.6;
       qn.qx = qn.x + Math.sin(frame * 0.005 + qn.trem) * ampv;
       qn.qy = qn.y + Math.cos(frame * 0.006 + qn.trem * 1.7) * ampv;
       if (qn.fired) firedList.push(qn);
     }
+    if (promptNode) { promptNode.qx = promptNode.x + Math.sin(breath * 1.3) * 3; promptNode.qy = promptNode.y + Math.cos(breath * 0.9) * 3; }
 
     var dmax = 0;
     for (var d = 0; d < nodes.length; d++) if (nodes[d].drain > dmax) dmax = nodes[d].drain;
     var drainAll = 1 - dmax * 0.92;
 
-    // breathing ambient glow
+    // ---- background wash + breathing core
     var throb = 0.5 + 0.5 * Math.sin(breath);
-    var bg = ctx.createRadialGradient(W / 2, H * 0.6, 0, W / 2, H * 0.6, H * 0.9);
-    bg.addColorStop(0, lerpColor(0.012 + 0.018 * throb));
-    bg.addColorStop(0.55, lerpColor(0.004 + 0.004 * throb));
+    var bg = ctx.createRadialGradient(W / 2, H * 0.62, 0, W / 2, H * 0.62, H * 0.95);
+    bg.addColorStop(0, lerpColor(0.011 + 0.016 * throb));
+    bg.addColorStop(0.6, lerpColor(0.004 + 0.003 * throb));
     bg.addColorStop(1, 'rgba(255,166,201,0)');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // ---- energy layer: all pink light goes here, bloomed back
+    // ---- drizzle: the vast faint field of everything it has absorbed
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (var z = 0; z < drizzle.length; z++) {
+      var dzz = drizzle[z];
+      var dzx = dzz.x + Math.sin(frame * 0.003 + dzz.dp) * 2;
+      var dzy = dzz.y + Math.cos(frame * 0.0025 + dzz.dp * 1.4) * 2;
+      ctx.font = dzz.size + 'px "CMU Typewriter Text", monospace';
+      ctx.fillStyle = 'rgba(228,228,234,' + (dzz.op * (0.7 + 0.3 * Math.sin(now * 0.001 + dzz.ph))).toFixed(3) + ')';
+      ctx.fillText(dzz.t, dzx, dzy);
+    }
+
+    // ---- energy layer
     gctx.setTransform(W2 / W, 0, 0, H2 / H, 0, 0);
     gctx.clearRect(0, 0, W, H);
     gctx.lineCap = 'round';
 
-    // lit axon energy
     for (var le = 0; le < litEdges.length; le++) {
       var le2 = litEdges[le];
-      var en = le2.energy * drainAll;
-      strokeLink(le2.a, le2.cp, le2.b, lerpColor(0.5 * en), 3 + 7 * en, gctx);
+      var en = le2.energy * drainAll * (le2.b.fired ? 1 : 0.25);
+      strokeLink(le2.a, le2.cp, le2.b, lerpColor(0.45 * en), 3 + 7 * en, gctx);
     }
-    // travelling impulses
     for (var pe = 0; pe < edges.length; pe++) {
       var e2 = edges[pe];
       if (now < e2.start) continue;
-      var pr2 = Math.min(1.08, (now - e2.start) / e2.dur);
+      var pr2 = Math.min(1.06, (now - e2.start) / e2.dur);
       var pos2 = bezierAt(e2.a, e2.cp, e2.b, pr2);
       var amp2 = e2.fire ? 1 : 0.3;
-      var gg = gctx.createRadialGradient(pos2.x, pos2.y, 0, pos2.x, pos2.y, 14);
-      gg.addColorStop(0, lerpColor(0.8 * amp2 * drainAll));
+      var gg = gctx.createRadialGradient(pos2.x, pos2.y, 0, pos2.x, pos2.y, 13);
+      gg.addColorStop(0, lerpColor(0.85 * amp2 * drainAll));
       gg.addColorStop(1, 'rgba(255,166,201,0)');
       gctx.fillStyle = gg;
       gctx.beginPath();
-      gctx.arc(pos2.x, pos2.y, 14, 0, Math.PI * 2);
+      gctx.arc(pos2.x, pos2.y, 13, 0, Math.PI * 2);
       gctx.fill();
     }
-    // node energy
     for (var ne = 0; ne < nodes.length; ne++) {
       var nd = nodes[ne];
-      var ch = Math.min(1, nd.charge) * ndrain(nd) * (nd.fired ? 1 : 0);
-      if (ch > 0.02) {
-        var rg = gctx.createRadialGradient(nd.qx, nd.qy, 0, nd.qx, nd.qy, 14 + 22 * ch);
-        rg.addColorStop(0, lerpColor(0.42 * ch + Math.min(1, nd.flashT) * 0.3));
+      if (!nd.fired) continue;
+      var ch = Math.min(1, nd.charge) * ndrain(nd);
+      if (ch > 0.03) {
+        var rg = gctx.createRadialGradient(nd.qx, nd.qy, 0, nd.qx, nd.qy, 12 + 20 * ch);
+        rg.addColorStop(0, lerpColor(0.4 * ch + Math.min(1, nd.flashT) * 0.3));
         rg.addColorStop(1, 'rgba(255,166,201,0)');
         gctx.fillStyle = rg;
         gctx.beginPath();
-        gctx.arc(nd.qx, nd.qy, 14 + 22 * ch, 0, Math.PI * 2);
-        gctx.fill();
-      } else if (nd.sparkF > 0) {
-        var sgg = gctx.createRadialGradient(nd.qx, nd.qy, 0, nd.qx, nd.qy, 16);
-        sgg.addColorStop(0, lerpColor(0.18 * nd.sparkF));
-        sgg.addColorStop(1, 'rgba(255,166,201,0)');
-        gctx.fillStyle = sgg;
-        gctx.beginPath();
-        gctx.arc(nd.qx, nd.qy, 16, 0, Math.PI * 2);
+        gctx.arc(nd.qx, nd.qy, 12 + 20 * ch, 0, Math.PI * 2);
         gctx.fill();
       }
     }
-    // prompt energy
     if (promptNode) {
       var pnp = promptNode;
       var ppd = pnp.drain > 0 ? (1 - pnp.drain) : 1;
-      var pg = gctx.createRadialGradient(pnp.x, pnp.y, 0, pnp.x, pnp.y, 36);
+      var pg = gctx.createRadialGradient(pnp.qx, pnp.qy, 0, pnp.qx, pnp.qy, 34);
       pg.addColorStop(0, lerpColor(0.4 * ppd));
       pg.addColorStop(1, 'rgba(255,166,201,0)');
       gctx.fillStyle = pg;
       gctx.beginPath();
-      gctx.arc(pnp.x, pnp.y, 36, 0, Math.PI * 2);
+      gctx.arc(pnp.qx, pnp.qy, 34, 0, Math.PI * 2);
       gctx.fill();
     }
 
-    // bloom composite — the mish soft-glow pass
+    // bloom
     ctx.filter = 'blur(2.5px)';
     ctx.globalAlpha = 0.5;
     ctx.drawImage(glowCanvas, 0, 0, W, H);
@@ -601,21 +724,18 @@
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
 
-    // ---- drifting motes: they curl with the field and lean toward lit cells
-    var cx = W / 2, cy = H * 0.6;
+    // ---- motes
     for (var m = 0; m < motes.length; m++) {
       var mo = motes[m];
-      // gentle swirl around the field's core
       var sc = Math.cos(mo.swirl), ss = Math.sin(mo.swirl);
       var nvx = mo.vx * sc - mo.vy * ss;
       mo.vy = mo.vx * ss + mo.vy * sc;
       mo.vx = nvx;
-      // weak pull toward whatever is currently firing
       if (firedList.length) {
-        var near = nearestOf(firedList, mo.x, mo.y);
-        var pdx = near.qx - mo.x, pdy = near.qy - mo.y;
+        var nrst = nearestOf(firedList, mo.x, mo.y);
+        var pdx = nrst.qx - mo.x, pdy = nrst.qy - mo.y;
         var dl = Math.sqrt(pdx * pdx + pdy * pdy) || 1;
-        var pull = 3400 / (dl * dl + 4000);
+        var pull = 2600 / (dl * dl + 5000);
         mo.vx += (pdx / dl) * pull * 0.5;
         mo.vy += (pdy / dl) * pull * 0.5;
       }
@@ -623,7 +743,7 @@
       if (mo.x < -4) mo.x = W + 4; else if (mo.x > W + 4) mo.x = -4;
       if (mo.y < -4) mo.y = H + 4; else if (mo.y > H + 4) mo.y = -4;
       var tw = 0.5 + 0.5 * Math.sin(now * 0.001 + mo.ph);
-      ctx.globalAlpha = 0.04 + 0.07 * tw;
+      ctx.globalAlpha = 0.035 + 0.05 * tw;
       ctx.fillStyle = mo.pink ? ACCENT : GREY;
       ctx.beginPath();
       ctx.arc(mo.x, mo.y, mo.r, 0, Math.PI * 2);
@@ -631,38 +751,51 @@
     }
     ctx.globalAlpha = 1;
 
-    // ---- dendritic filaments, faint rest-state wiring
+    // ---- filaments (fine, faint)
     for (var f = 0; f < filaments.length; f++) {
       var fi = filaments[f];
       var endFired = fi.a.fired || fi.b.fired;
       var base = endFired
         ? (0.09 + 0.05 * (0.5 + 0.5 * Math.sin(now * 0.004 + f))) * drainAll
-        : (0.022 + 0.012 * (0.5 + 0.5 * Math.sin(breath * 2 + f * 0.8)));
-      strokeLink(fi.a, fi.cp, fi.b, lerpColor(base), 0.8);
+        : (0.016 + 0.010 * (0.5 + 0.5 * Math.sin(breath * 2 + f * 0.8)));
+      strokeLink(fi.a, fi.cp, fi.b, lerpColor(base), 0.7);
     }
 
-    // ---- crisp core of the lit paths
+    // ---- crisp core lines
     for (var l2 = 0; l2 < litEdges.length; l2++) {
       var le3 = litEdges[l2];
-      var lp = le3.energy * 0.9 * drainAll;
-      strokeLink(le3.a, le3.cp, le3.b, lerpColor(lp), 1.1);
+      var lp = le3.energy * 0.9 * drainAll * (le3.b.fired ? 1 : 0.25);
+      strokeLink(le3.a, le3.cp, le3.b, lerpColor(lp), 1.0);
     }
 
     // crisp pulse heads
     for (var ph = 0; ph < edges.length; ph++) {
       var e3 = edges[ph];
       if (now < e3.start) continue;
-      var pr3 = Math.min(1.08, (now - e3.start) / e3.dur);
+      var pr3 = Math.min(1.06, (now - e3.start) / e3.dur);
       var pos3 = bezierAt(e3.a, e3.cp, e3.b, pr3);
       ctx.fillStyle = ACCENT;
       ctx.globalAlpha = (e3.fire ? 1 : 0.4) * drainAll;
       ctx.beginPath();
-      ctx.arc(pos3.x, pos3.y, e3.fire ? 2.6 : 1.4, 0, Math.PI * 2);
+      ctx.arc(pos3.x, pos3.y, e3.fire ? 2.4 : 1.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
 
-    // ---- nodes (crisp text on top of the light)
+    // ---- lane labels
+    ctx.font = '500 8px "CMU Sans Serif", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (var c2 = 0; c2 < CHAIN_KEYS.length; c2++) {
+      var lk = CHAIN_KEYS[c2];
+      var lc = lanes[lk];
+      var la = lanes[lk].fired ? (0.5 + 0.2 * Math.sin(now * 0.005)) : 0.16;
+      ctx.fillStyle = lerpColor(la);
+      ctx.fillText(CHAINS[lk].label.toUpperCase(), lc.x, H * 0.255);
+    }
+
+    // ---- nodes
+    ctx.font = '12px "CMU Sans Serif", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (var n2 = 0; n2 < nodes.length; n2++) {
@@ -673,37 +806,39 @@
       if (nd2.fired) {
         var ripple = nd2.flashT;
         if (ripple > 0) {
-          ctx.strokeStyle = lerpColor(ripple * 0.6 * ndr);
-          ctx.lineWidth = 1.6;
+          ctx.strokeStyle = lerpColor(ripple * 0.55 * ndr);
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(nd2.qx, nd2.qy, (1 - ripple) * 32, 0, Math.PI * 2);
+          ctx.arc(nd2.qx, nd2.qy, (1 - ripple) * 30, 0, Math.PI * 2);
           ctx.stroke();
         }
-        var scale = 1 + 0.08 * ch2 * (0.5 + 0.5 * Math.sin(now * 0.005 + nd2.glowph));
+        var breathScale = 1 + 0.06 * ch2 * (0.5 + 0.5 * Math.sin(now * 0.005 + nd2.glowph));
         ctx.save();
         ctx.translate(nd2.qx, nd2.qy);
-        ctx.scale(scale, scale);
-        ctx.strokeStyle = lerpColor((0.55 + 0.3 * ch2) * ndr);
-        ctx.lineWidth = 1.2;
-        ctx.fillStyle = 'rgba(255,166,201,0.08)';
+        ctx.scale(breathScale, breathScale);
+        ctx.fillStyle = 'rgba(10,10,15,0.92)';
         roundRect(-nd2.w / 2, -nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
         ctx.fill();
+        ctx.strokeStyle = lerpColor((0.5 + 0.35 * ch2) * ndr);
+        ctx.lineWidth = 1.2;
         ctx.stroke();
-        ctx.font = '12px "Helvetica Neue", sans-serif';
+        ctx.font = '12px "CMU Sans Serif", sans-serif';
         ctx.fillStyle = ACCENT;
-        ctx.globalAlpha = ndr * (0.6 + 0.4 * ch2);
+        ctx.globalAlpha = ndr * (0.65 + 0.35 * ch2);
         ctx.fillText(nd2.text, 0, 0);
         ctx.restore();
         ctx.globalAlpha = 1;
       } else {
         var rest = 0.5 + 0.5 * Math.sin(now * 0.002 + nd2.glowph);
         var spark = nd2.sparkF > 0 ? nd2.sparkF : 0;
-        ctx.strokeStyle = 'rgba(230,230,236,' + (0.06 + rest * 0.02 + spark * 0.12).toFixed(3) + ')';
-        ctx.lineWidth = 1;
+        ctx.fillStyle = 'rgba(10,10,15,0.9)';
         roundRect(nd2.qx - nd2.w / 2, nd2.qy - nd2.h / 2, nd2.w, nd2.h, nd2.h / 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(228,228,234,' + (0.07 + rest * 0.02 + spark * 0.12).toFixed(3) + ')';
+        ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.font = '12px "Helvetica Neue", sans-serif';
-        ctx.fillStyle = 'rgba(230,230,236,' + (0.28 + rest * 0.06 + spark * 0.5).toFixed(3) + ')';
+        ctx.font = '12px "CMU Sans Serif", sans-serif';
+        ctx.fillStyle = 'rgba(228,228,234,' + (0.30 + rest * 0.06 + spark * 0.4).toFixed(3) + ')';
         ctx.fillText(nd2.text, nd2.qx, nd2.qy);
       }
     }
@@ -712,25 +847,21 @@
     if (promptNode) {
       var pn = promptNode;
       var pdd = pn.drain > 0 ? (1 - pn.drain) : 1;
-      var pxx = pn.x + Math.sin(breath * 1.3) * 3;
-      var pyy = pn.y + Math.cos(breath * 0.9) * 3;
       ctx.save();
-      ctx.translate(pxx, pyy);
-      ctx.strokeStyle = lerpColor(0.85 * pdd);
-      ctx.lineWidth = 1.6;
-      ctx.fillStyle = 'rgba(255,166,201,0.1)';
+      ctx.translate(pn.qx, pn.qy);
+      ctx.fillStyle = 'rgba(10,10,15,0.94)';
       roundRect(-pn.w / 2, -pn.h / 2, pn.w, pn.h, pn.h / 2);
       ctx.fill();
+      ctx.strokeStyle = lerpColor(0.8 * pdd);
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-      ctx.font = '700 13px "Helvetica Neue", sans-serif';
+      ctx.font = '700 13px "CMU Sans Serif", sans-serif';
       ctx.fillStyle = ACCENT;
       ctx.globalAlpha = pdd;
       ctx.fillText(pn.text, 0, 0);
       ctx.restore();
       ctx.globalAlpha = 1;
     }
-
-    firedList.length = 0;
   }
 
   function ndrain(n) {
@@ -740,7 +871,7 @@
   function nearestOf(list, x, y) {
     var best = list[0], bd = Infinity;
     for (var i = 0; i < list.length; i++) {
-      var d = dist(list[i].qy, list[i].qx, y, x);
+      var d = dist(list[i].qx, list[i].qy, x, y);
       if (d < bd) { bd = d; best = list[i]; }
     }
     return best;
@@ -782,6 +913,12 @@
   window.addEventListener('resize', resize);
   resize();
   requestAnimationFrame(tick);
+
+  // web fonts arrive async — rebuild layout once they're ready so
+  // canvas measurements use the real metrics (important when deployed)
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { resize(); });
+  }
 
   // helpers
   function rand(a, b) { return a + Math.random() * (b - a); }

@@ -382,3 +382,47 @@ borrowed from mish-sims:
 - everything already alive during idle: breathing radial glow,
   resting flicker, spontaneous sparks on idle nodes, twitch quiver,
   dendritic filaments that brighten when a neighbour fires.
+
+## 9 — redo it: five lanes, bigger domain
+
+(it follows the mish-sims alive pass plus feedback: "can u make it
+better it looks sloppy and also can u like add more words EXPAND the
+domain and it still looks bad like i dont like it either redo it or
+idk looks half baked")
+
+- replaced random scattered pills with five clean lane columns running
+  top→bottom per chain, each lane a readable cascade: hop-1, hop-2,
+  hop-3 terminate just above the answer card.
+- the domain expanded: five chains now (science, craft, myth + new)
+  mind and machine — 35 facts total, keyword sets widened.
+- ~80 faint domain words drizzled through the field (including a 4th
+  wordlist of sri lankan/ganga flavor) at 9-11px / 0.09-0.16 opacity
+  in CMU Typewriter — reads as "everything it has absorbed".
+- pulse cascade cleaned up: prompt → 3 hop-1 → 2 chosen hop-2 (each
+  fed by a distinct hop-1) → hop-3. fewer crossed lines.
+- weak quiver tuned down to keep text legible; pills get opaque dark
+  backing so they cover the drizzle behind them; faint uppercase lane
+  labels (science/craft/myth/mind/machine) that light when their chain
+  fires.
+- new plain response pairs for mind and machine chains.
+
+## 10 — CMU fonts, webfont (not local)
+
+i want cmu fonts also. and since this is going to be deployed having
+fonts locally isn't gonna be enough.
+
+- linked the computer modern unicode webfonts from cdnfonts (remote
+  CDN, nothing local):
+  https://fonts.cdnfonts.com/css/cmu-serif
+  https://fonts.cdnfonts.com/css/cmu-sans-serif
+  https://fonts.cdnfonts.com/css/cmu-typewriter-text
+  with preconnect to fonts.cdnfonts.com.
+- CMU Serif for the headline and the reply card; CMU Sans Serif for
+  body/input/buttons/list pills/lane labels; CMU Typewriter Text for
+  the faint drizzle (the machine's raw stored text).
+- cdnfonts registers weights 500 and 700; canvas fonts use 700 for
+  the prompt pill and 500 elsewhere (600 requested by browser gets
+  synthesized).
+- document.fonts.ready re-triggers resize() so canvas layout is
+  re-measured with real glyph metrics after remote fonts load —
+  avoids pill overlap from wrong fallback metrics on first paint.
