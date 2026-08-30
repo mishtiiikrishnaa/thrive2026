@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>graphic.ai — how does ai work</title>
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vsalvino/computer-modern@main/fonts/typewriter.css">
+<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/cmu-typewriter-text">
+<style>
+  :root{
+    --pink:#ffa6c9;
+    --pink-soft:#ffbfdd;
+    --pink-dim:#b26a8f;
+    --pink-dark:#6e3d57;
+    --lilac:#cbb0e8;
+    --mint:#a9e8d4;
+    --peach:#ffd3b3;
+    --sky:#a8d8f0;
+    --lemon:#fff0b3;
+    --bg:#140b12;
+    --bg-2:#1c1018;
+    --bg-3:#24141d;
+    --panel:rgba(255,166,201,0.05);
+    --border:rgba(255,166,201,0.16);
+    --txt:#f6e7ee;
+    --txt-dim:#b895a8;
+    --txt-faint:#8a6a7d;
+    --mono:'Computer Modern Typewriter','CMU Typewriter Text','CMU Typewriter Text Variable Width','Compur CMU Typewriter',monospace;
+    --c1:#ffa6c9; --c2:#cbb0e8; --c3:#a9e8d4; --c4:#ffd3b3; --c5:#a8d8f0; --c6:#fff0b3;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--txt);
+    font-family:var(--mono);
+    letter-spacing:0.01em;
+    overflow-x:hidden;
+    line-height:1.6;
+  }
+  ::selection{background:var(--pink);color:#1a0d14}
+  ::-webkit-scrollbar{width:11px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--pink-dark);border-radius:8px}
+  a{color:var(--pink-soft);text-decoration:none;border-bottom:1px dashed var(--pink-dim)}
+
+  .glow{
+    position:fixed;top:-20vh;left:50%;transform:translateX(-50%);
+    width:90vw;height:80vh;z-index:0;pointer-events:none;
+    background:radial-gradient(ellipse at center,rgba(255,166,201,0.14),transparent 60%);
+    filter:blur(10px);
+  }
+
+  /* sticky nav */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0.9rem 4vw;background:rgba(20,11,18,0.72);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+  }
+  nav .logo{font-size:1.05rem;color:var(--pink-soft)}
+  nav .logo b{color:var(--pink)}
+  nav .links{display:flex;gap:1.4rem;font-size:0.82rem}
+  nav a{color:var(--txt-dim);border:none}
+  nav a:hover{color:var(--pink-soft)}
+
+  /* ---------- landing ---------- */
+  #hero{
+    position:relative;z-index:2;
+    min-height:100vh;display:flex;flex-direction:column;
+    justify-content:center;align-items:center;text-align:center;
+    padding:8vw 6vw;overflow:hidden;
+  }
+  .eyebrow{
+    font-size:0.78rem;letter-spacing:0.35em;text-transform:lowercase;
+    color:var(--txt-faint);margin-bottom:1.4rem;
+  }
+  .brand{
+    font-size:clamp(4rem,15vw,12rem);line-height:0.95;font-weight:700;
+    background:linear-gradient(120deg,var(--pink),var(--lilac),var(--mint),var(--peach));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 28px rgba(255,166,201,0.35));
+  }
+  .brand .dot{color:var(--pink);-webkit-text-fill-color:var(--pink)}
+  .tagline{
+    max-width:44rem;margin:1.8rem auto 0;font-size:clamp(1rem,2.2vw,1.3rem);
+    color:var(--txt-dim);line-height:1.7;
+  }
+  .tagline em{color:var(--pink-soft);font-style:normal}
+  .cta{display:flex;gap:1rem;margin-top:2.4rem;flex-wrap:wrap;justify-content:center}
+  .nudge{
+    margin-top:2.6rem;color:var(--pink-soft);font-size:0.9rem;opacity:0.85;
+    border:none;animation:float 2.4s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+  #hero-canvas{
+    position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.65;
+  }
+
+  /* ---------- sections ---------- */
+  section{position:relative;z-index:2;padding:8vw 6vw}
+  .sec-title{
+    font-size:clamp(1.8rem,5vw,3.4rem);text-align:center;margin-bottom:1rem;
+    line-height:1.1;
+  }
+  .sec-title span{color:var(--pink)}
+  .sec-sub{text-align:center;max-width:46rem;margin:0 auto 3rem;color:var(--txt-dim);font-size:1rem}
+
+  .how{
+    max-width:82rem;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.2rem;
+  }
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:18px;
+    padding:1.8rem 1.6rem;transition:transform 0.35s, border-color 0.35s, box-shadow 0.35s;
+    will-change:transform;
+  }
+  .card:hover{transform:translateY(-8px);border-color:rgba(255,166,201,0.45);box-shadow:0 14px 40px rgba(255,166,201,0.08)}
+  .card .ic{font-size:1.7rem;margin-bottom:0.9rem}
+  .card h3{color:var(--pink-soft);font-size:1.15rem;margin-bottom:0.5rem}
+  .card p{color:var(--txt-dim);font-size:0.94rem;line-height:1.6}
+
+  /* ---------- anatomy ---------- */
+  .anatomy{
+    max-width:82rem;margin:0 auto;display:grid;gap:1.2rem;
+  }
+  .row{
+    display:grid;grid-template-columns:1fr;gap:1.2rem;align-items:center;
+  }
+  @media(min-width:820px){.row{grid-template-columns:1fr 1fr}}
+  .row .txt{padding:0.6rem}
+  .row .txt h3{color:var(--pink-soft);font-size:1.4rem;margin-bottom:0.7rem}
+  .row .txt p{color:var(--txt-dim);font-size:0.98rem;margin-bottom:0.7rem}
+  .row .txt ul{color:var(--txt-dim);font-size:0.9rem;padding-left:1.2rem}
+  .row .txt li{margin-bottom:0.4rem}
+  .flow{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:18px;padding:1.6rem;
+    display:flex;flex-direction:column;gap:0.7rem;
+  }
+  .flow .step{
+    display:flex;gap:0.8rem;align-items:flex-start;
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:0.8rem 0.9rem;
+  }
+  .flow .step .n{
+    flex:0 0 auto;width:1.6rem;height:1.6rem;border-radius:50%;
+    background:rgba(255,166,201,0.15);border:1px solid var(--pink-dim);
+    color:var(--pink-soft);display:flex;align-items:center;justify-content:center;font-size:0.8rem;
+  }
+  .flow .step .b{font-size:0.9rem}
+  .flow .step .b strong{color:var(--txt)}
+  .flow .step .b span{display:block;font-size:0.8rem;color:var(--txt-dim);margin-top:0.2rem}
+
+  /* ---------- glossary accordion ---------- */
+  .glossary{max-width:60rem;margin:0 auto}
+  .term{
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    margin-bottom:0.7rem;overflow:hidden;
+  }
+  .term h3{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:1rem 1.3rem;cursor:pointer;font-size:1rem;color:var(--pink-soft);
+    user-select:none;
+  }
+  .term h3 .pl{color:var(--pink);transition:transform 0.3s;font-weight:400}
+  .term.open h3 .pl{transform:rotate(45deg)}
+  .term .bd{display:none;padding:0 1.3rem 1.2rem;color:var(--txt-dim);font-size:0.92rem;line-height:1.65}
+  .term.open .bd{display:block;animation:fade 0.4s ease}
+
+  /* ---------- play ---------- */
+  .play{position:relative;z-index:2;padding:4vw 4vw 8vw}
+  .stage{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:1.2rem}
+  @media(min-width:900px){.stage{grid-template-columns:340px 1fr}}
+
+  .input-panel{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;
+    padding:1.3rem;display:flex;flex-direction:column;gap:0.8rem;align-self:start;
+  }
+  .input-panel label{color:var(--txt-faint);font-size:0.8rem;letter-spacing:0.08em}
+  textarea{
+    width:100%;min-height:110px;resize:vertical;
+    background:var(--bg-3);border:1px solid var(--border);border-radius:12px;
+    color:var(--txt);padding:0.9rem;font-family:inherit;font-size:0.95rem;line-height:1.5;
+  }
+  textarea:focus{outline:none;border-color:var(--pink-dim);box-shadow:0 0 0 3px rgba(255,166,201,0.15)}
+  .btn{
+    border:none;cursor:pointer;border-radius:12px;padding:0.85rem 1.2rem;
+    font-family:inherit;font-size:0.95rem;background:linear-gradient(120deg,var(--pink),var(--pink-soft));
+    color:#1a0d14;font-weight:700;transition:filter 0.25s,transform 0.15s;
+  }
+  .btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
+  .btn:active{transform:translateY(0)}
+  .btn.ghost{background:transparent;color:var(--pink-soft);border:1px solid var(--border);font-weight:400}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+  .keywords{min-height:2.4rem;display:flex;flex-wrap:wrap;gap:0.4rem;align-items:flex-start}
+  .kw{
+    font-size:0.78rem;padding:0.2rem 0.6rem;border-radius:999px;
+    background:rgba(255,166,201,0.12);border:1px solid rgba(255,166,201,0.3);color:var(--pink-soft);
+  }
+  .hint{font-size:0.78rem;color:var(--txt-faint);line-height:1.5}
+
+  .graph-wrap{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative;
+  }
+  .graph-head{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;
+    padding:0.85rem 1.1rem;border-bottom:1px solid var(--border);
+  }
+  .graph-head .t{font-size:0.85rem;color:var(--txt-faint);letter-spacing:0.08em}
+  .stats{font-size:0.78rem;color:var(--txt-dim);display:flex;gap:1rem}
+  .stats b{color:var(--pink-soft);font-weight:400}
+
+  /* fact feed */
+  .feed{
+    max-width:1200px;margin:1rem auto 0;
+    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:1rem 1.2rem;
+  }
+  .feed .ft{font-size:0.78rem;color:var(--txt-faint);letter-spacing:0.1em;margin-bottom:0.7rem}
+  .feed .logs{display:flex;flex-direction:column;gap:0.45rem;max-height:16rem;overflow:auto}
+  .flog{
+    font-size:0.82rem;color:var(--txt-dim);padding:0.45rem 0.7rem;border-radius:10px;
+    background:var(--panel);border-left:3px solid var(--pink-dim);
+    animation:slide 0.4s ease;
+    display:flex;gap:0.6rem;align-items:flex-start;
+  }
+  .flog .k{color:var(--pink-soft);white-space:nowrap}
+  .flog .d{color:var(--txt-dim)}
+  @keyframes slide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+
+  /* legend */
+  .legend{max-width:1200px;margin:1rem auto 0;display:flex;flex-wrap:wrap;gap:1.2rem;justify-content:center;font-size:0.8rem;color:var(--txt-faint)}
+  .legend .it{display:flex;align-items:center;gap:0.5rem}
+  .legend .dot{width:12px;height:12px;border-radius:50%}
+
+  /* answer panel */
+  .answer{
+    margin:1.2rem auto 0;max-width:1200px;
+    background:linear-gradient(160deg,rgba(255,166,201,0.08),rgba(203,176,232,0.06));
+    border:1px solid var(--border);border-radius:16px;
+    padding:1.6rem 1.8rem;display:none;
+  }
+  .answer.show{display:block;animation:fade 0.5s ease}
+  .answer .at{color:var(--pink-soft);font-size:0.85rem;letter-spacing:0.12em;margin-bottom:0.7rem}
+  .answer p{color:var(--txt);line-height:1.75;font-size:1.05rem}
+  .answer .src{margin-top:1rem;font-size:0.8rem;color:var(--txt-faint)}
+  .answer .src span{display:inline-block;margin-right:0.5rem;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(255,166,201,0.08);border:1px solid var(--border)}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  footer{
+    position:relative;z-index:2;text-align:center;padding:3rem 6vw 4rem;
+    color:var(--txt-faint);font-size:0.85rem;
+  }
+  footer .cap{color:var(--pink);font-size:0.95rem;margin-bottom:0.5rem}
+  footer .cap b{color:#fff;font-weight:700}
+
+  @media(max-width:640px){
+    nav .links{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<canvas id="hero-canvas"></canvas>
+
+<nav>
+  <div class="logo">graphic<b>.</b>ai</div>
+  <div class="links">
+    <a href="#how">how ai works</a>
+    <a href="#anatomy">anatomy</a>
+    <a href="#glossary">glossary</a>
+    <a href="#play">grow the graph</a>
+  </div>
+</nav>
+
+<!-- ============ LANDING ============ -->
+<header id="hero">
+  <div class="eyebrow">an interactive explainer</div>
+  <h1 class="brand">graphic<span class="dot">.</span>ai</h1>
+  <p class="tagline">
+    an answer that grows. drop in a question and watch it bloom into a
+    graph of facts — each node a piece, each edge a thought — until the
+    whole picture of <em>how ai works</em> is laid out before you.
+    &nbsp;type, watch the graph grow, click nodes, read the answer.
+  </p>
+  <a class="nudge" href="#play">grow it ↓</a>
+</header>
+
+<!-- ============ HOW AI WORKS ============ -->
+<section id="how">
+  <h2 class="sec-title">how do machines <span>learn to think?</span></h2>
+  <p class="sec-sub">no magic, no ghosts. strip away the hype and an ai is a very large, very patient machine for finding patterns. here is the whole trick in six parts.</p>
+  <div class="how">
+    <div class="card" data-deep="0">
+      <div class="ic">🍞</div>
+      <h3>01 · training</h3>
+      <p>an ai is not programmed with rules. it is fed staggering amounts of text — books, code, conversations — and learns the statistical shape of language within them. no one writes the rules; the data writes them.</p>
+    </div>
+    <div class="card" data-deep="1">
+      <div class="ic">🧠</div>
+      <h3>02 · weights</h3>
+      <p>inside, millions of small numbers called weights are nudged during training. adjusting them is how the model stores what it has learned. the graph you grow works the same way — nodes, connected, remembering.</p>
+    </div>
+    <div class="card" data-deep="2">
+      <div class="ic">🌐</div>
+      <h3>03 · attention</h3>
+      <p>transformers don't read one word at a time. an attention mechanism weighs every word against every other, deciding which parts of the context most matter for what comes next. that is the real engine of modern ai.</p>
+    </div>
+    <div class="card" data-deep="3">
+      <div class="ic">🪄</div>
+      <h3>04 · inference</h3>
+      <p>when you prompt, the model runs the maths forward and predicts the next token — over and over — until an answer emerges. the same forward thinking lives here: facts feed edges, edges feed the answer.</p>
+    </div>
+    <div class="card" data-deep="4">
+      <div class="ic">📉</div>
+      <h3>05 · loss & backprop</h3>
+      <p>the model compares its guess to the truth, measures the error, and walks the weights back a little. repeated over billions of steps, the errors shrink and the model sharpens. learning is just error, iterated.</p>
+    </div>
+    <div class="card" data-deep="5">
+      <div class="ic">🔁</div>
+      <h3>06 · generation</h3>
+      <p>nothing is truly "created". the model joins the most probable pieces of what it has seen. this page mimics that — it connects your keywords to stored facts and draws the shortest path between them.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ANATOMY ============ -->
+<section id="anatomy">
+  <h2 class="sec-title">the anatomy of <span>a transformer</span></h2>
+  <p class="sec-sub">a model is not one thing — it is a pipeline. each stage hands its work to the next. here is what happens between "you type" and "it answers".</p>
+  <div class="anatomy">
+    <div class="row">
+      <div class="txt">
+        <h3>the pipeline, front to back</h3>
+        <p>your sentence is broken into tokens, pushed through layers that keep storing meaning, until the model is confident about the next one. it repeats until it decides to stop.</p>
+        <ul>
+          <li>tokenisation chops text into digestible chunks.</li>
+          <li>embeddings turn each token into a pile of numbers.</li>
+          <li>self-attention lets every token consult every other.</li>
+          <li>feed-forward layers add non-linearity and depth.</li>
+          <li>softmax turns scores into probabilities.</li>
+        </ul>
+      </div>
+      <div class="flow">
+        <div class="step"><div class="n">1</div><div class="b"><strong>input</strong><span>"why can an ai be creative?"</span></div></div>
+        <div class="step"><div class="n">2</div><div class="b"><strong>tokenise</strong><span>[why] [can] [an] [ai] [be] [creative] [?]</span></div></div>
+        <div class="step"><div class="n">3</div><div class="b"><strong>embed</strong><span>each token → a vector of numbers</span></div></div>
+        <div class="step"><div class="n">4</div><div class="b"><strong>attention</strong><span>every token weighs the others</span></div></div>
+        <div class="step"><div class="n">5</div><div class="b"><strong>predict</strong><span>softmax → probabilities over the vocabulary</span></div></div>
+        <div class="step"><div class="n">6</div><div class="b"><strong>repeat</strong><span>…until an [end] token appears</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GLOSSARY ============ -->
+<section id="glossary">
+  <h2 class="sec-title">the pieces that <span>make it work</span></h2>
+  <p class="sec-sub">the vocabulary, decoded. click a term to unfold it. these are the same ideas the graph above will start drawing for you.</p>
+  <div class="glossary">
+    <div class="term"><h3>token <span class="pl">+</span></h3><div class="bd">text is split into tokens — small chunks of characters the model can reason over. "creativity" might be one token or several. predicting well means choosing good tokens, one at a time, until the sentence ends.</div></div>
+    <div class="term"><h3>embedding <span class="pl">+</span></h3><div class="bd">each token becomes a vector — a list of numbers. words with similar meanings end up with similar vectors, so the model can do arithmetic on meaning itself. this is where the model's whole "world" lives.</div></div>
+    <div class="term"><h3>attention <span class="pl">+</span></h3><div class="bd">a mechanism where each token asks how relevant every other token is, and mixes their information accordingly. it is why a model can connect the word at position one to the word at position two hundred.</div></div>
+    <div class="term"><h3>self-attention <span class="pl">+</span></h3><div class="bd">attention where a token attends to the whole sequence, including itself. repeated across many layers, it lets the model build a rich representation of context before guessing the next token.</div></div>
+    <div class="term"><h3>weights <span class="pl">+</span></h3><div class="bd">the learnable numbers that, multiplied and added through layers, transform inputs into predictions. training is the slow process of finding weights that make the model consistently right.</div></div>
+    <div class="term"><h3>backpropagation <span class="pl">+</span></h3><div class="bd">from the Greek, "backwards propagation of error". the model measures how wrong it was, then pushes that blame backwards through every weight, nudging each one toward a better answer. the heart of learning.</div></div>
+    <div class="term"><h3>gradient descent <span class="pl">+</span></h3><div class="bd">the optimisation that follows the downhill slope of the error. like rolling a ball down a hill of mistakes, the model keeps moving in the direction that reduces error most steeply, step by careful step.</div></div>
+    <div class="term"><h3>overfitting <span class="pl">+</span></h3><div class="bd">when the model memorises the training data instead of generalising, it becomes great at old examples and terrible at new ones. the ai equivalent of a student who learns the answers, not the subject.</div></div>
+    <div class="term"><h3>parameter <span class="pl">+</span></h3><div class="bd">one individual weight in the model. a "large language model" is large precisely because it has billions of these. think of parameters as the model's neurons, and edges as the connections between them.</div></div>
+    <div class="term"><h3>hallucination <span class="pl">+</span></h3><div class="bd">when the model confidently predicts something false. because it only predicts plausible text, not verified truth, it can invent fluently. a reminder that fluency is not the same as knowing.</div></div>
+    <div class="term"><h3>temperature <span class="pl">+</span></h3><div class="bd">a dial on how randomly the model picks the next token. low temperature: safe, repetitive, predictable. high temperature: wild, creative, occasionally wrong. creativity and accuracy trade off against each other.</div></div>
+    <div class="term"><h3>context window <span class="pl">+</span></h3><div class="bd">the amount of text the model can keep in mind at once. bigger context means it can weave together more threads — like a longer conversation, or a graph that keeps every fact you add alive.</div></div>
+  </div>
+</section>
+
+<!-- ============ THE PLAY AREA ============ -->
+<section class="play" id="play">
+  <h2 class="sec-title">grow the <span>graph</span></h2>
+  <p class="sec-sub">type a prompt. keywords are pulled out, facts flood in as nodes, and the graph builds itself. every new prompt keeps the old graph and adds to it — like memory. click nodes to weave them into the answer.</p>
+
+  <div class="stage">
+    <div class="input-panel">
+      <label for="prompt">your prompt</label>
+      <textarea id="prompt" placeholder="e.g. why can an ai seem so creative even though it just predicts words?"></textarea>
+      <button class="btn" id="go">grow the graph</button>
+      <button class="btn ghost" id="clear">reset everything</button>
+      <div class="keywords" id="keywords"></div>
+      <div class="hint">tip: facts appear below as they're generated. for unknown keywords, the site invents plausible ones — this is how the answer thread grows.</div>
+    </div>
+
+    <div class="graph-wrap">
+      <div class="graph-head">
+        <span class="t">your growing graph</span>
+        <span class="stats"><span><b id="stat-n">0</b> nodes</span> <span><b id="stat-e">0</b> edges</span></span>
+      </div>
+      <canvas id="graph" aria-label="interactive fact graph"></canvas>
+    </div>
+  </div>
+
+  <div class="feed">
+    <div class="ft">live fact feed</div>
+    <div class="logs" id="logs"></div>
+  </div>
+
+  <div class="legend">
+    <div class="it"><span class="dot" style="background:var(--pink)"></span> keyword cluster</div>
+    <div class="it"><span class="dot" style="background:var(--lilac)"></span> fact node</div>
+    <div class="it"><span class="it" style="gap:0"></span> edges = shared meaning</div>
+  </div>
+
+  <div class="answer" id="answer"></div>
+</section>
+
+<footer>
+  <div class="cap">graphic<b>.</b>ai</div>
+  built in pastel · typewriter type · dark. every fact a node, every node a thought. nothing deleted, only added.
+  <br>graphic.ai is a tiny, harmless demo of how graphy an answer can get — not a real model.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // polyfill roundRect (older browsers)
+  if(!CanvasRenderingContext2D.prototype.roundRect){
+    CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+      r=Math.min(r,w/2,h/2);
+      this.moveTo(x+r,y);
+      this.arcTo(x+w,y,x+w,y+h,r);
+      this.arcTo(x+w,y+h,x,y+h,r);
+      this.arcTo(x,y+h,x,y,r);
+      this.arcTo(x,y,x+w,y,r);
+      return this;
+    };
+  }
+
+  const PALETTE=["#ffa6c9","#cbb0e8","#a9e8d4","#ffd3b3","#a8d8f0","#fff0b3"];
+
+  // ---------- fact bank ----------
+  const FACTS={
+    "ai":["ai is software that learns patterns from data instead of following hand-written rules.",
+      "modern ai is mostly statistics at a planetary scale — prediction, not magic.",
+      "an ai model has no understanding; it has probabilities and a good memory."],
+    "artificial":["artificial means the intelligence is made, imitating nature but built from maths.",
+      "'artificial intelligence' is a label for machines that appear to think."],
+    "intelligence":["intelligence as we know it maps loosely onto prediction; ai does the same without feeling.",
+      "in ai, intelligence emerges from billions of tiny numeric adjustments."],
+    "machine":["a machine learning system improves by seeing examples, not by being reprogrammed.",
+      "the 'machine' in machine learning spends most energy on the learning."],
+    "learning":["learning in ai means nudging weights until the output matches the training data.",
+      "machine learning is curve-fitting that scales until it seems like thought."],
+    "neural":["neural networks are layered, and each layer transforms its input a little.",
+      "'neural' borrows the name of brain cells, but the network is pure arithmetic."],
+    "network":["a network is a web of connections — in ai, connections that pass numbers along.",
+      "you are building a network right now: nodes of fact linked by meaning."],
+    "neuron":["an artificial neuron sums weighted inputs, then applies a simple function.",
+      "a neuron alone is weak; a million of them start to look clever."],
+    "weight":["weights are the dials an ai turns; training finds the best settings.",
+      "every edge in a neural network carries a weight — a number that decides how much it matters."],
+    "training":["training feeds the model examples and adjusts weights to reduce error.",
+      "training is slow and expensive; using the model afterwards is fast and cheap."],
+    "data":["data is the fuel — the more varied it is, the more robust the learning.",
+      "an ai is only as good as the data it was taught on."],
+    "token":["text is chopped into tokens — small chunks of characters the model can reason over.",
+      "a token is one step of prediction; long answers are many tokens in a row."],
+    "word":["words are the atoms of language; ai learns their statistical relationships.",
+      "by predicting the next word a million times, an ai learns grammar without the rules."],
+    "predict":["prediction is the core trick: given the last tokens, guess the next.",
+      "creativity is often just fluent prediction doing something unexpected."],
+    "prediction":["a transformer predicts by weighing every token against every other — attention.",
+      "when you prompt an ai, you are handing it a prediction problem."],
+    "attention":["attention lets the model focus on the relevant words, not just the nearest ones.",
+      "self-attention is why modern ai can hold long context and connect distant ideas."],
+    "transformer":["transformers process all tokens at once and let them talk to each other via attention.",
+      "the 'transformer' architecture underlies most of today's ai."],
+    "context":["context is everything the model keeps in mind before the next word.",
+      "longer context means the ai can weave together more threads."],
+    "prompt":["a prompt is the seed; the quality of the answer starts with its wording.",
+      "good prompts point the model at the right stored patterns."],
+    "reason":["ai 'reasons' by chaining small predictions into longer coherent steps.",
+      "what looks like reasoning is often many tiny predictions adding up."],
+    "creative":["ai creativity resembles recombination — mixing patterns it memorised in new orders.",
+      "there is no intent behind ai art; there is only statistical freshness."],
+    "creativity":["creativity, to an ai, is fluent prediction straying from the obvious.",
+      "novelty emerges when the model samples the improbable-but-plausible."],
+    "learn":["learning, to a machine, is a slow slide toward matching reality's examples.",
+      "the learning never truly ends — each fact you add reshapes the graph."],
+    "math":["under every ai is linear algebra and calculus, dressed up in layers.",
+      "maths is the skeleton; data is the flesh."],
+    "mathematics":["the maths of ai is mostly matrix multiplication scaled up a trillion times.",
+      "a neural net is a long chain of multiply-accumulate operations."],
+    "model":["a model is a giant bundle of learned weights — the finished skeleton of training.",
+      "the same weights that guessed 'cat' can guess a sonnet."],
+    "brain":["ai is inspired by the brain but runs on floating-point numbers and gpus.",
+      "analogies to the brain help; they are not literal."],
+    "algorithm":["an algorithm is a recipe; machine learning writes the recipe by example.",
+      "deep learning replaces hand-made recipes with learned ones."],
+    "gpu":["gpus crunch the many small maths steps in parallel — that is why ai can be big.",
+      "training a large model needs thousands of gpus for weeks."],
+    "reasoning":["step-by-step reasoning lets an ai break a hard question into easier ones.",
+      "asking the model to explain draws out stronger, more connected answers."],
+    "emerge":["complex behaviour can emerge from simple rules repeated at scale.",
+      "the graph, built of small facts, emerges into a full explanation."],
+    "emergence":["emergence is when many simple pieces add up to something with new behaviour.",
+      "no single node knows the answer; the network of them does."],
+    "knowledge":["an ai's 'knowledge' is the shape of its weights, not a database of facts.",
+      "knowledge in ai is compressed into numbers, then unpacked on demand."],
+    "chat":["a chat model keeps memory of the conversation so each reply fits the thread.",
+      "your graph here is the memory; every fact you add stays for life."],
+    "language":["language models are trained to complete text, and that training teaches them lots.",
+      "to speak is to predict; to predict well is, in some sense, to know."],
+    "generative":["generative ai creates new content by sampling from what it has learned.",
+      "generation = prediction driving the next thing, again and again."],
+    "information":["information flows along the edges of a network — in ai, as numbers.",
+      "the graph below is literally information: facts at the nodes, meaning on the edges."],
+    "meaning":["meaning in ai is encoded as patterns in the weights, not as definitions.",
+      "the graph renders meaning as connections between facts."],
+    "question":["every good question is a seed that can grow into a small forest of facts.",
+      "asking splits one doubt into a graph of honest answers."],
+    "answer":["an answer is a path through the graph of what you already know.",
+      "the assembled answer is the sum of the nodes you chose to connect."],
+    "algorithmic":["algorithmic thinking is breaking a big task into tiny, repeatable steps.",
+      "at its core, ai is a vast, learned chain of tiny algorithmic steps."]
+  };
+
+  const GENERIC=[
+    "a broad theme from your prompt — the model connects it to the larger picture of ai.",
+    "this keyword trails across the field; follow its edges to nearby facts.",
+    "worth one node: ideas that repeat across prompts tend to matter most.",
+    "linked here because your prompt touched it, so the graph records it.",
+    "an open thread in the map — click it to weave it into the answer.",
+    "a small node with big neighbours; the graph grows around it."
+  ];
+
+  const STOP=["a","an","the","is","are","was","were","be","been","being","do","does","did","to","of","in","on","for","and","or","but","why","how","what","when","where","who","it","its","so","my","me","even","can","with","you","i","that","this","there","than","as","at","by","from","your","have","has","not","just","which","will","would","should","could","about"];
+
+  // ---------- state ----------
+  const NODES=[];
+  const EDGES=[];
+  const pinned=[];
+  let W=0,H=0;
+  const graphCanvas=document.getElementById('graph');
+  const gctx=graphCanvas.getContext('2d');
+  const heroCanvas=document.getElementById('hero-canvas');
+  const hctx=heroCanvas.getContext('2d');
+  let mouseX=0,mouseY=0,dragging=null,offsetX=0,offsetY=0;
+  let scrollY=0, mpx=0, mpy=0;
+
+  // ---------- sizing ----------
+  function sizeGraph(){
+    const wrap=graphCanvas.parentElement;
+    W=Math.max(320,wrap.clientWidth);
+    H=Math.max(480,Math.min(640,window.innerHeight*0.62));
+    graphCanvas.width=W*window.devicePixelRatio;
+    graphCanvas.height=H*window.devicePixelRatio;
+    graphCanvas.style.width=W+"px";
+    graphCanvas.style.height=H+"px";
+    gctx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+  }
+  function sizeHero(){
+    heroCanvas.width=window.innerWidth*window.devicePixelRatio;
+    heroCanvas.height=window.innerHeight*window.devicePixelRatio;
+    heroCanvas.style.width=window.innerWidth+"px";
+    heroCanvas.style.height=window.innerHeight+"px";
+    hctx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+  }
+  window.addEventListener('resize',()=>{sizeGraph();sizeHero();rebuildHero();});
+
+  function rnd(a,b){return a+Math.random()*(b-a)}
+  function colorOf(n){return PALETTE[n.color%PALETTE.length]}
+  function nodeRadius(n){return 4+Math.min(10,Math.sqrt(n.conn)/2)}
+
+  // ---------- physics ----------
+  function step(){
+    for(let i=0;i<NODES.length;i++){
+      for(let j=i+1;j<NODES.length;j++){
+        const a=NODES[i],b=NODES[j];
+        let dx=a.x-b.x,dy=a.y-b.y;
+        let d2=dx*dx+dy*dy;if(d2<0.01)d2=0.01;
+        let d=Math.sqrt(d2);
+        if(d<16){
+          const push=(16-d)*0.25;dx/=d;dy/=d;
+          a.x+=dx*push;a.y+=dy*push;b.x-=dx*push;b.y-=dy*push;
+          continue;
+        }
+        let f=(1400*d2)/(d2+1400);f=Math.min(f,60);
+        dx/=d;dy/=d;
+        a.x+=dx*f*0.12;a.y+=dy*f*0.12;
+        b.x-=dx*f*0.12;b.y-=dy*f*0.12;
+      }
+    }
+    for(let e of EDGES){
+      const a=e.a,b=e.b;
+      if(a.pinned||b.pinned)continue;
+      let dx=b.x-a.x,dy=b.y-a.y;
+      let d=Math.sqrt(dx*dx+dy*dy)||0.001;
+      let f=(d-e.len)*0.014;
+      dx/=d;dy/=d;
+      a.x+=dx*f;a.y+=dy*f;b.x-=dx*f;b.y-=dy*f;
+    }
+    for(let n of NODES){
+      if(n.pinned)continue;
+      n.vx=(n.vx||0)*0.92+(W/2-n.x)*0.0016;
+      n.vy=(n.vy||0)*0.92+(H/2-n.y)*0.0016;
+      n.x+=n.vx;n.y+=n.vy;
+    }
+  }
+
+  function draw(){
+    gctx.clearRect(0,0,W,H);
+    for(let e of EDGES){
+      const a=e.a,b=e.b;
+      gctx.beginPath();
+      gctx.moveTo(a.x,a.y);gctx.lineTo(b.x,b.y);
+      gctx.strokeStyle=(a.group&&b.group)?'rgba(255,215,232,0.34)':'rgba(255,166,201,0.20)';
+      gctx.lineWidth=(a.group&&b.group)?1.6:1;
+      gctx.stroke();
+    }
+    for(let n of NODES){
+      const r=nodeRadius(n);
+      const col=colorOf(n);
+      const grd=gctx.createRadialGradient(n.x,n.y,r*0.2,n.x,n.y,r);
+      grd.addColorStop(0,n.group?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.28)");
+      grd.addColorStop(1,col);
+      gctx.beginPath();gctx.arc(n.x,n.y,r,0,Math.PI*2);
+      gctx.fillStyle=grd;
+      gctx.shadowColor=col;gctx.shadowBlur=n.group?6:12;
+      gctx.fill();gctx.shadowBlur=0;
+      if(n.group){
+        gctx.beginPath();gctx.arc(n.x,n.y,r+4,0,Math.PI*2);
+        gctx.strokeStyle="rgba(255,255,255,0.28)";gctx.lineWidth=1;gctx.stroke();
+      }
+    }
+    // labels
+    gctx.font="12px 'Computer Modern Typewriter',monospace";
+    for(let n of NODES){
+      if(!n.group&&!mouseOver(n))continue;
+      const label=n.group||n.label;
+      const tw=gctx.measureText(label).width;
+      const by=n.y-nodeRadius(n)-12;
+      if(by<14)continue;
+      gctx.fillStyle="rgba(20,11,18,0.88)";
+      gctx.beginPath();
+      gctx.roundRect(n.x-tw/2-6,by-11,tw+12,18,6);
+      gctx.fill();
+      gctx.fillStyle=n.group?'#ffa6c9':'#f6e7ee';
+      gctx.fillText(label,n.x-tw/2,by+1);
+    }
+    updateStats();
+  }
+
+  function mouseOver(n){return Math.hypot(mouseX-n.x,mouseY-n.y)<nodeRadius(n)+8}
+
+  function updateStats(){
+    const ne=document.getElementById('stat-n'),ee=document.getElementById('stat-e');
+    if(ne)ne.textContent=NODES.length;
+    if(ee)ee.textContent=EDGES.length;
+  }
+
+  let lastT=0;
+  function loop(t){
+    try{
+      if(NODES.length)step();
+      draw();
+    }catch(err){ /* never let one bad frame kill the loop */ }
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- hero ambient ----------
+  let heroNodes=[];
+  const heroLinks=[];
+  function buildHero(){
+    heroNodes.length=0;heroLinks.length=0;
+    const n=Math.floor(Math.min(100,window.innerWidth/11));
+    for(let i=0;i<n;i++){
+      heroNodes.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,
+        vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,
+        c:PALETTE[Math.floor(Math.random()*PALETTE.length)],r:rnd(1,3.4)});
+    }
+    for(let i=0;i<heroNodes.length;i++)
+      for(let j=i+1;j<heroNodes.length;j++){
+        const d=Math.hypot(heroNodes[i].x-heroNodes[j].x,heroNodes[i].y-heroNodes[j].y);
+        if(d<120)heroLinks.push({a:i,b:j});
+      }
+  }
+  function rebuildHero(){ /* keep positions, recompute none needed */ }
+
+  function drawHero(){
+    hctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+    const sx=scrollY*0.15+mpx*-10;
+    const sy=scrollY*0.35+mpy*-10;
+    for(let ln of heroLinks){
+      const a=heroNodes[ln.a],b=heroNodes[ln.b];
+      hctx.strokeStyle="rgba(255,166,201,0.09)";hctx.lineWidth=1;
+      hctx.beginPath();hctx.moveTo(a.x+sx,a.y+sy);hctx.lineTo(b.x+sx,b.y+sy);hctx.stroke();
+    }
+    hctx.globalAlpha=0.45;
+    for(let n of heroNodes){
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>window.innerWidth)n.vx*=-1;
+      if(n.y<0||n.y>window.innerHeight)n.vy*=-1;
+      hctx.beginPath();hctx.arc(n.x+sx,n.y+sy,n.r,0,Math.PI*2);
+      hctx.fillStyle=n.c;hctx.fill();
+    }
+    hctx.globalAlpha=1;
+    requestAnimationFrame(drawHero);
+  }
+  window.addEventListener('scroll',()=>{scrollY=window.scrollY;applyParallax();},{passive:true});
+  window.addEventListener('mousemove',e=>{
+    mpx=(e.clientX/window.innerWidth-0.5)*2;
+    mpy=(e.clientY/window.innerHeight-0.5)*2;
+  },{passive:true});
+
+  // ---------- DOM parallax on cards ----------
+  function applyParallax(){
+    const cards=document.querySelectorAll('.card');
+    const vh=window.innerHeight;
+    cards.forEach(c=>{
+      const r=c.getBoundingClientRect();
+      const mid=r.top+r.height/2-vh/2;
+      const depth=parseFloat(c.dataset.deep||0);
+      const shift=-mid*0.04*(depth+1);
+      c.style.transform='translateY('+shift.toFixed(1)+'px)';
+    });
+  }
+
+  // ---------- seed ----------
+  function seed(){
+    ["ai","learning"].forEach(w=>{
+      factsFor(w).slice(0,3).forEach(f=>addFactFor(w,f));
+    });
+    updateStats();
+  }
+
+  // ---------- extraction ----------
+  function extract(raw){
+    const words=raw.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>2);
+    const stems={};
+    for(let k in FACTS){ if(k.length>2) stems[k]=k; }
+    const known=[];
+    const seen=new Set();
+    for(let w of words){
+      if(FACTS[w]&&!seen.has(w)){known.push(w);seen.add(w);}
+    }
+    const unknowns=[];
+    for(let w of words){
+      if(STOP.includes(w))continue;
+      if(FACTS[w])continue;
+      if(!seen.has(w)){unknowns.push(w);seen.add(w);}
+      if(unknowns.length>=3)break;
+    }
+    return {known,unknowns};
+  }
+
+  function factsFor(word){
+    if(FACTS[word])return FACTS[word].slice();
+    return [...GENERIC].sort(()=>Math.random()-0.5).slice(0,3);
+  }
+
+  // ---------- mutations ----------
+  function ensureGroup(word){
+    let g=NODES.find(n=>n.group===word);
+    if(!g){
+      g={group:word,label:word,x:W/2+rnd(-60,60),y:H/2+rnd(-60,60),
+         color:NODES.length%PALETTE.length,conn:0,pinned:false};
+      NODES.push(g);
+    }
+    return g;
+  }
+  function addFactFor(word,fact){
+    const g=ensureGroup(word);
+    const n={label:fact,color:Math.floor(Math.random()*PALETTE.length),
+      x:g.x+rnd(-130,130),y:g.y+rnd(-130,130),conn:1,pinned:false};
+    NODES.push(n);
+    EDGES.push({a:g,b:n,len:rnd(55,90)});
+    g.conn++;
+    for(let other of NODES){
+      if(other.group&&other!==g){
+        EDGES.push({a:g,b:other,len:rnd(90,150)});
+        g.conn++;other.conn++;
+      }
+    }
+    pushLog(word,fact);
+  }
+
+  // ---------- visible feed ----------
+  function pushLog(word,fact){
+    const logs=document.getElementById('logs');
+    const row=document.createElement('div');
+    row.className='flog';
+    const k=document.createElement('span');k.className='k';k.textContent='['+word+']';
+    const d=document.createElement('span');d.className='d';d.textContent=fact;
+    row.appendChild(k);row.appendChild(d);
+    logs.appendChild(row);
+    logs.scrollTop=logs.scrollHeight;
+  }
+
+  // ---------- rapid fire ----------
+  function fireFacts(word){
+    const facts=factsFor(word);
+    let i=0;
+    const iv=setInterval(()=>{
+      if(i>=facts.length){clearInterval(iv);rebuildAnswer();return;}
+      addFactFor(word,facts[i]);i++;
+    },260);
+  }
+
+  // ---------- answer ----------
+  function rebuildAnswer(){
+    const el=document.getElementById('answer');
+    if(pinned.length===0){el.classList.remove('show');return;}
+    el.classList.add('show');
+    const seen=new Set();const parts=[];
+    for(let p of pinned){
+      if(seen.has(p))continue;seen.add(p);
+      parts.push('<span style="color:var(--pink-soft)">'+p.label+'</span>');
+    }
+    const mid=parts.slice(0,2);
+    const closing=parts.length>2?' and '+parts.slice(2).join(', '):'';
+    el.innerHTML=
+      '<div class="at">assembled answer</div>'+
+      '<p>'+mid.join(' ')+closing+' — drawn from the nodes you pinned. each fact is a real thread in the graph above; together they form your answer. add more prompts and the graph (and the answer) grows.</p>'+
+      '<div class="src">'+parts.map(p=>'<span>'+p.label+'</span>').join('')+'</div>';
+  }
+
+  // ---------- events ----------
+  const rect=()=>graphCanvas.getBoundingClientRect();
+  graphCanvas.addEventListener('mousemove',e=>{
+    const r=rect();mouseX=e.clientX-r.left;mouseY=e.clientY-r.top;
+    if(dragging){dragging.x=mouseX-offsetX;dragging.y=mouseY-offsetY;}
+  },{passive:true});
+  graphCanvas.addEventListener('touchmove',e=>{
+    const r=rect(),t=e.touches[0];
+    mouseX=t.clientX-r.left;mouseY=t.clientY-r.top;
+    if(dragging){dragging.x=mouseX-offsetX;dragging.y=mouseY-offsetY;}
+  },{passive:true});
+  graphCanvas.addEventListener('mousedown',e=>{
+    const r=rect();mouseX=e.clientX-r.left;mouseY=e.clientY-r.top;
+    const hit=NODES.find(n=>mouseOver(n)&&!n.group);
+    if(hit){dragging=hit;offsetX=mouseX-hit.x;offsetY=mouseY-hit.y;hit.pinned=true;}
+  });
+  window.addEventListener('mouseup',()=>{dragging=null;});
+  graphCanvas.addEventListener('click',e=>{
+    const r=rect();const x=e.clientX-r.left,y=e.clientY-r.top;
+    const hit=NODES.find(n=>Math.hypot(x-n.x,y-n.y)<nodeRadius(n)+8);
+    if(hit&&!pinned.includes(hit)){pinned.push(hit);}
+    rebuildAnswer();
+  });
+
+  document.getElementById('go').addEventListener('click',()=>{
+    const raw=document.getElementById('prompt').value.trim();
+    if(!raw)return;
+    const {known,unknowns}=extract(raw);
+    const kw=document.getElementById('keywords');
+    kw.innerHTML='';
+    [...known,...unknowns].forEach(w=>{
+      const s=document.createElement('span');s.className='kw';s.textContent=w;kw.appendChild(s);
+    });
+    [...known,...unknowns].forEach((word,i)=>setTimeout(()=>fireFacts(word),i*120+rnd(40,200)));
+    document.getElementById('prompt').value='';
+  });
+
+  document.getElementById('clear').addEventListener('click',()=>{
+    NODES.length=0;EDGES.length=0;pinned.length=0;
+    document.getElementById('keywords').innerHTML='';
+    document.getElementById('logs').innerHTML='';
+    document.getElementById('answer').classList.remove('show');
+    updateStats();
+  });
+  document.getElementById('prompt').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('go').click();}
+  });
+
+  // glossary accordion
+  document.querySelectorAll('.term h3').forEach(h=>{
+    h.addEventListener('click',()=>{h.parentElement.classList.toggle('open');});
+  });
+
+  // ---------- init ----------
+  sizeGraph();sizeHero();buildHero();
+  seed();
+  requestAnimationFrame(loop);
+  requestAnimationFrame(drawHero);
+})();
+</script>
+</body>
+</html>
