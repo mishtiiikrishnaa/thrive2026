@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vsalvino/computer-modern@main/fonts/typewriter.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vsalvino/computer-modern@main/fonts/serif.css">
 <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/cmu-typewriter-text">
 <style>
   :root{
@@ -28,6 +29,7 @@
     --txt-dim:#b895a8;
     --txt-faint:#8a6a7d;
     --mono:'Computer Modern Typewriter','CMU Typewriter Text','CMU Typewriter Text Variable Width','Compur CMU Typewriter',monospace;
+    --dsp:'Computer Modern Serif','CMU Serif','CMU Serif Upright Italic',serif;
     --c1:#ffa6c9; --c2:#cbb0e8; --c3:#a9e8d4; --c4:#ffd3b3; --c5:#a8d8f0; --c6:#fff0b3;
   }
   *{margin:0;padding:0;box-sizing:border-box}
@@ -60,7 +62,7 @@
     padding:0.9rem 4vw;background:rgba(20,11,18,0.72);
     backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
   }
-  nav .logo{font-size:1.05rem;color:var(--pink-soft)}
+  nav .logo{font-size:1.05rem;color:var(--pink-soft);font-family:var(--dsp)}
   nav .logo b{color:var(--pink)}
   nav .links{display:flex;gap:1.4rem;font-size:0.82rem}
   nav a{color:var(--txt-dim);border:none}
@@ -78,6 +80,7 @@
     color:var(--txt-faint);margin-bottom:1.4rem;
   }
   .brand{
+    font-family:var(--dsp);
     font-size:clamp(4rem,15vw,12rem);line-height:0.95;font-weight:700;
     background:linear-gradient(120deg,var(--pink),var(--lilac),var(--mint),var(--peach));
     -webkit-background-clip:text;background-clip:text;color:transparent;
@@ -211,6 +214,43 @@
   .stats{font-size:0.78rem;color:var(--txt-dim);display:flex;gap:1rem}
   .stats b{color:var(--pink-soft);font-weight:400}
 
+  /* graph camera controls */
+  .graph-canvas-wrap{position:relative}
+  .camctl{
+    position:absolute;right:0.9rem;top:0.9rem;z-index:3;
+    display:flex;flex-direction:column;gap:0.4rem;
+  }
+  .camctl button{
+    width:2.2rem;height:2.2rem;border-radius:10px;cursor:pointer;
+    background:rgba(20,11,18,0.85);border:1px solid var(--border);
+    color:var(--pink-soft);font-family:var(--mono);font-size:1.1rem;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:background 0.2s;
+  }
+  .camctl button:hover{background:rgba(255,166,201,0.15)}
+  .camhint{
+    position:absolute;left:0.9rem;bottom:0.7rem;z-index:3;
+    font-size:0.72rem;color:var(--txt-faint);pointer-events:none;
+  }
+  .zoom-badge{
+    position:absolute;left:0.9rem;top:0.9rem;z-index:3;
+    font-size:0.74rem;color:var(--pink-soft);background:rgba(20,11,18,0.7);
+    padding:0.2rem 0.5rem;border-radius:8px;border:1px solid var(--border);
+  }
+
+  /* chat */
+  .chatpanel{
+    max-width:1200px;margin:1rem auto 0;
+    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;
+  }
+  .chatpanel .ct{font-size:0.78rem;color:var(--txt-faint);letter-spacing:0.1em;padding:0.9rem 1.2rem;border-bottom:1px solid var(--border)}
+  .chatwin{display:flex;flex-direction:column;gap:0.7rem;padding:1rem 1.2rem;max-height:22rem;overflow:auto}
+  .msg{max-width:88%;padding:0.6rem 0.9rem;border-radius:14px;font-size:0.9rem;line-height:1.5;animation:fade 0.4s ease}
+  .msg.user{background:linear-gradient(120deg,rgba(255,166,201,0.2),rgba(203,176,232,0.15));border:1px solid rgba(255,166,201,0.3);align-self:flex-end;color:var(--txt)}
+  .msg.bot{background:var(--panel);border:1px solid var(--border);align-self:flex-start;color:var(--txt-dim)}
+  .msg .roles{font-size:0.7rem;letter-spacing:0.08em;color:var(--pink-soft);margin-bottom:0.3rem}
+  .msg .facts{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem}
+  .msg .facts span{font-size:0.76rem;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(255,166,201,0.1);border:1px solid var(--border);color:var(--txt-dim)}
+
   /* fact feed */
   .feed{
     max-width:1200px;margin:1rem auto 0;
@@ -251,7 +291,7 @@
     position:relative;z-index:2;text-align:center;padding:3rem 6vw 4rem;
     color:var(--txt-faint);font-size:0.85rem;
   }
-  footer .cap{color:var(--pink);font-size:0.95rem;margin-bottom:0.5rem}
+  footer .cap{color:var(--pink);font-size:0.95rem;margin-bottom:0.5rem;font-family:var(--dsp)}
   footer .cap b{color:#fff;font-weight:700}
 
   @media(max-width:640px){
@@ -393,13 +433,27 @@
         <span class="t">your growing graph</span>
         <span class="stats"><span><b id="stat-n">0</b> nodes</span> <span><b id="stat-e">0</b> edges</span></span>
       </div>
-      <canvas id="graph" aria-label="interactive fact graph"></canvas>
+      <div class="graph-canvas-wrap">
+        <div class="zoom-badge" id="zoom-badge">100%</div>
+        <div class="camctl">
+          <button id="zoom-in" title="zoom in">+</button>
+          <button id="zoom-out" title="zoom out">−</button>
+          <button id="zoom-home" title="reset view">⌂</button>
+        </div>
+        <canvas id="graph" aria-label="interactive fact graph"></canvas>
+        <div class="camhint">scroll to zoom · drag empty space to pan · drag a node to move it</div>
+      </div>
     </div>
   </div>
 
   <div class="feed">
     <div class="ft">live fact feed</div>
     <div class="logs" id="logs"></div>
+  </div>
+
+  <div class="chatpanel">
+    <div class="ct">chat — the graph is the memory, every answer remembers everything</div>
+    <div class="chatwin" id="chatwin"></div>
   </div>
 
   <div class="legend">
@@ -538,13 +592,21 @@
   const NODES=[];
   const EDGES=[];
   const pinned=[];
+  const chat=[];
   let W=0,H=0;
+  const cam={zoom:1,tx:0,ty:0};
   const graphCanvas=document.getElementById('graph');
   const gctx=graphCanvas.getContext('2d');
   const heroCanvas=document.getElementById('hero-canvas');
   const hctx=heroCanvas.getContext('2d');
-  let mouseX=0,mouseY=0,dragging=null,offsetX=0,offsetY=0;
+  let mouseX=0,mouseY=0,dragging=null,panning=null,offsetX=0,offsetY=0;
   let scrollY=0, mpx=0, mpy=0;
+  let pinching=null;
+  let chatBusy=false;
+
+  // world <-> screen
+  function toScreen(wx,wy){return {x:wx*cam.zoom+cam.tx,y:wy*cam.zoom+cam.ty};}
+  function toWorld(sx,sy){return {x:(sx-cam.tx)/cam.zoom,y:(sy-cam.ty)/cam.zoom};}
 
   // ---------- sizing ----------
   function sizeGraph(){
@@ -556,6 +618,7 @@
     graphCanvas.style.width=W+"px";
     graphCanvas.style.height=H+"px";
     gctx.setTransform(window.devicePixelRatio,0,0,window.devicePixelRatio,0,0);
+    cam.tx=W/2;cam.ty=H/2;
   }
   function sizeHero(){
     heroCanvas.width=window.innerWidth*window.devicePixelRatio;
@@ -568,7 +631,24 @@
 
   function rnd(a,b){return a+Math.random()*(b-a)}
   function colorOf(n){return PALETTE[n.color%PALETTE.length]}
-  function nodeRadius(n){return 4+Math.min(10,Math.sqrt(n.conn)/2)}
+  function nodeRadius(n){return (4+Math.min(9,Math.sqrt(n.conn)/2))*cam.zoom}
+  function nodeWorldR(n){return 4+Math.min(9,Math.sqrt(n.conn)/2)}
+
+  // ---------- camera helpers ----------
+  function setZoom(nz,aboutScreenX,aboutScreenY){
+    if(aboutScreenX===undefined){aboutScreenX=W/2;aboutScreenY=H/2;}
+    const before=toWorld(aboutScreenX,aboutScreenY);
+    nz=Math.max(0.25,Math.min(4,nz));
+    cam.zoom=nz;
+    const after=toWorld(aboutScreenX,aboutScreenY);
+    cam.tx+=(after.x-before.x)*nz;
+    cam.ty+=(after.y-before.y)*nz;
+    updateZoomBadge();
+  }
+  function updateZoomBadge(){
+    const zb=document.getElementById('zoom-badge');
+    if(zb)zb.textContent=Math.round(cam.zoom*100)+'%';
+  }
 
   // ---------- physics ----------
   function step(){
@@ -600,56 +680,72 @@
     }
     for(let n of NODES){
       if(n.pinned)continue;
-      n.vx=(n.vx||0)*0.92+(W/2-n.x)*0.0016;
-      n.vy=(n.vy||0)*0.92+(H/2-n.y)*0.0016;
+      n.vx=(n.vx||0)*0.92+(-n.x)*0.0016;
+      n.vy=(n.vy||0)*0.92+(-n.y)*0.0016;
       n.x+=n.vx;n.y+=n.vy;
     }
   }
 
   function draw(){
     gctx.clearRect(0,0,W,H);
+    const z=cam.zoom;
     for(let e of EDGES){
-      const a=e.a,b=e.b;
+      const a=toScreen(e.a.x,e.a.y),b=toScreen(e.b.x,e.b.y);
       gctx.beginPath();
       gctx.moveTo(a.x,a.y);gctx.lineTo(b.x,b.y);
-      gctx.strokeStyle=(a.group&&b.group)?'rgba(255,215,232,0.34)':'rgba(255,166,201,0.20)';
-      gctx.lineWidth=(a.group&&b.group)?1.6:1;
+      gctx.strokeStyle=(e.a.group&&e.b.group)?'rgba(255,215,232,0.34)':'rgba(255,166,201,0.20)';
+      gctx.lineWidth=((e.a.group&&e.b.group)?1.6:1)*Math.min(1.6,z);
       gctx.stroke();
     }
     for(let n of NODES){
+      const p=toScreen(n.x,n.y);
       const r=nodeRadius(n);
       const col=colorOf(n);
-      const grd=gctx.createRadialGradient(n.x,n.y,r*0.2,n.x,n.y,r);
+      if(p.x<-r||p.x>W+r||p.y<-r||p.y>H+r)continue;
+      const grd=gctx.createRadialGradient(p.x,p.y,r*0.2,p.x,p.y,r);
       grd.addColorStop(0,n.group?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.28)");
       grd.addColorStop(1,col);
-      gctx.beginPath();gctx.arc(n.x,n.y,r,0,Math.PI*2);
+      gctx.beginPath();gctx.arc(p.x,p.y,r,0,Math.PI*2);
       gctx.fillStyle=grd;
-      gctx.shadowColor=col;gctx.shadowBlur=n.group?6:12;
+      gctx.shadowColor=col;gctx.shadowBlur=n.group?6*z:12*z;
       gctx.fill();gctx.shadowBlur=0;
       if(n.group){
-        gctx.beginPath();gctx.arc(n.x,n.y,r+4,0,Math.PI*2);
+        gctx.beginPath();gctx.arc(p.x,p.y,r+4*z,0,Math.PI*2);
         gctx.strokeStyle="rgba(255,255,255,0.28)";gctx.lineWidth=1;gctx.stroke();
       }
     }
-    // labels
-    gctx.font="12px 'Computer Modern Typewriter',monospace";
+    // labels (obsidian-style: show group labels always at reasonable zoom, facts on hover)
+    const showGroupLabels=z>0.7;
+    gctx.font=(12*z)+"px 'Computer Modern Typewriter',monospace";
     for(let n of NODES){
-      if(!n.group&&!mouseOver(n))continue;
-      const label=n.group||n.label;
+      const p=toScreen(n.x,n.y);
+      const r=nodeRadius(n);
+      let show=n.group?showGroupLabels:mouseOver(n);
+      if(!show)continue;
+      const label=truncateLabel(n.group||n.label,z);
       const tw=gctx.measureText(label).width;
-      const by=n.y-nodeRadius(n)-12;
+      const by=p.y-r-11*z;
       if(by<14)continue;
       gctx.fillStyle="rgba(20,11,18,0.88)";
       gctx.beginPath();
-      gctx.roundRect(n.x-tw/2-6,by-11,tw+12,18,6);
+      gctx.roundRect(p.x-tw/2-6*z,by-11*z,tw+12*z,18*z,6*z);
       gctx.fill();
       gctx.fillStyle=n.group?'#ffa6c9':'#f6e7ee';
-      gctx.fillText(label,n.x-tw/2,by+1);
+      gctx.fillText(label,p.x-tw/2,by+z*0);
     }
     updateStats();
   }
 
-  function mouseOver(n){return Math.hypot(mouseX-n.x,mouseY-n.y)<nodeRadius(n)+8}
+  function truncateLabel(str,z){
+    const max=26;
+    if(str.length<=max)return str;
+    return str.slice(0,max-1)+'…';
+  }
+
+  function mouseOver(n){
+    const w=toWorld(mouseX,mouseY);
+    return Math.hypot(w.x-n.x,w.y-n.y)<nodeWorldR(n)+8/cam.zoom;
+  }
 
   function updateStats(){
     const ne=document.getElementById('stat-n'),ee=document.getElementById('stat-e');
@@ -657,7 +753,6 @@
     if(ee)ee.textContent=EDGES.length;
   }
 
-  let lastT=0;
   function loop(t){
     try{
       if(NODES.length)step();
@@ -761,7 +856,7 @@
   function ensureGroup(word){
     let g=NODES.find(n=>n.group===word);
     if(!g){
-      g={group:word,label:word,x:W/2+rnd(-60,60),y:H/2+rnd(-60,60),
+      g={group:word,label:word,x:rnd(-40,40),y:rnd(-40,40),
          color:NODES.length%PALETTE.length,conn:0,pinned:false};
       NODES.push(g);
     }
@@ -800,63 +895,179 @@
     const facts=factsFor(word);
     let i=0;
     const iv=setInterval(()=>{
-      if(i>=facts.length){clearInterval(iv);rebuildAnswer();return;}
+      if(i>=facts.length){clearInterval(iv);return;}
       addFactFor(word,facts[i]);i++;
     },260);
   }
 
-  // ---------- answer ----------
+  // ---------- cumulative answer (the graph is the memory) ----------
+  function factLabels(){
+    const seen=new Set(),out=[];
+    for(let n of NODES){
+      if(n.group)continue;
+      if(seen.has(n.label))continue;
+      seen.add(n.label);out.push(n);
+    }
+    return out;
+  }
+  function groupLabels(){
+    const seen=new Set(),out=[];
+    for(let n of NODES){
+      if(!n.group||seen.has(n.group))continue;
+      seen.add(n.group);out.push(n);
+    }
+    return out;
+  }
   function rebuildAnswer(){
     const el=document.getElementById('answer');
-    if(pinned.length===0){el.classList.remove('show');return;}
+    const facts=factLabels();
+    if(facts.length===0){el.classList.remove('show');return;}
     el.classList.add('show');
-    const seen=new Set();const parts=[];
-    for(let p of pinned){
-      if(seen.has(p))continue;seen.add(p);
-      parts.push('<span style="color:var(--pink-soft)">'+p.label+'</span>');
-    }
-    const mid=parts.slice(0,2);
-    const closing=parts.length>2?' and '+parts.slice(2).join(', '):'';
+    const parts=facts.map(f=>'<span style="color:var(--pink-soft)">'+escapeHtml(truncate(f.label,140))+'</span>');
+    const groups=groupLabels().map(g=>g.group).join(', ')||'—';
     el.innerHTML=
-      '<div class="at">assembled answer</div>'+
-      '<p>'+mid.join(' ')+closing+' — drawn from the nodes you pinned. each fact is a real thread in the graph above; together they form your answer. add more prompts and the graph (and the answer) grows.</p>'+
-      '<div class="src">'+parts.map(p=>'<span>'+p.label+'</span>').join('')+'</div>';
+      '<div class="at">this is the whole picture so far</div>'+
+      '<p>everything you (and the graph) have learned, remembered together. topics covered: '+escapeHtml(groups)+'. every fact below is a node still alive in the graph above — add new prompts and this answer keeps growing.</p>'+
+      '<div class="src">'+parts.join('')+'</div>';
+  }
+  function truncate(s,n){return s.length>n?s.slice(0,n-1)+'…':s;}
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ---------- chat ----------
+  const chatwin=document.getElementById('chatwin');
+  function addMessage(role,text,facts){
+    const m=document.createElement('div');
+    m.className='msg '+role;
+    const r=document.createElement('div');r.className='roles';
+    r.textContent=role==='user'?'you':'graphic.ai';
+    m.appendChild(r);
+    const body=document.createElement('div');
+    body.textContent=text;
+    m.appendChild(body);
+    if(facts&&facts.length){
+      const fw=document.createElement('div');fw.className='facts';
+      facts.forEach(f=>{
+        const s=document.createElement('span');s.textContent=truncate(f,90);fw.appendChild(s);
+      });
+      m.appendChild(fw);
+    }
+    chatwin.appendChild(m);
+    chatwin.scrollTop=chatwin.scrollHeight;
   }
 
   // ---------- events ----------
   const rect=()=>graphCanvas.getBoundingClientRect();
+  let moved=false;
   graphCanvas.addEventListener('mousemove',e=>{
     const r=rect();mouseX=e.clientX-r.left;mouseY=e.clientY-r.top;
-    if(dragging){dragging.x=mouseX-offsetX;dragging.y=mouseY-offsetY;}
-  },{passive:true});
-  graphCanvas.addEventListener('touchmove',e=>{
-    const r=rect(),t=e.touches[0];
-    mouseX=t.clientX-r.left;mouseY=t.clientY-r.top;
-    if(dragging){dragging.x=mouseX-offsetX;dragging.y=mouseY-offsetY;}
+    if(dragging||panning)moved=true;
+    if(dragging){
+      const w=toWorld(mouseX,mouseY);
+      dragging.x=w.x-offsetX;dragging.y=w.y-offsetY;
+    }
+    if(panning){
+      cam.tx+=(e.clientX-panning.px);
+      cam.ty+=(e.clientY-panning.py);
+      panning.px=e.clientX;panning.py=e.clientY;
+    }
   },{passive:true});
   graphCanvas.addEventListener('mousedown',e=>{
     const r=rect();mouseX=e.clientX-r.left;mouseY=e.clientY-r.top;
-    const hit=NODES.find(n=>mouseOver(n)&&!n.group);
-    if(hit){dragging=hit;offsetX=mouseX-hit.x;offsetY=mouseY-hit.y;hit.pinned=true;}
+    moved=false;
+    const hit=NODES.find(n=>mouseOver(n));
+    if(hit){dragging=hit;const w=toWorld(mouseX,mouseY);offsetX=w.x-hit.x;offsetY=w.y-hit.y;hit.pinned=true;}
+    else{panning={px:e.clientX,py:e.clientY};}
   });
-  window.addEventListener('mouseup',()=>{dragging=null;});
+  window.addEventListener('mouseup',()=>{dragging=null;panning=null;});
+  graphCanvas.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const r=rect();
+    const factor=e.deltaY<0?1.15:1/1.15;
+    setZoom(cam.zoom*factor,e.clientX-r.left,e.clientY-r.top);
+  },{passive:false});
   graphCanvas.addEventListener('click',e=>{
+    if(moved){return;}
     const r=rect();const x=e.clientX-r.left,y=e.clientY-r.top;
-    const hit=NODES.find(n=>Math.hypot(x-n.x,y-n.y)<nodeRadius(n)+8);
+    const hit=NODES.find(n=>mouseOver(n));
     if(hit&&!pinned.includes(hit)){pinned.push(hit);}
     rebuildAnswer();
   });
 
+  // touch: one-finger pan, two-finger pinch
+  let touches=new Map();
+  graphCanvas.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    const r=rect();
+    [...e.touches].forEach(t=>touches.set(t.identifier,{x:t.clientX-r.left,y:t.clientY-r.top}));
+    if(touches.size===2){
+      const ts=[...touches.values()];
+      pinching={d:Math.hypot(ts[0].x-ts[1].x,ts[0].y-ts[1].y),cx:(ts[0].x+ts[1].x)/2,cy:(ts[0].y+ts[1].y)/2};
+    } else if(touches.size===1){
+      const t=[...touches.values()][0];
+      const w=toWorld(t.x,t.y);
+      const hit=NODES.find(n=>mouseOverAt(t.x,t.y));
+      if(hit){dragging=hit;offsetX=w.x-hit.x;offsetY=w.y-hit.y;hit.pinned=true;}
+    }
+  },{passive:false});
+  graphCanvas.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    const r=rect();
+    const ts=[...e.touches].map(t=>({x:t.clientX-r.left,y:t.clientY-r.top}));
+    if(ts.length===2&&pinching){
+      const d=Math.hypot(ts[0].x-ts[1].x,ts[0].y-ts[1].y);
+      const cx=(ts[0].x+ts[1].x)/2,cy=(ts[0].y+ts[1].y)/2;
+      setZoom(cam.zoom*(d/pinching.d),cx,cy);
+      pinching.d=d;pinching.cx=cx;pinching.cy=cy;
+    } else if(ts.length===1&&dragging){
+      mouseX=ts[0].x;mouseY=ts[0].y;
+      const w=toWorld(mouseX,mouseY);
+      dragging.x=w.x-offsetX;dragging.y=w.y-offsetY;
+    } else if(ts.length===1&&panning===null&&!dragging&&pinching){
+      // fallback one-finger pan when not on a node
+    }
+    touches=new Map();e.touches.forEach(t=>touches.set(t.identifier,{x:t.clientX-r.left,y:t.clientY-r.top}));
+  },{passive:false});
+  graphCanvas.addEventListener('touchend',e=>{
+    touches.clear();pinching=null;dragging=null;
+  });
+  function mouseOverAt(sx,sy){
+    const w=toWorld(sx,sy);
+    return NODES.find(n=>Math.hypot(w.x-n.x,w.y-n.y)<nodeWorldR(n)+8/cam.zoom);
+  }
+
+  // camera controls
+  document.getElementById('zoom-in').addEventListener('click',()=>setZoom(cam.zoom*1.3));
+  document.getElementById('zoom-out').addEventListener('click',()=>setZoom(cam.zoom/1.3));
+  document.getElementById('zoom-home').addEventListener('click',()=>{
+    cam.zoom=1;cam.tx=W/2;cam.ty=H/2;updateZoomBadge();
+  });
+
   document.getElementById('go').addEventListener('click',()=>{
     const raw=document.getElementById('prompt').value.trim();
-    if(!raw)return;
+    if(!raw||chatBusy)return;
+    chatBusy=true;
     const {known,unknowns}=extract(raw);
     const kw=document.getElementById('keywords');
     kw.innerHTML='';
     [...known,...unknowns].forEach(w=>{
       const s=document.createElement('span');s.className='kw';s.textContent=w;kw.appendChild(s);
     });
-    [...known,...unknowns].forEach((word,i)=>setTimeout(()=>fireFacts(word),i*120+rnd(40,200)));
+    addMessage('user',raw);
+    const keywords=[...known,...unknowns];
+    const total=keywords.length;
+    keywords.forEach((word,i)=>setTimeout(()=>fireFacts(word),i*120+rnd(40,200)));
+    // finish once all clusters have fired (facts fire ~260ms each, 3 facts)
+    const doneAt=(total>0?((total-1)*120+400+3*260):600);
+    setTimeout(()=>{
+      const groups=groupLabels().map(g=>g.group);
+      const text='here is the picture. across all '+groups.length+' topics so far: '+
+        (groups.join(', ')||'nothing yet')+'. every new prompt is added to what you already know — nothing is thrown away.';
+      addMessage('bot',text,factLabels().map(f=>f.label));
+      rebuildAnswer();
+      chatBusy=false;
+    },doneAt);
     document.getElementById('prompt').value='';
   });
 
@@ -864,6 +1075,7 @@
     NODES.length=0;EDGES.length=0;pinned.length=0;
     document.getElementById('keywords').innerHTML='';
     document.getElementById('logs').innerHTML='';
+    document.getElementById('chatwin').innerHTML='';
     document.getElementById('answer').classList.remove('show');
     updateStats();
   });

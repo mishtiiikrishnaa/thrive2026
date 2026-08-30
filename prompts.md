@@ -50,3 +50,20 @@ each prompt that builds this site lives here, for the record.
   - per-card DOM parallax driven by `data-deep` depth
 - stickied the nav with a back-to-section links
 - `vercel.json` rewritten to point the root `/` at `index.html` so deploy serves the new page
+
+---
+
+## 4 — round three: obsidian graph, chat with memory
+
+- made the graph **obsidian-like**: camera with zoom + pan
+  - scroll wheel zooms toward the cursor, drag empty space pans, touch has
+    one-finger pan + two-finger pinch, and `+` / `−` / home controls in the corner
+  - nodes moved to a world coordinate system projected through the camera;
+    labels scale with zoom and hide when zoomed out (like a local graph)
+- added a **growing chat window** beside the feed
+  - every prompt appears as a user bubble; the bot replies with a summary
+  - the graph itself is the memory — the newest answer aggregates **every fact node
+    in the graph**, so each new answer contains everything before it
+- brand kept on **cmu serif** (`Computer Modern Serif`), not the typewriter —
+  for the `graphic.ai` logo, nav wordmark and footer cap
+- pushed after completion
