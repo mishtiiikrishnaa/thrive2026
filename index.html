@@ -127,21 +127,7 @@
     will-change:transform;display:flex;flex-direction:column;align-items:center;text-align:center;min-height:340px;
   }
   .card:hover{transform:translateY(-8px);border-color:rgba(255,166,201,0.45);box-shadow:0 14px 40px rgba(255,166,201,0.08)}
-  /* ---------- graph-themed cards ---------- */
-  .card{position:relative;overflow:hidden}
-  .card::after{
-    content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-    width:70%;height:2px;background:linear-gradient(90deg,transparent,var(--pink-dim),transparent);
-    border-radius:1px;opacity:0.5;
-  }
-  .card .ic{
-    width:58px;height:58px;border-radius:50%;
-    background:radial-gradient(circle at 35% 35%,rgba(255,166,201,0.25),rgba(203,176,232,0.15));
-    border:1.5px solid rgba(255,166,201,0.35);
-    display:flex;align-items:center;justify-content:center;
-    font-size:1.5rem;box-shadow:0 0 20px rgba(255,166,201,0.15);
-    box-sizing:border-box;
-  }
+  .card .ic{font-size:2.2rem;margin-bottom:1.2rem;display:block}
   .card h3{color:var(--pink-soft);font-size:1.3rem;margin-bottom:0.7rem}
   .card p{color:var(--txt-dim);font-size:1.02rem;line-height:1.75}
   /* deep dive */
@@ -154,15 +140,10 @@
     position:relative;overflow:hidden;transition:transform 0.35s,border-color 0.35s;
     display:flex;flex-direction:column;align-items:center;text-align:center;
   }
-  .deepcard{position:relative;overflow:hidden}
   .deepcard::before{
     content:"";position:absolute;top:0;left:0;right:0;height:3px;
     background:linear-gradient(90deg,var(--pink),var(--lilac),var(--mint));
     opacity:0.6;
-  }
-  .deepcard::after{
-    content:"";position:absolute;inset:8px;
-    border-radius:10px;border:1px dashed rgba(255,166,201,0.12);pointer-events:none;
   }
   .deepcard:hover{transform:translateY(-6px);border-color:rgba(255,166,201,0.45)}
   .deepcard .dc-ic{font-size:2rem;margin-bottom:1rem;display:block}
@@ -191,12 +172,6 @@
   .flow .step{
     display:flex;gap:0.8rem;align-items:flex-start;
     background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:0.8rem 0.9rem;
-    position:relative;
-  }
-  .flow .step::after{
-    content:"";position:absolute;left:0.65rem;top:50%;width:2px;height:120%;
-    background:linear-gradient(180deg,transparent,var(--pink-dim),transparent);
-    opacity:0.35;z-index:-1;transform:translateY(-50%);
   }
   .flow .step .n{
     flex:0 0 auto;width:1.6rem;height:1.6rem;border-radius:50%;
@@ -208,11 +183,7 @@
   .flow .step .b span{display:block;font-size:0.8rem;color:var(--txt-dim);margin-top:0.2rem}
   /* ---------- glossary accordion ---------- */
   .glossary{max-width:60rem;margin:0 auto}
-  .term{position:relative;overflow:hidden}
-  .term::before{
-    content:"●";position:absolute;left:-6px;top:50%;transform:translateY(-50%);
-    color:var(--pink);font-size:0.7rem;opacity:0.4;
-  }
+  .term{
     background:var(--panel);border:1px solid var(--border);border-radius:12px;
     margin-bottom:0.7rem;overflow:hidden;
   }
