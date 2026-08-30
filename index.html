@@ -125,6 +125,29 @@
   .card h3{color:var(--pink-soft);font-size:1.15rem;margin-bottom:0.5rem}
   .card p{color:var(--txt-dim);font-size:0.94rem;line-height:1.6}
 
+  /* deep dive */
+  .deepgrid{
+    max-width:82rem;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;
+  }
+  .deepcard{
+    background:linear-gradient(160deg,rgba(255,166,201,0.05),rgba(203,176,232,0.04));
+    border:1px solid var(--border);border-radius:18px;padding:1.7rem 1.5rem;
+    position:relative;overflow:hidden;transition:transform 0.35s,border-color 0.35s;
+  }
+  .deepcard::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--pink),var(--lilac),var(--mint));
+    opacity:0.6;
+  }
+  .deepcard:hover{transform:translateY(-6px);border-color:rgba(255,166,201,0.45)}
+  .deepcard .dc-ic{font-size:1.6rem;margin-bottom:0.8rem}
+  .deepcard h3{color:var(--pink-soft);font-size:1.15rem;margin-bottom:0.5rem}
+  .deepcard p{color:var(--txt-dim);font-size:0.93rem;line-height:1.65}
+
+  /* scroll reveal */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.7s ease,transform 0.7s ease}
+  .reveal.in{opacity:1;transform:none}
+
   /* ---------- anatomy ---------- */
   .anatomy{
     max-width:82rem;margin:0 auto;display:grid;gap:1.2rem;
@@ -173,38 +196,48 @@
 
   /* ---------- play ---------- */
   .play{position:relative;z-index:2;padding:4vw 4vw 8vw}
-  .stage{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:1.2rem}
-  @media(min-width:900px){.stage{grid-template-columns:340px 1fr}}
+  .stage{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:1.2rem;align-items:stretch}
+  @media(min-width:1020px){.stage{grid-template-columns:44fr 56fr}}
 
-  .input-panel{
+  .left-panel{display:flex;flex-direction:column;gap:0.9rem;min-width:0}
+  .right-panel{display:flex;flex-direction:column;gap:0.9rem;min-width:0}
+
+  .promptbox{
     background:var(--bg-2);border:1px solid var(--border);border-radius:16px;
-    padding:1.3rem;display:flex;flex-direction:column;gap:0.8rem;align-self:start;
+    padding:1.1rem 1.2rem;
   }
-  .input-panel label{color:var(--txt-faint);font-size:0.8rem;letter-spacing:0.08em}
+  .promptbox label{color:var(--txt-faint);font-size:0.8rem;letter-spacing:0.08em}
+  .promptrow{display:flex;gap:0.6rem;margin-top:0.5rem}
+  .promptrow textarea{flex:1;font-family:inherit;min-height:78px;resize:vertical}
   textarea{
-    width:100%;min-height:110px;resize:vertical;
-    background:var(--bg-3);border:1px solid var(--border);border-radius:12px;
-    color:var(--txt);padding:0.9rem;font-family:inherit;font-size:0.95rem;line-height:1.5;
+    width:100%;background:var(--bg-3);border:1px solid var(--border);border-radius:12px;
+    color:var(--txt);padding:0.8rem;font-size:0.95rem;line-height:1.5;
   }
   textarea:focus{outline:none;border-color:var(--pink-dim);box-shadow:0 0 0 3px rgba(255,166,201,0.15)}
   .btn{
-    border:none;cursor:pointer;border-radius:12px;padding:0.85rem 1.2rem;
+    border:none;cursor:pointer;border-radius:12px;padding:0 1rem;
     font-family:inherit;font-size:0.95rem;background:linear-gradient(120deg,var(--pink),var(--pink-soft));
     color:#1a0d14;font-weight:700;transition:filter 0.25s,transform 0.15s;
   }
   .btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
   .btn:active{transform:translateY(0)}
-  .btn.ghost{background:transparent;color:var(--pink-soft);border:1px solid var(--border);font-weight:400}
+  .btn.ghost{background:transparent;color:var(--pink-soft);border:1px solid var(--border);font-weight:400;padding:0.8rem 1.2rem}
   .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
-  .keywords{min-height:2.4rem;display:flex;flex-wrap:wrap;gap:0.4rem;align-items:flex-start}
+  .keywords{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem}
   .kw{
     font-size:0.78rem;padding:0.2rem 0.6rem;border-radius:999px;
     background:rgba(255,166,201,0.12);border:1px solid rgba(255,166,201,0.3);color:var(--pink-soft);
   }
-  .hint{font-size:0.78rem;color:var(--txt-faint);line-height:1.5}
+
+  .panel{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:0.9rem 1.1rem;
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .panel-t{font-size:0.78rem;color:var(--txt-faint);letter-spacing:0.1em;margin-bottom:0.6rem}
 
   .graph-wrap{
     background:var(--bg-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative;
+    display:flex;flex-direction:column;height:100%;
   }
   .graph-head{
     display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;
@@ -215,7 +248,14 @@
   .stats b{color:var(--pink-soft);font-weight:400}
 
   /* graph camera controls */
-  .graph-canvas-wrap{position:relative}
+  .graph-canvas-wrap{position:relative;flex:1}
+  #graph{display:block}
+  .emptyhint{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;
+    text-align:center;font-size:0.9rem;color:var(--txt-faint);pointer-events:none;
+    max-width:70%;line-height:1.6;
+  }
+  .emptyhint .pl{display:inline-block;margin-top:0.6rem;font-size:1.3rem;color:var(--pink-soft);animation:float 2.4s ease-in-out infinite}
   .camctl{
     position:absolute;right:0.9rem;top:0.9rem;z-index:3;
     display:flex;flex-direction:column;gap:0.4rem;
@@ -237,29 +277,19 @@
     padding:0.2rem 0.5rem;border-radius:8px;border:1px solid var(--border);
   }
 
-  /* chat */
-  .chatpanel{
-    max-width:1200px;margin:1rem auto 0;
-    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;
-  }
-  .chatpanel .ct{font-size:0.78rem;color:var(--txt-faint);letter-spacing:0.1em;padding:0.9rem 1.2rem;border-bottom:1px solid var(--border)}
-  .chatwin{display:flex;flex-direction:column;gap:0.7rem;padding:1rem 1.2rem;max-height:22rem;overflow:auto}
-  .msg{max-width:88%;padding:0.6rem 0.9rem;border-radius:14px;font-size:0.9rem;line-height:1.5;animation:fade 0.4s ease}
+  /* chat window */
+  .chatwin{display:flex;flex-direction:column;gap:0.7rem;max-height:16rem;overflow:auto;padding-right:0.2rem}
+  .msg{max-width:92%;padding:0.6rem 0.9rem;border-radius:14px;font-size:0.88rem;line-height:1.5;animation:fade 0.4s ease}
   .msg.user{background:linear-gradient(120deg,rgba(255,166,201,0.2),rgba(203,176,232,0.15));border:1px solid rgba(255,166,201,0.3);align-self:flex-end;color:var(--txt)}
   .msg.bot{background:var(--panel);border:1px solid var(--border);align-self:flex-start;color:var(--txt-dim)}
   .msg .roles{font-size:0.7rem;letter-spacing:0.08em;color:var(--pink-soft);margin-bottom:0.3rem}
   .msg .facts{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem}
   .msg .facts span{font-size:0.76rem;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(255,166,201,0.1);border:1px solid var(--border);color:var(--txt-dim)}
 
-  /* fact feed */
-  .feed{
-    max-width:1200px;margin:1rem auto 0;
-    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:1rem 1.2rem;
-  }
-  .feed .ft{font-size:0.78rem;color:var(--txt-faint);letter-spacing:0.1em;margin-bottom:0.7rem}
-  .feed .logs{display:flex;flex-direction:column;gap:0.45rem;max-height:16rem;overflow:auto}
+  /* fact generation feed */
+  .logs{display:flex;flex-direction:column;gap:0.4rem;max-height:14rem;overflow:auto;padding-right:0.2rem}
   .flog{
-    font-size:0.82rem;color:var(--txt-dim);padding:0.45rem 0.7rem;border-radius:10px;
+    font-size:0.8rem;color:var(--txt-dim);padding:0.4rem 0.65rem;border-radius:10px;
     background:var(--panel);border-left:3px solid var(--pink-dim);
     animation:slide 0.4s ease;
     display:flex;gap:0.6rem;align-items:flex-start;
@@ -269,22 +299,36 @@
   @keyframes slide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
 
   /* legend */
-  .legend{max-width:1200px;margin:1rem auto 0;display:flex;flex-wrap:wrap;gap:1.2rem;justify-content:center;font-size:0.8rem;color:var(--txt-faint)}
+  .legend{display:flex;flex-wrap:wrap;gap:1.2rem;justify-content:center;font-size:0.78rem;color:var(--txt-faint)}
   .legend .it{display:flex;align-items:center;gap:0.5rem}
   .legend .dot{width:12px;height:12px;border-radius:50%}
 
-  /* answer panel */
+  /* the proper AI answer window */
   .answer{
-    margin:1.2rem auto 0;max-width:1200px;
-    background:linear-gradient(160deg,rgba(255,166,201,0.08),rgba(203,176,232,0.06));
-    border:1px solid var(--border);border-radius:16px;
-    padding:1.6rem 1.8rem;display:none;
+    margin-top:0.4rem;min-height:0;
+    background:linear-gradient(160deg,rgba(255,166,201,0.1),rgba(203,176,232,0.05));
+    border:1px solid rgba(255,166,201,0.35);border-radius:16px;
+    padding:1.1rem 1.3rem;display:none;position:relative;
   }
   .answer.show{display:block;animation:fade 0.5s ease}
-  .answer .at{color:var(--pink-soft);font-size:0.85rem;letter-spacing:0.12em;margin-bottom:0.7rem}
-  .answer p{color:var(--txt);line-height:1.75;font-size:1.05rem}
-  .answer .src{margin-top:1rem;font-size:0.8rem;color:var(--txt-faint)}
-  .answer .src span{display:inline-block;margin-right:0.5rem;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(255,166,201,0.08);border:1px solid var(--border)}
+  .answer .at{
+    color:var(--pink-soft);font-size:0.78rem;letter-spacing:0.14em;margin-bottom:0.6rem;
+    display:flex;align-items:center;gap:0.5rem;
+  }
+  .answer .at::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}
+  .answer .status{font-size:0.8rem;color:var(--txt-faint);font-style:italic}
+  .answer .body .concl{
+    color:var(--txt);line-height:1.7;font-size:1rem;margin-top:0.4rem;
+  }
+  .answer .connects{
+    display:flex;flex-wrap:wrap;gap:0.4rem;margin:0.7rem 0;
+  }
+  .answer .connects .cnx{
+    font-size:0.76rem;padding:0.2rem 0.6rem;border-radius:999px;
+    background:rgba(169,232,212,0.12);border:1px solid rgba(169,232,212,0.35);color:var(--mint);
+  }
+  .answer .sources{margin-top:0.8rem;padding-top:0.7rem;border-top:1px dashed var(--border);font-size:0.74rem;color:var(--txt-faint)}
+  .answer .sources b{color:var(--pink-soft);font-weight:400}
   @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
   footer{
@@ -329,7 +373,7 @@
 <!-- ============ HOW AI WORKS ============ -->
 <section id="how">
   <h2 class="sec-title">how do machines <span>learn to think?</span></h2>
-  <p class="sec-sub">no magic, no ghosts. strip away the hype and an ai is a very large, very patient machine for finding patterns. here is the whole trick in six parts.</p>
+  <p class="sec-sub">no magic, no ghosts. strip away the hype and an ai is a very large, very patient machine for finding patterns. nine parts — training, the maths, and the quirks that make it feel alive.</p>
   <div class="how">
     <div class="card" data-deep="0">
       <div class="ic">🍞</div>
@@ -360,6 +404,21 @@
       <div class="ic">🔁</div>
       <h3>06 · generation</h3>
       <p>nothing is truly "created". the model joins the most probable pieces of what it has seen. this page mimics that — it connects your keywords to stored facts and draws the shortest path between them.</p>
+    </div>
+    <div class="card" data-deep="6">
+      <div class="ic">🔤</div>
+      <h3>07 · tokenization</h3>
+      <p>text never enters the model as letters you see. it is chopped into tokens — word pieces — then mapped to numbers. "unbelievable" might become three tokens. the model thinks in token ids, not sentences; everything downstream is arithmetic on those ids.</p>
+    </div>
+    <div class="card" data-deep="7">
+      <div class="ic">🎲</div>
+      <h3>08 · creativity & temperature</h3>
+      <p>the model outputs probabilities for the next token, not a single word. turn the temperature up and it samples more freely — vivid, risky, sometimes wrong. turn it down and it plays safe and dull. an ai's "imagination" is literally a randomness dial.</p>
+    </div>
+    <div class="card" data-deep="8">
+      <div class="ic">👻</div>
+      <h3>09 · hallucination</h3>
+      <p>a model that only predicts the next likely word will sometimes invent one with total confidence. it has no way to check against reality. that is why your source graph here insists on real, shared facts — the fix for hallucination is grounding, not more tokens.</p>
     </div>
   </div>
 </section>
@@ -413,56 +472,99 @@
   </div>
 </section>
 
+<!-- ============ DEEPER DIVE ============ -->
+<section id="deep">
+  <h2 class="sec-title">go <span>deeper</span></h2>
+  <p class="sec-sub">the glossy summary is over. this is the stuff under the hood — what the big words actually mean, and what people get wrong.</p>
+
+  <div class="deepgrid">
+    <div class="deepcard">
+      <div class="dc-ic">📏</div>
+      <h3>scaling laws</h3>
+      <p>performance grows predictably with three dials: more parameters, more data, and more compute. there is a surprisingly clean mathematical relationship — double the size, fix the data, and quality climbs on a smooth curve. that is why models keep getting bigger: it is not hype, it is a measurable trend.</p>
+    </div>
+    <div class="deepcard">
+      <div class="dc-ic">🧮</div>
+      <h3>embedding space</h3>
+      <p>a word's embedding is its address in a high-dimensional map of meaning. nearby words are similar words; arithmetic even works — famously, "king − man + woman ≈ queen". the model never sees symbols, only these coordinates, and all reasoning happens as motion through them.</p>
+    </div>
+    <div class="deepcard">
+      <div class="dc-ic">🌊</div>
+      <h3>gradient flow</h3>
+      <p>backprop sends a tiny correction backwards through every layer. in deep networks the signal can die out (vanishing gradients) or explode — so training is as much about plumbing as about maths. normalisation layers and careful initialisation exist to keep the gradient flowing.</p>
+    </div>
+    <div class="deepcard">
+      <div class="dc-ic">🧭</div>
+      <h3>alignment (rhlf)</h3>
+      <p>after pretraining, models get a final polish so they answer helpfully and refuse harm. humans rate many responses; a reward model learns what "good" means; the policy is fine-tuned to chase it. this is why a raw predictor feels like a helpful assistant.</p>
+    </div>
+    <div class="deepcard">
+      <div class="dc-ic">🎲</div>
+      <h3>sampling & temperature</h3>
+      <p>the model only outputs probabilities — a human or a sampling strategy turns them into words. pick the argmax and you get dull, safe text; sample with high temperature and you get novelty and mistakes. creativity in ai is literally a randomness dial.</p>
+    </div>
+    <div class="deepcard">
+      <div class="dc-ic">🚫</div>
+      <h3>myth vs reality</h3>
+      <p>myth: the model "understands". reality: it predicts patterns with no ground truth. myth: it has a memory of your data. reality: weights are compressed shapes, not files. myth: bigger always means better. reality: it also means more cost, more energy, more hallucinations to police.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ============ THE PLAY AREA ============ -->
 <section class="play" id="play">
   <h2 class="sec-title">grow the <span>graph</span></h2>
-  <p class="sec-sub">type a prompt. keywords are pulled out, facts flood in as nodes, and the graph builds itself. every new prompt keeps the old graph and adds to it — like memory. click nodes to weave them into the answer.</p>
+  <p class="sec-sub">left: your prompt sprouts keywords and facts. right: the graph grows, node by node. find the shared words, connect them, and read the final answer. the graph survives a browser reset — the chat starts fresh.</p>
 
   <div class="stage">
-    <div class="input-panel">
-      <label for="prompt">your prompt</label>
-      <textarea id="prompt" placeholder="e.g. why can an ai seem so creative even though it just predicts words?"></textarea>
-      <button class="btn" id="go">grow the graph</button>
-      <button class="btn ghost" id="clear">reset everything</button>
-      <div class="keywords" id="keywords"></div>
-      <div class="hint">tip: facts appear below as they're generated. for unknown keywords, the site invents plausible ones — this is how the answer thread grows.</div>
-    </div>
-
-    <div class="graph-wrap">
-      <div class="graph-head">
-        <span class="t">your growing graph</span>
-        <span class="stats"><span><b id="stat-n">0</b> nodes</span> <span><b id="stat-e">0</b> edges</span></span>
-      </div>
-      <div class="graph-canvas-wrap">
-        <div class="zoom-badge" id="zoom-badge">100%</div>
-        <div class="camctl">
-          <button id="zoom-in" title="zoom in">+</button>
-          <button id="zoom-out" title="zoom out">−</button>
-          <button id="zoom-home" title="reset view">⌂</button>
+    <!-- LEFT: prompt + chat (the answer lives here) + facts -->
+    <div class="left-panel">
+      <div class="promptbox">
+        <label for="prompt">your prompt</label>
+        <div class="promptrow">
+          <textarea id="prompt" placeholder="why is the sky blue?"></textarea>
+          <button class="btn" id="go">grow</button>
         </div>
-        <canvas id="graph" aria-label="interactive fact graph"></canvas>
-        <div class="camhint">scroll to zoom · drag empty space to pan · drag a node to move it</div>
+        <div class="keywords" id="keywords"></div>
+      </div>
+
+      <div class="panel chat-panel">
+        <div class="panel-t">chat — the answer appears here</div>
+        <div class="chatwin" id="chatwin"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-t">fact generation</div>
+        <div class="logs" id="logs"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: the persistent graph -->
+    <div class="right-panel">
+      <div class="graph-wrap">
+        <div class="graph-head">
+          <span class="t">the graph — persists across reloads</span>
+          <span class="stats"><span><b id="stat-n">0</b> nodes</span> <span><b id="stat-e">0</b> edges</span></span>
+        </div>
+        <div class="graph-canvas-wrap">
+          <div class="zoom-badge" id="zoom-badge">100%</div>
+          <div class="camctl">
+            <button id="zoom-in" title="zoom in">+</button>
+            <button id="zoom-out" title="zoom out">−</button>
+            <button id="zoom-home" title="reset view">⌂</button>
+          </div>
+          <canvas id="graph" aria-label="interactive fact graph"></canvas>
+          <div class="camhint">scroll to zoom · drag empty space to pan · drag a node to move it</div>
+          <div class="emptyhint" id="emptyhint">the graph is empty — ask a question and it will grow</div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="it"><span class="dot" style="background:var(--pink)"></span> keyword cluster</div>
+        <div class="it"><span class="dot" style="background:var(--lilac)"></span> fact node</div>
+        <div class="it"><span class="dot" style="background:var(--mint)"></span> shared word (connector)</div>
       </div>
     </div>
   </div>
-
-  <div class="feed">
-    <div class="ft">live fact feed</div>
-    <div class="logs" id="logs"></div>
-  </div>
-
-  <div class="chatpanel">
-    <div class="ct">chat — the graph is the memory, every answer remembers everything</div>
-    <div class="chatwin" id="chatwin"></div>
-  </div>
-
-  <div class="legend">
-    <div class="it"><span class="dot" style="background:var(--pink)"></span> keyword cluster</div>
-    <div class="it"><span class="dot" style="background:var(--lilac)"></span> fact node</div>
-    <div class="it"><span class="it" style="gap:0"></span> edges = shared meaning</div>
-  </div>
-
-  <div class="answer" id="answer"></div>
 </section>
 
 <footer>
@@ -693,8 +795,10 @@
       const a=toScreen(e.a.x,e.a.y),b=toScreen(e.b.x,e.b.y);
       gctx.beginPath();
       gctx.moveTo(a.x,a.y);gctx.lineTo(b.x,b.y);
-      gctx.strokeStyle=(e.a.group&&e.b.group)?'rgba(255,215,232,0.34)':'rgba(255,166,201,0.20)';
-      gctx.lineWidth=((e.a.group&&e.b.group)?1.6:1)*Math.min(1.6,z);
+      const isConn=e.a.connector||e.b.connector;
+      const isGroupLink=e.a.group&&e.b.group;
+      gctx.strokeStyle=isConn?'rgba(169,232,212,0.5)':(isGroupLink?'rgba(255,215,232,0.34)':'rgba(255,166,201,0.20)');
+      gctx.lineWidth=(isConn?1.4:(isGroupLink?1.6:1))*Math.min(1.6,z);
       gctx.stroke();
     }
     for(let n of NODES){
@@ -702,6 +806,13 @@
       const r=nodeRadius(n);
       const col=colorOf(n);
       if(p.x<-r||p.x>W+r||p.y<-r||p.y>H+r)continue;
+      // spawn pop: new nodes bloom in with a fading halo
+      if(n.age!==undefined&&n.age<1){
+        const a=1-n.age;
+        gctx.beginPath();gctx.arc(p.x,p.y,r*(1+a*1.4),0,Math.PI*2);
+        gctx.strokeStyle=col;gctx.globalAlpha=a*0.8;gctx.lineWidth=2;
+        gctx.stroke();gctx.globalAlpha=1;
+      }
       const grd=gctx.createRadialGradient(p.x,p.y,r*0.2,p.x,p.y,r);
       grd.addColorStop(0,n.group?"rgba(255,255,255,0.12)":"rgba(255,255,255,0.28)");
       grd.addColorStop(1,col);
@@ -713,25 +824,41 @@
         gctx.beginPath();gctx.arc(p.x,p.y,r+4*z,0,Math.PI*2);
         gctx.strokeStyle="rgba(255,255,255,0.28)";gctx.lineWidth=1;gctx.stroke();
       }
+      if(n.connector){
+        gctx.beginPath();gctx.arc(p.x,p.y,r+3*z,0,Math.PI*2);
+        gctx.strokeStyle="rgba(169,232,212,0.75)";gctx.lineWidth=1.4;gctx.stroke();
+      }
     }
     // labels (obsidian-style: show group labels always at reasonable zoom, facts on hover)
     const showGroupLabels=z>0.7;
     gctx.font=(12*z)+"px 'Computer Modern Typewriter',monospace";
+    const labelBoxes=[];
+    const padding=4*z;
     for(let n of NODES){
       const p=toScreen(n.x,n.y);
       const r=nodeRadius(n);
-      let show=n.group?showGroupLabels:mouseOver(n);
+      let show=n.group?showGroupLabels:(n.connector?showGroupLabels:mouseOver(n));
       if(!show)continue;
       const label=truncateLabel(n.group||n.label,z);
-      const tw=gctx.measureText(label).width;
+      const tw=gctx.measureText(label).width+12*z;
+      const th=18*z;
+      const lx=p.x-tw/2;
       const by=p.y-r-11*z;
-      if(by<14)continue;
+      const ly=by-11*z;
+      if(ly+th<6||ly<6)continue;
+      // collision avoidance: skip if this label overlaps an already-drawn one
+      let overlap=false;
+      for(let b of labelBoxes){
+        if(lx<b.x+b.w+padding&&lx+tw+padding>b.x&&ly<b.y+b.h+padding&&ly+th+padding>b.y){overlap=true;break;}
+      }
+      if(overlap)continue;
+      labelBoxes.push({x:lx,y:ly,w:tw,h:th});
       gctx.fillStyle="rgba(20,11,18,0.88)";
       gctx.beginPath();
-      gctx.roundRect(p.x-tw/2-6*z,by-11*z,tw+12*z,18*z,6*z);
+      gctx.roundRect(lx,ly,tw,th,6*z);
       gctx.fill();
-      gctx.fillStyle=n.group?'#ffa6c9':'#f6e7ee';
-      gctx.fillText(label,p.x-tw/2,by+z*0);
+      gctx.fillStyle=n.group?'#ffa6c9':(n.connector?'#a9e8d4':'#f6e7ee');
+      gctx.fillText(label,p.x-tw/2+6*z,by+z*0);
     }
     updateStats();
   }
@@ -749,13 +876,16 @@
 
   function updateStats(){
     const ne=document.getElementById('stat-n'),ee=document.getElementById('stat-e');
+    const eh=document.getElementById('emptyhint');
     if(ne)ne.textContent=NODES.length;
     if(ee)ee.textContent=EDGES.length;
+    if(eh)eh.style.display=(NODES.length===0)?'block':'none';
   }
 
   function loop(t){
     try{
       if(NODES.length)step();
+      for(let n of NODES)if(n.age!==undefined&&n.age<1)n.age+=0.02;
       draw();
     }catch(err){ /* never let one bad frame kill the loop */ }
     requestAnimationFrame(loop);
@@ -819,14 +949,6 @@
     });
   }
 
-  // ---------- seed ----------
-  function seed(){
-    ["ai","learning"].forEach(w=>{
-      factsFor(w).slice(0,3).forEach(f=>addFactFor(w,f));
-    });
-    updateStats();
-  }
-
   // ---------- extraction ----------
   function extract(raw){
     const words=raw.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>2);
@@ -857,15 +979,15 @@
     let g=NODES.find(n=>n.group===word);
     if(!g){
       g={group:word,label:word,x:rnd(-40,40),y:rnd(-40,40),
-         color:NODES.length%PALETTE.length,conn:0,pinned:false};
+         color:NODES.length%PALETTE.length,conn:0,pinned:false,age:0};
       NODES.push(g);
     }
     return g;
   }
   function addFactFor(word,fact){
     const g=ensureGroup(word);
-    const n={label:fact,color:Math.floor(Math.random()*PALETTE.length),
-      x:g.x+rnd(-130,130),y:g.y+rnd(-130,130),conn:1,pinned:false};
+    const n={label:fact,src:word,color:Math.floor(Math.random()*PALETTE.length),
+      x:g.x+rnd(-130,130),y:g.y+rnd(-130,130),conn:1,pinned:false,age:0};
     NODES.push(n);
     EDGES.push({a:g,b:n,len:rnd(55,90)});
     g.conn++;
@@ -895,20 +1017,96 @@
     const facts=factsFor(word);
     let i=0;
     const iv=setInterval(()=>{
-      if(i>=facts.length){clearInterval(iv);return;}
+      if(i>=facts.length){clearInterval(iv);finishConnectors();saveGraph();return;}
       addFactFor(word,facts[i]);i++;
     },260);
+  }
+
+  // ---------- persistence (graph survives reload; chat does not) ----------
+  function saveGraph(){
+    try{
+      const data={nodes:NODES.map(n=>({group:n.group||null,label:n.label,x:n.x,y:n.y,
+        color:n.color,conn:n.conn,pinned:!!n.pinned,src:n.src||null,connector:!!n.connector})),
+        edges:EDGES.map(e=>({a:NODES.indexOf(e.a),b:NODES.indexOf(e.b),len:e.len}))};
+      localStorage.setItem('graphicai_graph_v1',JSON.stringify(data));
+    }catch(e){}
+  }
+  function loadGraph(){
+    try{
+      const raw=localStorage.getItem('graphicai_graph_v1');
+      if(!raw)return false;
+      const data=JSON.parse(raw);
+      if(!data.nodes||!data.nodes.length)return false;
+      const map=[];
+      data.nodes.forEach((nd,i)=>{
+        const n={group:nd.group||null,label:nd.label||'',x:nd.x||0,y:nd.y||0,
+          color:nd.color||0,conn:nd.conn||0,pinned:nd.pinned||false,
+          src:nd.src||null,connector:!!nd.connector,
+          age:1,vx:0,vy:0};
+        NODES.push(n);map[i]=n;
+      });
+      data.edges.forEach(e=>{
+        if(map[e.a]&&map[e.b])EDGES.push({a:map[e.a],b:map[e.b],len:e.len||80});
+      });
+      return true;
+    }catch(e){return false;}
+  }
+
+  // ---------- shared-word connectors ----------
+  // find words that appear inside the facts of two (or more) keyword clusters,
+  // add a small connector node in the middle and link the clusters to it.
+  const CONNECTOR_WORDS=['light','data','predict','learn','pattern','brain','text','math','matter','guess'];
+  function tokenizeFact(f){
+    return f.toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).filter(w=>w.length>3);
+  }
+  function finishConnectors(){
+    const groups=groupLabels();
+    if(groups.length<2)return;
+    let added=0;
+    for(let i=0;i<groups.length;i++){
+      for(let j=i+1;j<groups.length;j++){
+        const a=groups[i],b=groups[j];
+        const fa=factLabelsInGroup(a),fb=factLabelsInGroup(b);
+        const wa={},wb={};
+        fa.forEach(f=>tokenizeFact(f.label).forEach(w=>{if(CONNECTOR_WORDS.includes(w)||freqWord(w))wa[w]=1;}));
+        fb.forEach(f=>tokenizeFact(f.label).forEach(w=>{if(CONNECTOR_WORDS.includes(w)||freqWord(w))wb[w]=1;}));
+        // choose the first word shared by both clusters
+        let shared=null;
+        for(let w in wa){if(wb[w]){shared=w;break;}}
+        if(!shared)continue;
+        // connector node between the two clusters
+        const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
+        const c={group:null,label:shared,color:2 /*mint*/,conn:2,x:cx+rnd(-10,10),y:cy+rnd(-10,10),pinned:false,connector:true,age:0};
+        NODES.push(c);
+        EDGES.push({a:a,b:c,len:rnd(60,90)});
+        EDGES.push({a:b,b:c,len:rnd(60,90)});
+        a.conn++;b.conn++;c.conn=2;
+        added++;
+        if(added>=4)return;
+      }
+    }
+    if(added>0)saveGraph();
+  }
+  function freqWord(w){
+    // a whitelist of genuinely connective words
+    return ['light','color','colour','water','air','sun','time','energy','shape','motion','rule','word','idea','fact','link','part','kind','way','need','make','see','use'].includes(w);
+  }
+  function factLabelsInGroup(g){
+    return NODES.filter(n=>!n.group&&EDGES.some(e=>e.a===g&&e.b===n));
   }
 
   // ---------- cumulative answer (the graph is the memory) ----------
   function factLabels(){
     const seen=new Set(),out=[];
     for(let n of NODES){
-      if(n.group)continue;
+      if(n.group||n.connector)continue;
       if(seen.has(n.label))continue;
       seen.add(n.label);out.push(n);
     }
     return out;
+  }
+  function connectorNodes(){
+    return NODES.filter(n=>n.connector);
   }
   function groupLabels(){
     const seen=new Set(),out=[];
@@ -918,17 +1116,57 @@
     }
     return out;
   }
-  function rebuildAnswer(){
-    const el=document.getElementById('answer');
+  // ---- the answer lives in the chat window ----
+  let pendingAnswer=null;
+  function answerThinking(){
+    const m=document.createElement('div');
+    m.className='msg bot thinking';
+    const r=document.createElement('div');r.className='roles';r.textContent='graphic.ai';
+    const body=document.createElement('div');body.className='body';
+    body.textContent='assembling the answer — extracting keywords, spawning facts, connecting shared words…';
+    m.appendChild(r);m.appendChild(body);
+    chatwin.appendChild(m);
+    chatwin.scrollTop=chatwin.scrollHeight;
+    pendingAnswer=m;
+  }
+  function buildAnswerHTML(){
     const facts=factLabels();
-    if(facts.length===0){el.classList.remove('show');return;}
-    el.classList.add('show');
-    const parts=facts.map(f=>'<span style="color:var(--pink-soft)">'+escapeHtml(truncate(f.label,140))+'</span>');
-    const groups=groupLabels().map(g=>g.group).join(', ')||'—';
-    el.innerHTML=
-      '<div class="at">this is the whole picture so far</div>'+
-      '<p>everything you (and the graph) have learned, remembered together. topics covered: '+escapeHtml(groups)+'. every fact below is a node still alive in the graph above — add new prompts and this answer keeps growing.</p>'+
-      '<div class="src">'+parts.join('')+'</div>';
+    const groups=groupLabels();
+    const connectors=connectorNodes();
+    const topicChips=groups.map(g=>'<span class="cnx">'+escapeHtml(g.group)+'</span>').join('')||'<span class="cnx">?</span>';
+    const kws=groups.map(g=>g.group).join(', ')||'the topic';
+    const shared=connectors.map(c=>c.label);
+    let conclusion;
+    if(shared.length){
+      conclusion='putting it together: the graph connects <b>'+escapeHtml(kws)+'</b> through the shared idea'+
+        (shared.length>1?'s':'')+' <b>'+escapeHtml(shared.join(', '))+'</b>. click the facts in the graph to see how each one feeds the answer.';
+    }else{
+      conclusion='about <b>'+escapeHtml(kws)+'</b>: the facts are laid out in the graph. keep asking and the shared ideas between topics will appear as mint connector nodes.';
+    }
+    let html='<div class="concl">'+conclusion+'</div>';
+    html+='<div class="connects">'+topicChips+'</div>';
+    if(shared.length) html+='<div class="connects">shared words: '+shared.map(s=>'<span class="cnx">“'+escapeHtml(s)+'”</span>').join('')+'</div>';
+    const src=facts.slice(0,8).map(f=>'<span>'+escapeHtml(truncate(f.label,110))+'</span>').join('');
+    if(facts.length) html+='<div class="sources"><b>'+facts.length+' facts in the graph · </b>'+src+'</div>';
+    return html;
+  }
+  function postAnswer(){
+    const html=buildAnswerHTML();
+    if(pendingAnswer){
+      const body=pendingAnswer.querySelector('.body');
+      body.innerHTML=html;
+      pendingAnswer.classList.remove('thinking');
+      pendingAnswer=null;
+    }else{
+      const m=document.createElement('div');
+      m.className='msg bot';
+      const r=document.createElement('div');r.className='roles';r.textContent='graphic.ai';
+      const b=document.createElement('div');b.className='body';
+      b.innerHTML=html;
+      m.appendChild(r);m.appendChild(b);
+      chatwin.appendChild(m);
+    }
+    chatwin.scrollTop=chatwin.scrollHeight;
   }
   function truncate(s,n){return s.length>n?s.slice(0,n-1)+'…':s;}
   function escapeHtml(s){
@@ -943,7 +1181,7 @@
     const r=document.createElement('div');r.className='roles';
     r.textContent=role==='user'?'you':'graphic.ai';
     m.appendChild(r);
-    const body=document.createElement('div');
+    const body=document.createElement('div');body.className='body';
     body.textContent=text;
     m.appendChild(body);
     if(facts&&facts.length){
@@ -992,7 +1230,7 @@
     const r=rect();const x=e.clientX-r.left,y=e.clientY-r.top;
     const hit=NODES.find(n=>mouseOver(n));
     if(hit&&!pinned.includes(hit)){pinned.push(hit);}
-    rebuildAnswer();
+    if(hit)postAnswer();
   });
 
   // touch: one-finger pan, two-finger pinch
@@ -1057,28 +1295,23 @@
     addMessage('user',raw);
     const keywords=[...known,...unknowns];
     const total=keywords.length;
+    if(total===0){
+      addMessage('bot','i heard that. no keywords i know appeared — try rephrasing with a clearer subject.');
+      chatBusy=false;
+      document.getElementById('prompt').value='';
+      return;
+    }
+    answerThinking();
     keywords.forEach((word,i)=>setTimeout(()=>fireFacts(word),i*120+rnd(40,200)));
-    // finish once all clusters have fired (facts fire ~260ms each, 3 facts)
-    const doneAt=(total>0?((total-1)*120+400+3*260):600);
+    const doneAt=((total-1)*120+400+3*260);
     setTimeout(()=>{
-      const groups=groupLabels().map(g=>g.group);
-      const text='here is the picture. across all '+groups.length+' topics so far: '+
-        (groups.join(', ')||'nothing yet')+'. every new prompt is added to what you already know — nothing is thrown away.';
-      addMessage('bot',text,factLabels().map(f=>f.label));
-      rebuildAnswer();
+      postAnswer();
+      saveGraph();
       chatBusy=false;
     },doneAt);
     document.getElementById('prompt').value='';
   });
 
-  document.getElementById('clear').addEventListener('click',()=>{
-    NODES.length=0;EDGES.length=0;pinned.length=0;
-    document.getElementById('keywords').innerHTML='';
-    document.getElementById('logs').innerHTML='';
-    document.getElementById('chatwin').innerHTML='';
-    document.getElementById('answer').classList.remove('show');
-    updateStats();
-  });
   document.getElementById('prompt').addEventListener('keydown',e=>{
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('go').click();}
   });
@@ -1088,9 +1321,20 @@
     h.addEventListener('click',()=>{h.parentElement.classList.toggle('open');});
   });
 
+  // scroll reveal
+  try{
+    const seen=new Set();
+    document.querySelectorAll('section .how > * , section .deepgrid > *, section .anatomy, section .glossary').forEach(el=>{el.classList.add('reveal');});
+    const io=new IntersectionObserver((entries)=>{
+      entries.forEach(en=>{ if(en.isIntersecting&&!seen.has(en.target)){seen.add(en.target);en.target.classList.add('in');} });
+    },{threshold:0.12});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  }catch(e){}
+
   // ---------- init ----------
   sizeGraph();sizeHero();buildHero();
-  seed();
+  loadGraph();
+  updateStats();
   requestAnimationFrame(loop);
   requestAnimationFrame(drawHero);
 })();

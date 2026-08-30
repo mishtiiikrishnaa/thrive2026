@@ -67,3 +67,26 @@ each prompt that builds this site lives here, for the record.
 - brand kept on **cmu serif** (`Computer Modern Serif`), not the typewriter —
   for the `graphic.ai` logo, nav wordmark and footer cap
 - pushed after completion
+
+---
+
+## 5 — round four: the graph is the star
+
+- **graph starts empty** — the pre-seeded demo nodes are gone. first load shows a
+  blank canvas with an empty-state hint ("the graph is empty — ask a question and it
+  will grow"). it only grows when you actually prompt it. persistence stays, so it
+  survives reloads but never invents nodes on its own.
+- **the answer moved into the chat window** — removed the separate answer panel.
+  the bot's "assembling…" message now becomes the final structured answer in place:
+  a plain-language conclusion, keyword chips, shared-word (connector) chips, and the
+  fact sources it was built from. clicking a node re-posts the fresh answer into chat.
+- **label collision-avoidance on the graph** — labels skip drawing if they overlap an
+  already-drawn label, so zoomed-in text stays readable instead of stacking.
+- **spawn pop effect** — new nodes bloom in with a fading halo as they're added.
+- **deeper "how machines learn to think"** — expanded from six to nine cards
+  (added tokenization, temperature/creativity, hallucination) with heavier detail.
+- **new "go deeper" section** — six deep-dive cards (scaling laws, embedding space,
+  gradient flow, alignment/rlhf, sampling & temperature, myth vs reality).
+- **scroll-reveal animations** — sections and cards fade up as you scroll to them.
+- pushed after completion
+
